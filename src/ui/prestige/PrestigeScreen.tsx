@@ -27,6 +27,9 @@ export function PrestigeScreen() {
           <span className="font-semibold" style={{ color: 'var(--accent)' }}> Empire Tokens</span>.
           Spend them on permanent <span className="font-semibold">talents</span> below.
         </p>
+        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+          ✓ Kept forever: your talents, tokens, achievements &amp; ascension milestones.
+        </p>
 
         <div className="my-2 flex w-full justify-around">
           <Stat label="Profit bonus" value={`+${profitBonusPct}%`} />
