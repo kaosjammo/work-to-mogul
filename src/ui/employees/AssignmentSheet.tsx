@@ -177,7 +177,8 @@ export function AssignmentSheet() {
                               {e.name} {match && '⭐'}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                              {e.roleBlurb}
+                              {e.roleName} · {e.effectLabel}
+                              {match && <span style={{ color: 'var(--accent)' }}> · ⭐ +25% on-theme</span>}
                             </div>
                           </div>
                           <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
