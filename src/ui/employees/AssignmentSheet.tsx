@@ -106,7 +106,10 @@ export function AssignmentSheet() {
                           <>
                             <div className="truncate text-sm font-semibold">{e.name}</div>
                             <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                              {e.roleName} · Lv {e.level}
+                              Lv {e.level} · {e.effectLabel}
+                              {e.affinity === view.industryId && (
+                                <span style={{ color: 'var(--accent)' }}> · ⭐</span>
+                              )}
                             </div>
                           </>
                         ) : (
