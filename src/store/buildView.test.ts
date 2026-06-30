@@ -71,3 +71,25 @@ describe('best-buy ROI cue + stats', () => {
     expect(stats.industriesEntered).toBe(1)
   })
 })
+
+describe('employee effect label reflects the build (specs are legible)', () => {
+  function pct(label: string): number {
+    return Number(label.match(/(\d+)%/)?.[1] ?? 0)
+  }
+  it('a specced closer shows a higher profit % than a bare one', () => {
+    const s = initialGameState(0)
+    s.employees.bare = {
+      id: 'bare', templateId: 'x', name: 'Bare', role: 'closer',
+      rarity: 'common', level: 10, affinity: null, traits: [], specialisation: null,
+    }
+    s.employees.built = {
+      id: 'built', templateId: 'x', name: 'Built', role: 'closer',
+      rarity: 'common', level: 10, affinity: null, traits: [],
+      specialisation: 'rainmaker', specialisation2: 'kingpin',
+    }
+    const v = buildView(s)
+    const bare = v.employees.find((e) => e.id === 'bare')!
+    const built = v.employees.find((e) => e.id === 'built')!
+    expect(pct(built.effectLabel)).toBeGreaterThan(pct(bare.effectLabel)) // the build shows
+  })
+})

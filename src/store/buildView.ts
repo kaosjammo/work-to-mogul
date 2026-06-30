@@ -26,7 +26,7 @@ import { FOUNDER_PERKS, FOUNDER_PERK_ORDER, type FounderPerkDef } from '../conte
 import { PRESTIGE_MILESTONES } from '../content/prestigeMilestones'
 import { ART_UPGRADES, ART_MILESTONE } from '../content/artManifest'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
-import { TRAIT_NAME } from '../content/traits'
+import { TRAIT_NAME, TRAIT_DEFS } from '../content/traits'
 import { TALENTS, TALENT_ORDER, type TalentTheme } from '../content/talents'
 import { SPECIALISATIONS, SPECS_BY_ROLE, REQUIRED_SPEC_LEVEL, MASTERY_SPEC_LEVEL } from '../content/specialisations'
 import { resolveBusiness } from '../engine/resolveBusiness'
@@ -343,7 +343,15 @@ function industryName(id: IndustryId | null): string | null {
 function employeeEffectLabel(e: EmployeeInstance): string {
   const role = ROLE_DEFS[e.role]
   const ch: EffectChannel | undefined = role?.primaryChannels[0]
-  const base = (ch && role?.baseMagnitude[ch]) || 0
+  // Reflect the employee's BUILD on its primary channel — traits + both specs on
+  // top of the role base — so a Rainmaker/Kingpin closer visibly out-earns a bare
+  // one on the roster card (affinity/Empire-Training are per-assignment, omitted here).
+  let base = (ch && role?.baseMagnitude[ch]) || 0
+  if (ch) {
+    for (const t of e.traits) base += TRAIT_DEFS[t]?.channelDeltas[ch] ?? 0
+    if (e.specialisation) base += SPECIALISATIONS[e.specialisation]?.channelDeltas[ch] ?? 0
+    if (e.specialisation2) base += SPECIALISATIONS[e.specialisation2]?.channelDeltas[ch] ?? 0
+  }
   const mag = base * RARITY_MULT[e.rarity] * (1 + 0.15 * (e.level - 1))
   const pct = Math.round(mag * 100)
   switch (ch) {
