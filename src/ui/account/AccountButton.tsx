@@ -28,6 +28,13 @@ export function AccountButton() {
     >
       <span aria-hidden>☁</span>
       <span className="h-2 w-2 rounded-full" style={{ background: dot }} aria-hidden />
+      {/* Signed-in: show the sync state in words (a title tooltip is invisible on
+          touch). Anonymous play stays compact (just the cloud + dot). */}
+      {signedIn && (
+        <span className="text-xs font-medium" style={{ color: dot }}>
+          {label}
+        </span>
+      )}
     </button>
   )
 }
