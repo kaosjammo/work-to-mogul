@@ -15,9 +15,9 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **187 tests / 30 files green** (`npx vitest run`), oxlint clean, production build boots.
+- **192 tests / 31 files green** (`npm.cmd test`), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
-- **Latest balance change (`c038473`, just landed):** prestige token yield re-tuned `sqrt → fifth-root` (`PRESTIGE_YIELD_EXP = 0.2`), a ~100,000× cut at the high end, after the user minted **1.48B tokens overnight**. This was a *reactive, eyeballed* fix — **not yet validated by any multi-ascension simulation** (see Risks). This is the single biggest open balance question.
+- **Prestige token cut validated — and found over-corrected (`c038473` + `673dbdc`):** the `sqrt → fifth-root` re-tune (`PRESTIGE_YIELD_EXP = 0.2`) is now confirmed by the new multi-ascension sim to *not* explode (run #1 banks 1 token, no ascension blows up — the 1.48B-overnight bug is a CI guard). But the **same sim shows it over-shot**: the prestige loop is now too flat to reward repeated ascensions (see Next task + Risks). **The live balance question flipped from "too much" to "too little."**
 
 **What exists (inventory — do not re-build):**
 
@@ -42,26 +42,28 @@ The game has a **rich first run and a thin second run.** Everything that makes a
 mogul idle game sticky long-term lives in the *prestige loop*, and that loop is the
 weakest, least-validated part of the game:
 
-1. **The prestige loop is balance-blind.** The harness (`harness.ts`) simulates one
-   greedy 10h *first run* and stops — the bot never ascends, spends tokens, or claims
-   Golden Deals. So the entire economy *after* the first prestige is untested by CI.
-   The 1.48B-token overnight blowup is the direct symptom: a balance regression in the
-   meta-loop was invisible until a human played it. **Until a simulation drives
-   ascensions, every prestige-balance change is a guess.** This is why it's Task 1.
+1. **The prestige loop was balance-blind — now measured, and it's too flat.**
+   `harness.ts`'s new `simulateProgression()` (`673dbdc`) drives 6 ascensions and
+   asserts the meta-economy. It confirmed the fifth-root cut stopped the 1.48B blowup
+   (run #1 banks 1 token) — **but the same curve shows ascending stopped feeling
+   powerful**: run lifetime plateaus from ascension #3 (~$7Qi, only +8% over three more
+   runs) while yield sticks at ~5 tokens/run. The core idle promise — "ascend → the
+   next run is dramatically faster" — isn't being delivered. *Measuring it turned the
+   open question into a concrete tuning target (see Next task).*
 2. **Prestige offers no *decisions*, only accumulation.** Empire Tokens buy a flat,
    buy-everything-eventually talent shop. There's no "this run I'll be a fast-money
    speculator vs. a slow industrial juggernaut" choice — so a second run *feels
    identical* to the first, just faster. Idle players churn when ascension #2 has no
-   new flavour. Roadmap item #2 (**founder perk choices**) is the fix and the highest
-   *retention* lever once the loop is measurable.
-3. **The token sink and token supply were tuned in separate commits and never
-   reconciled.** Deep Mastery talents (rank-50, growth 1.55) were sized as a
-   "bottomless sink" *before* the 100,000× token cut — they may now be unreachable
-   dead content, or the base tree may now take too many ascensions to fill. Unknown
-   without #1.
+   new flavour. Roadmap item #2 (**founder perk choices**) adds that decision — but
+   note perks on a *flat* slope still feel weak, so the slope re-tune comes first.
+3. **Sink/supply mismatch confirmed live.** The deep Mastery sink needs ~50 tokens for
+   rank 1, but the bot banks only **26 across 6 ascensions** — it's **dead content** at
+   realistic yields. The base tree also crawls (41% filled after 6 ascensions, ~+3%
+   each). The cut over-shot; the fix is a power-curve re-tune, not more content.
 
-Diagnosis in one line: **make the prestige loop measurable (Task 1), then make it a
-decision (Task 2). Everything else is secondary until those land.**
+Diagnosis in one line: **the loop is now measurable and it failed the eye-test — the
+slope is too flat. Re-tune the power curve (next), then add the founder-perk decision
+(Task 2). Everything else is secondary until those land.**
 
 ---
 
@@ -69,8 +71,8 @@ decision (Task 2). Everything else is secondary until those land.**
 
 | # | Task | Why it matters for retention | Status |
 |---|---|---|---|
-| **1** | **Progression harness v2 + prestige balance pass** | Converts the "1.48B overnight" class of bug into a failing test; unblocks all meta tuning | **NEXT — build now** |
-| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | Ready after #1 |
+| **1** | **Progression harness v2 ✅ + prestige *slope* balance pass** | Harness landed (`673dbdc`) — proved the cut is non-exploding but **over-corrected to a flat loop**; the power-curve re-tune is the live work | **harness DONE · re-tune NEXT** |
+| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | Ready after the re-tune |
 | **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | Backlog |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
@@ -81,25 +83,49 @@ Do **not** add a 9th industry / raw content tier — the existing systems aren't
 
 ---
 
-## Next highest-value task → Task 1: Progression harness v2 + prestige balance pass
+## Task 1 ✅ DONE — Progression harness v2 (`673dbdc`)
 
-Extend the existing deterministic harness so the **prestige loop** is simulated and
-pacing-asserted, then use it to validate (or correct) the just-landed token re-tune.
-Pure-engine work, no UI — lowest-risk way to make the meta-loop safe to iterate.
+`harness.ts` now has `simulateProgression()` + `progressionLoop.test.ts`: drives the
+greedy bot through 6 ascensions (4h/run), banks tokens, spends them cheapest-rank-first
+on the base tree, and asserts the meta-economy stays sane. **It validated the fifth-root
+cut — run #1 banks 1 token, no ascension explodes** (the 1.48B-overnight class of bug is
+now a CI guard). It also exposed the *opposite* problem — the new top priority below.
+
+---
+
+## Next highest-value task → Prestige slope balance pass
+
+**The harness proved the token cut over-corrected.** Measured curve (seed 7, 6
+ascensions, 4h/run — reproduce with `npx vitest run progressionLoop`):
+
+| run | run lifetime | tokens banked | cumulative | base tree |
+|---|---|---|---|---|
+| #1 | $2.43Qa | +1 | 1 | 22% |
+| #2 | $2.78Qi | +4 | 5 | 30% |
+| #3 | $6.51Qi | +5 | 10 | 33% |
+| #4 | $6.83Qi | +5 | 15 | 36% |
+| #5 | $7.06Qi | +5 | 20 | 39% |
+| #6 | $7.06Qi | +6 | 26 | 41% |
+
+The prestige loop is **too flat to be rewarding**:
+1. **Run output plateaus** — lifetime is basically flat from run #3 ($6.5Qi → $7.06Qi, +8% across three more ascensions) despite banking 16 more tokens. Talents barely move the run, so "ascend → next run is dramatically faster" doesn't happen.
+2. **Yield stuck at ~5/run, tree crawls** (+3%/ascension → ~20 ascensions to fill). Ascension #4+ gives almost nothing new.
+3. **Mastery sink unreachable** — 26 cumulative tokens vs ~50 for one Mastery rank; dead content at realistic yields.
+
+**Goal:** re-tune so each ascension *visibly* accelerates the next run and the tree is a
+satisfying — not glacial — journey, **without** re-opening the 1.48B blowup. The new
+harness is the guard: tighten its bounds to lock the target band.
 
 **Acceptance criteria**
-- [ ] `harness.ts` gains a **multi-ascension mode**: the bot ascends when `prestigePending` ≥ a sensible threshold (e.g. would gain ≥ 1 token AND lifetime past the next band), then **spends banked tokens** on talents via a documented greedy policy (cheapest-rank-first across the base tree), and continues for **N ascensions** (param, default ≥ 5) or a wall-clock budget.
-- [ ] New `SimResult` fields: `ascensions`, `tokensPerAscension[]`, `cumulativeTokens`, `talentRanksFilled`, and `runLifetimes[]` (lifetime earned per run).
-- [ ] A new test file (e.g. `progressionLoop.test.ts`) prints the per-ascension curve (like `harness.test.ts` does for run 1) **and** asserts pacing invariants:
-  - [ ] Tokens earned at ascension #1 is small (single digits) and **`tokensPerAscension` grows sub-exponentially** — no single ascension mints more than a bounded multiple (e.g. ≤ 50×) of the previous (catches the sqrt-style blowup).
-  - [ ] After N ascensions the **base talent tree is not 100% filled** (multi-ascension journey intact) **and** is not ~0% filled (tokens aren't uselessly scarce). Pick concrete bounds from the printed curve and lock them in.
-  - [ ] Each run's lifetime earnings **increases run-over-run** (talents compound) but stays within a sane band (no instant-max).
-- [ ] Document the chosen bot ascension/spend policy in a comment — it encodes "reasonable player" assumptions and must be legible for future tuning.
-- [ ] If the curve shows the deep **Mastery sink is unreachable** (first rank never affordable within N ascensions) **or** the base tree fills in < 3 ascensions, file the finding in `dev-progress.md` and propose a one-line constant tweak — but **balance changes are a separate, explicit follow-up commit**, not bundled into the harness commit.
-- [ ] `npm run build` ✓, `npm run lint` ✓, full suite green (≥ 187 + new tests). No save-format change.
+- [ ] Change **one lever at a time** and re-run the sim. Likely levers: (a) **stronger talent effects** so run lifetime climbs run-over-run instead of plateauing; (b) a **modest yield bump** between fifth-root and sqrt (e.g. raise `PRESTIGE_YIELD_EXP` toward ~0.25–0.3, or add a small per-ascension term).
+- [ ] Target curve (tune to taste, then lock as test bounds): by ascension #6, **run lifetime ≥ ~3× run #1's** (talents compound visibly), cumulative tokens reach **at/near the first Mastery rank** (sink reachable, not instant), and the base tree hits **~60–80%** by run #6 (a journey, still not maxed).
+- [ ] Keep the existing invariants green: run #1 still banks < 100 tokens; no single ascension mints > 20× the previous. **Update `progressionLoop.test.ts` bounds to the new target band in the same commit.**
+- [ ] Decide the Mastery sink explicitly: if still unreachable after the bump, lower `costBase`/`costGrowth` so rank 1 is affordable within ~3–4 ascensions, OR re-label it an "infinity sink for whales" in a code comment and accept it.
+- [ ] `npm run build` ✓, lint ✓, full suite green. No save-format change (pure constants).
 
-**Out of scope for Task 1:** any UI, any new currency, founder perks (that's Task 2).
-Keep it a pure measurement tool + at most one isolated balance-constant follow-up.
+**Then → Task 2: founder perk choices** (below) — perks add the *decision*, this pass
+adds the *power curve*. They're complementary: founder perks on a flat slope still feel
+weak, so do the slope first.
 
 ---
 
@@ -148,9 +174,9 @@ a unlock). Acceptance criteria to be written when Task 2 is close.
 
 ## Risks, balancing & UX notes for the main dev
 
-- **The token re-tune is unproven.** `c038473` cut yield ~100,000× by eyeball. Task 1 exists specifically to verify it. Do **not** layer Task 2's perks on top until the loop curve is printed and bounded — a perk that multiplies token yield could re-open the blowup.
-- **Late-game dampening landed (`17e9bdb`), harness held.** A parallel session cut the high-owned milestone + industry-tier multipliers (`defaultMilestones.ts` 500→2000-owned tiers to ×1.5 / smaller ×2, plus `economy.ts`) to slow the late first run. Verified this pass: it did **not** touch `harness.test.ts` and the harness is still green (6/6) — the landmarks stayed in-band, so no re-baseline was needed. General guard for the *next* such change: any balance edit that moves late-run income must re-run the harness and re-baseline `harness.test.ts` bounds **in the same commit** if landmarks shift. (Art registration for new quantum/space assets is still in-flight/uncommitted — doesn't affect balance.) This reinforces Task 1: first-run pacing is guarded; the *prestige* loop still isn't.
-- **Sink/supply mismatch is live.** Deep Mastery talents (`industrialist`/`grandmaster`/`overclock`, rank-50, growth 1.55) were sized for the *old* token flood. After Task 1 prints `cumulativeTokens` over N ascensions, decide: are they reachable? If not, either lower `costBase`/`costGrowth` or accept them as a true infinity-sink and say so in a comment.
+- **The token re-tune is proven non-exploding, but over-corrected.** `673dbdc`'s sim confirms `c038473` killed the blowup (run #1 = 1 token, no ascension > 20× the prior). The new risk is the *opposite*: the slope is too flat (run output plateaus by ascension #3). The Next-task re-tune must lift the slope **without** crossing back over the blowup line — the sub-exponential-yield assertion in `progressionLoop.test.ts` is the trip-wire; keep it green while raising the target band.
+- **Late-game dampening landed (`17e9bdb`), harness held.** A parallel session cut the high-owned milestone + industry-tier multipliers (`defaultMilestones.ts` 500→2000-owned tiers to ×1.5 / smaller ×2, plus `economy.ts`) to slow the late first run. Verified this pass: it did **not** touch `harness.test.ts` and the harness is still green (6/6) — the landmarks stayed in-band, so no re-baseline was needed. General guard for the *next* such change: any balance edit that moves late-run income must re-run the harness and re-baseline `harness.test.ts` bounds **in the same commit** if landmarks shift. (Quantum/space art registration is now complete and covered by `artManifest.test.ts` — doesn't affect balance.) This reinforces Task 1: first-run pacing is guarded; the *prestige* loop still isn't.
+- **Sink/supply mismatch confirmed (not hypothetical).** The sim banks **26 cumulative tokens over 6 ascensions** vs ~50 for a single Mastery rank — the deep Mastery talents (`industrialist`/`grandmaster`/`overclock`, rank-50, growth 1.55) are **unreachable dead content** at current yields. Resolve it as part of the slope re-tune: either the yield bump lifts cumulative tokens into Mastery range, or lower `costBase`/`costGrowth`, or explicitly re-label it a whale-only infinity sink in a comment. Don't leave it ambiguous.
 - **Harness fidelity caveat:** the current bot never claims Golden Deals or spends tokens, so its pacing intentionally ignores those. Task 1's bot adds token-spend; keep Golden-Deal claiming out (or deterministic) so `balance.test.ts`'s first-run invariants don't shift.
 - **Save safety:** Tasks 2–3 touch the save shape. Every new field needs a default-on-load migration + a regression test (we already have a save-compat guard pattern — extend it).
 - **Parallel-session hygiene:** another Claude session commits to `main`. Fetch/rebase before pushing; stage only files you changed. Docs-only commits (this reviewer loop) should never collide with engine commits.
