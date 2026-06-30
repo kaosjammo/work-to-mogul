@@ -24,6 +24,16 @@ export function BusinessesScreen() {
 
   return (
     <div>
+      {!hasAnyBusiness && (
+        <div
+          className="mb-3 rounded-2xl px-3 py-2 text-sm"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
+        >
+          👋 <span className="font-semibold" style={{ color: 'var(--text)' }}>New here?</span> Tap{' '}
+          <span className="font-semibold" style={{ color: '#6aa9ff' }}>Work Shift</span> below to earn your
+          first cash, then buy a business to start your empire.
+        </div>
+      )}
       <WorkCard />
       <IndustryTabs />
       <IndustryBanner industryId={activeId} name={ind.name} totalOwned={industryView.totalOwned} />
