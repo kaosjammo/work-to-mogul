@@ -4,285 +4,152 @@ Living roadmap, updated at the start of each development loop. Mobile-first
 idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 
 **Core flow:** Work shifts → wages → promotions → save capital → buy businesses
-→ choose industry paths → hire employees → automate → build an empire.
+→ choose industry paths → hire employees → automate → prestige → spend Empire
+Tokens → run again, faster.
+
+> Reviewer-maintained. The main dev session builds from the **Prioritised retention
+> roadmap** + **Acceptance criteria** below. Full loop-by-loop history lives in
+> [`dev-progress.md`](dev-progress.md).
 
 ---
 
-## Current implemented features
+## Current state (verified this pass)
 
-**Core loop & economy**
-- Work/Career early game (6 levels, wages/promotions) as the manual income bridge — players start here, **not** a Lemonade Stand. At max level the career "retires" into a **Senior Consultant** end-state: an optional over-time consulting bonus pool (capped) you Collect by tapping (`career.ts` + WorkCard strip).
-- Geometric-cost businesses with Buy x1/x10/x100/Max; **32 businesses across 8 industries** (incl. the ultra-endgame Quantum Frontier + Dyson Sphere capstone); per-business milestones **(25→2000 owned)**. Quick-spend: "Spend Cash" (best-value) + "Buy all affordable" upgrades.
-- **Balance overhaul (merged):** economy re-tuned for income-efficiency monotonicity — a pricier business is never a worse $/s-per-$ deal, both globally and within each industry ladder. Guarded by `src/content/balance.test.ts`.
-- Industries visible from the start, gated only by cost-of-entry (no artificial unlock payments).
-- 10 Hz fixed-timestep engine outside React; throttled view publish; manual→automated income pivot.
-- Offline/away catch-up (cap 2h) with welcome-back banner.
+- **187 tests / 30 files green** (`npx vitest run`), oxlint clean, production build boots.
+- Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
+- **Latest balance change (`c038473`, just landed):** prestige token yield re-tuned `sqrt → fifth-root` (`PRESTIGE_YIELD_EXP = 0.2`), a ~100,000× cut at the high end, after the user minted **1.48B tokens overnight**. This was a *reactive, eyeballed* fix — **not yet validated by any multi-ascension simulation** (see Risks). This is the single biggest open balance question.
 
-**Employees** (note: shipped beyond the "4 roles only" MVP rule — see Known issues)
-- 7 roles (Operator, Runner, Closer, Buyer + Gambler, Auditor, HR), 4 rarities, levels to 10, industry affinity.
-- Assignment to business slots; Auto-Assign Best; morale, risk events, crit, traits, named synergies.
-- L5 specialisations; employee fusion/promotion.
+**What exists (inventory — do not re-build):**
 
-**Meta**
-- Prestige/ascension → Empire Tokens; 17-talent tree; ascension milestones; 25-contract rotating board; Golden Deals / Time-Warp; 30 achievements (each grants difficulty-tiered Empire Tokens); 34 upgrades (ladder priced into the endgame).
+- **Core loop & economy:** Work/Career early game (6 levels) → Senior Consultant retirement end-state; 32 businesses / 8 industries, geometric cost, Buy x1/x10/x100/Max, per-business milestones to 2000 owned; income-efficiency **monotonicity invariant** guarded by `balance.test.ts`; 10 Hz fixed-timestep engine; offline catch-up (cap 2h).
+- **Employees:** 7 roles, 4 rarities, levels to 10, industry affinity, slot assignment + Auto-Assign Best, morale/risk/crit/traits, named synergies, L5 specialisations, fusion/promotion.
+- **Meta:** Prestige → Empire Tokens; **20-talent tree** (incl. 3 deep rank-50 "Mastery" sinks); 10 ascension milestones; 25-contract rotating board; 30 achievements (token-rewarding); 34 upgrades; Golden Deals / MEGA jackpots / Time-Warp / Profit Rush.
+- **Legibility/feel:** ⭐ best-ROI cue, ⏳ time-to-afford countdowns, `Next ✦ at $X` prestige cue, floating "+$" pops + haptics, reactive mascot, celebration toasts, nav badges, Settings (FX/haptics toggles), Stats tab.
+- **Platform:** versioned localStorage save + migrate hook; env-gated Supabase cloud save + accounts; complete gameplay art coverage; PWA (manifest + service worker).
 
-**Legibility / feel**
-- ⭐ Best-ROI reinvestment cue; ⏳ "time to afford" countdown on unaffordable businesses (derived from idle income); industry specialisation-bonus progress cue; rich Stats tab (economy/empire/progress + settings); haptics + floating-number toggles.
+**Known issues / notes**
 
-**Platform**
-- Versioned localStorage save (`tycoon:save`) with tolerant load + migrate hook; autosave.
-- **Cloud save + accounts (NEW, env-gated):** Supabase Auth (email+password) + `game_saves` table (RLS, anon key only). Account modal (login/signup/logout), HUD sync-status pill (Local/Syncing/Synced/Sync failed), debounced cloud upload on autosave, and a non-destructive local-vs-cloud conflict chooser on login. Fully disabled (anonymous local play) when `VITE_SUPABASE_*` are unset.
-- **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
-- PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
-- Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
-- **185 tests / 30 files**; oxlint clean; production build verified booting.
+- Employee systems already exceed the old "4 roles only" MVP rule — intentional pre-existing state, stable. Don't *add* roles; **do** deepen the existing ones (see Task 3).
+- Cloud save needs real Supabase creds for an on-device test (code verified, env-gated, anonymous play unaffected). `@supabase/supabase-js` adds ~153 kB gzip — deferred code-split.
+- No standalone `typecheck` script; `tsc -b` runs inside `npm run build`. Art coverage complete; only optional P2 emoji depth-glyphs remain.
 
-## Current known issues / notes
+---
 
-- **Employee complexity exceeds the stated MVP rule.** The loop directive says
-  "start with four roles only" and "do not add M4b complexity unless the core
-  loop is already stable." The core loop **is** stable and these systems already
-  shipped in prior loops — so this is documented as an intentional pre-existing
-  state, not something to expand further this loop. No rollback (would break
-  saves/tests); no further employee-depth additions while focusing on Goals 1–3.
-- **Cloud save needs real Supabase creds for a full on-device test.** Code is
-  built + env-gated; the **auth header handling is now verified** (publishable-key
-  fetch patch confirmed via a fake-key build — login sends apikey only, no bad
-  bearer). The reconcile → conflict chooser → sync paths are still code-reviewed
-  only locally (no live backend). Provision Supabase (`supabase-notes.md`) + set
-  Vercel env vars (`deploy-notes.md`) to exercise on-device. Use the **publishable**
-  (`sb_publishable_…`) or legacy anon JWT key — never a secret/service_role key.
-- **Bundle size grew** ~322 kB → ~539 kB raw (~98 kB → ~153 kB gzip) from
-  bundling `@supabase/supabase-js`. Acceptable, but a deferred optimization is to
-  code-split it (dynamic import) so anonymous/unconfigured builds stay lean.
-- **Art gaps** — effectively none for gameplay content (full coverage); only the
-  P2 emoji-based depth-system glyphs remain (intentional). See audit below.
-- No separate `typecheck` script; `tsc -b` runs inside `npm run build`.
+## Retention diagnosis (what's actually limiting D1/D7)
 
-## Missing Art / Placeholder Audit
+The game has a **rich first run and a thin second run.** Everything that makes a
+mogul idle game sticky long-term lives in the *prestige loop*, and that loop is the
+weakest, least-validated part of the game:
 
-Full detail in [`art-missing.md`](art-missing.md); style/specs in
-[`art-plan.md`](art-plan.md) + the implemented ledger in
-[`docs/MISSING_ART.md`](docs/MISSING_ART.md). **No referenced-but-missing asset
-ids** (coverage test green).
+1. **The prestige loop is balance-blind.** The harness (`harness.ts`) simulates one
+   greedy 10h *first run* and stops — the bot never ascends, spends tokens, or claims
+   Golden Deals. So the entire economy *after* the first prestige is untested by CI.
+   The 1.48B-token overnight blowup is the direct symptom: a balance regression in the
+   meta-loop was invisible until a human played it. **Until a simulation drives
+   ascensions, every prestige-balance change is a guess.** This is why it's Task 1.
+2. **Prestige offers no *decisions*, only accumulation.** Empire Tokens buy a flat,
+   buy-everything-eventually talent shop. There's no "this run I'll be a fast-money
+   speculator vs. a slow industrial juggernaut" choice — so a second run *feels
+   identical* to the first, just faster. Idle players churn when ascension #2 has no
+   new flavour. Roadmap item #2 (**founder perk choices**) is the fix and the highest
+   *retention* lever once the loop is measurable.
+3. **The token sink and token supply were tuned in separate commits and never
+   reconciled.** Deep Mastery talents (rank-50, growth 1.55) were sized as a
+   "bottomless sink" *before* the 100,000× token cut — they may now be unreachable
+   dead content, or the base tree may now take too many ascensions to fill. Unknown
+   without #1.
 
-**Coverage is now complete for all gameplay content** (the P0/P1 gaps from
-iteration 1 were generated + registered):
+Diagnosis in one line: **make the prestige loop measurable (Task 1), then make it a
+decision (Task 2). Everything else is secondary until those land.**
 
-| Priority | Status |
-|---|---|
-| **P0** Business icons (27) + Industry icons (7) | ✅ all authored + registered |
-| **P1** Industry banners + patterns (7×) | ✅ authored **and now rendered** — banner shows as a slim industry header (`IndustryBanner`), pattern as a faint texture on the entry box |
-| **P1** Upgrade icons (14) | ✅ all authored |
-| **P1** Employee portraits (17) | ✅ all authored (`ART_EMPLOYEES`, via `employeeArt()`) |
-| **P2** Depth-system glyphs (talents, milestones, specs, contracts, golden, fusion badges, ✦ token) + the new ☁ account/sync pill | ⏳ intentionally emoji — optional polish |
+---
 
-**Placeholders in active use:** effectively none for shipped content — the
-`fallback_*` SVGs remain only as safety nets for any future unmapped id.
+## Prioritised retention roadmap
 
-**Recommended next art batch:** none required for gameplay. Optional **P2 brand
-glyphs** only (Empire-Token ✦ mark, a cloud/sync icon for the account pill,
-talent/contract node frames).
+| # | Task | Why it matters for retention | Status |
+|---|---|---|---|
+| **1** | **Progression harness v2 + prestige balance pass** | Converts the "1.48B overnight" class of bug into a failing test; unblocks all meta tuning | **NEXT — build now** |
+| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | Ready after #1 |
+| **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | Backlog |
+| 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
+| 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
+| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
-## Next highest-value task
+Do **not** add a 9th industry / raw content tier — the existing systems aren't yet
+*differentiated* enough to justify more of them (see Deferred).
 
-Goals 1–3 (cloud save, art, mobile polish) are done, and the standing /goal's
-**legibility, meta-depth, active-play, and progression-feel** layers are now
-comprehensively shipped (see the latest loop summary). Verified sound this pass:
-both balance axes (cost-scaling monotonicity via `balance.test.ts`; the ~676-token
-talent sink vs token supply) and mobile layout (0 doc-overflow at 375px on every
-content-heavy tab). Cheap + safe increments are genuinely exhausted — the small,
-low-risk wins have all landed, so further marginal UI churn would be padding.
+---
 
-**Remaining work is larger, deliberate pieces — pick a direction before building**
-(each is hard to reverse and carries bloat/balance weight, so they want an explicit
-call rather than autonomous invention):
+## Next highest-value task → Task 1: Progression harness v2 + prestige balance pass
 
-| Direction | Value | Risk / cost |
-|---|---|---|
-| **9th industry / content tier** | More end-game depth | Low value at the margin — the 8th (Quantum) already exceeds a 10h run; must append at the cost-top to keep `balance.test` monotonic. |
-| **Prestige-2 / second meta layer** | High long-horizon depth | Large design + balance surface; touches prestige reset, a new currency, UI. |
-| **New employee role / strategic axis** | Deepens the signature mechanic | Revives cut scope (mentor/synergist); cross-employee effects are balance-sensitive; new composition + tests. |
-| **Seasonal / time-gated events** | Recurring re-engagement | Needs a wall-clock cadence design (the deferred daily/weekly contracts blocker). |
-| **Economy rescale** | Coherence | Re-price upgrades/employees/contracts onto the post-overhaul scale; currently *acceptable, not broken* — risky churn for low payoff. |
+Extend the existing deterministic harness so the **prestige loop** is simulated and
+pacing-asserted, then use it to validate (or correct) the just-landed token re-tune.
+Pure-engine work, no UI — lowest-risk way to make the meta-loop safe to iterate.
 
-Operational: **provision Supabase** + set Vercel env vars to test login/sync on a
-phone (`deploy-notes.md`); optional **code-split `@supabase/supabase-js`** to shrink
-the anonymous bundle. A parallel Claude session also commits here — fetch/rebase and
-stage only your own files before pushing.
+**Acceptance criteria**
+- [ ] `harness.ts` gains a **multi-ascension mode**: the bot ascends when `prestigePending` ≥ a sensible threshold (e.g. would gain ≥ 1 token AND lifetime past the next band), then **spends banked tokens** on talents via a documented greedy policy (cheapest-rank-first across the base tree), and continues for **N ascensions** (param, default ≥ 5) or a wall-clock budget.
+- [ ] New `SimResult` fields: `ascensions`, `tokensPerAscension[]`, `cumulativeTokens`, `talentRanksFilled`, and `runLifetimes[]` (lifetime earned per run).
+- [ ] A new test file (e.g. `progressionLoop.test.ts`) prints the per-ascension curve (like `harness.test.ts` does for run 1) **and** asserts pacing invariants:
+  - [ ] Tokens earned at ascension #1 is small (single digits) and **`tokensPerAscension` grows sub-exponentially** — no single ascension mints more than a bounded multiple (e.g. ≤ 50×) of the previous (catches the sqrt-style blowup).
+  - [ ] After N ascensions the **base talent tree is not 100% filled** (multi-ascension journey intact) **and** is not ~0% filled (tokens aren't uselessly scarce). Pick concrete bounds from the printed curve and lock them in.
+  - [ ] Each run's lifetime earnings **increases run-over-run** (talents compound) but stays within a sane band (no instant-max).
+- [ ] Document the chosen bot ascension/spend policy in a comment — it encodes "reasonable player" assumptions and must be legible for future tuning.
+- [ ] If the curve shows the deep **Mastery sink is unreachable** (first rank never affordable within N ascensions) **or** the base tree fills in < 3 ascensions, file the finding in `dev-progress.md` and propose a one-line constant tweak — but **balance changes are a separate, explicit follow-up commit**, not bundled into the harness commit.
+- [ ] `npm run build` ✓, `npm run lint` ✓, full suite green (≥ 187 + new tests). No save-format change.
+
+**Out of scope for Task 1:** any UI, any new currency, founder perks (that's Task 2).
+Keep it a pure measurement tool + at most one isolated balance-constant follow-up.
+
+---
+
+## Task 2 (next): Prestige v1 — founder perk choices
+
+When the player ascends, present **one choice of 3 founder perks** that re-flavours the
+coming run (not just +stats). The talent shop stays; this adds the *decision* on top.
+
+**Acceptance criteria (draft — refine after Task 1 lands)**
+- [ ] On ascend, the player picks 1 of 3 perks (e.g. **Industrialist** — businesses cheaper but slower; **Speculator** — Golden Deals/Time-Warp supercharged; **Taskmaster** — staff effects amplified). Perks are *divergent*, ideally with a downside, so the choice is real.
+- [ ] The chosen perk persists for the run, is visible in the HUD/Stats, and is **wiped on the next ascension** (re-chosen each run) — distinct from permanent talents.
+- [ ] Perks are **data-driven** (a `FOUNDER_PERKS` table like `talents.ts`) with a `content.test`-style guard that every perk's effect is actually wired (we've shipped dead-perk bugs before — don't repeat).
+- [ ] Save migration: existing saves load with **no perk selected** (neutral) until their next ascension; no data loss.
+- [ ] The **harness v2 bot picks a perk** (e.g. fixed or round-robin) so prestige-loop pacing stays measured with perks active.
+- [ ] Surfaced clearly on mobile: the ascend confirm flow shows the 3 perks with one-line effect text; choosing is one tap. Build/lint/tests green.
+
+---
+
+## Task 3 (backlog): Employee depth v2
+
+Deepen the *existing* roster into ongoing decisions rather than adding roles.
+Candidates (pick a thin slice, don't build all): per-employee **XP from active duty**
+that diverges from bought levels; **trait re-rolls / training** as a token/cash sink;
+**specialisation as a branching choice** (already have L5 specs — make it a fork, not
+a unlock). Acceptance criteria to be written when Task 2 is close.
+
+---
+
+## Backlog (post Task 1–3)
+
+- **Stronger industry identity:** give each of the 8 industries one *mechanical* signature (not just a number) — e.g. Finance compounds, Food has rush-hour windows. Reuse the existing signature-perk data table.
+- **Business event cards:** lightweight opportunity/crisis cards with a 2-option choice during idle stretches; deterministic spawn (reuse the Golden Deal spawn-counter pattern, not RNG, to stay harness-safe).
+- **Daily/weekly time-gated contracts:** needs a wall-clock cadence design (the long-standing blocker).
+- **Mobile/feel polish:** optional P2 brand glyphs (✦ Empire-Token mark, sync icon), sound layer behind the existing FX toggle, ascension celebration moment.
+- **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
 
 ## Deferred ideas
 
-- Batches B–E of art (industry dressing, upgrade icons, employee portraits, brand glyphs).
-- Real SVG authoring for P0/P1 art (out of scope this loop — docs only / optional lightweight placeholders).
-- Daily/weekly time-gated contracts (need a wall-clock cadence design).
+- 9th industry / raw content tier — **explicitly not now**; differentiate the 8 existing first.
+- Prestige-2 / second meta currency — premature until the *first* prestige loop is measured (Task 1) and given decisions (Task 2).
+- Economy rescale (re-pricing upgrades/employees onto the post-overhaul scale) — acceptable, not broken; risky churn for low payoff.
 - Loadout presets (low value vs employee-wipe on ascension).
-- Account features explicitly OUT of scope: profile pics, usernames, friends, leaderboards, payments, social.
-- Native packaging (Electron/Tauri/Capacitor/Steam) — explicitly not now.
+- Out of scope per /goal: dating/life-sim, major rewrites, new stack, secrets, backend changes, native packaging, social/leaderboards/payments.
 
-## Latest loop summary
+---
 
-**Goal-run — legibility, decision-support + meta/active depth.** On the standing /goal,
-high-value increments (each build + 185 Vitest + oxlint + browser-verified on a throwaway
-dev server, then fetch/rebase/pushed):
-- **System-completeness audit (found real gaps, not padding):** (a) added the **Great Workplace**
-  synergy — HR was the only role absent from every synergy, so there was no combo reason to staff
-  a morale specialist; (b) fixed **two dead industry signature perks** — Retail's *Franchise* and
-  Finance's *Compound Interest* were defined but had no effect (only 5 of 7 perks were wired).
-  Refactored perks into a data table + added a `content.test` guard so a future dead perk fails
-  loudly. Both verified harness-byte-identical (deep-specialisation rewards, zero pacing impact).
-- **Golden Deal depth** — (a) every 5th deal is a deterministic MEGA jackpot worth 5× (75 min
-  of idle income, 🌟 hotter gradient + stronger buzz); (b) claiming any deal now also kicks off
-  a 20s **Profit Rush** that doubles all-business profit (HUD chip + countdown). No RNG (a spawn
-  counter); one guarded line in the economy fold; harness-safe (the bot never claims deals, so
-  pacing is unchanged).
-- **Achievements now reward Empire Tokens + show progress** — each grants difficulty-tiered
-  tokens (1–5, ~85 total over the arc), spendable on talents (in the spirit of contracts +
-  ascension milestones). The Ascend list shows each locked goal's ✦ bounty *and a progress
-  bar* for countable goals (units/staff/industries/lifetime/ascensions/talents/upgrades);
-  the unlock toast shows `+N ✦`. A v1→v2 save migration back-grants rewards for
-  already-unlocked achievements (once, no double-grant). Harness-safe: the bot unlocks but
-  never spends tokens, so pacing is unchanged.
-- **"Saving toward" legibility, completed across all three surfaces** — (1) ⏳ "time to
-  afford" countdown on every unaffordable business; (2) `Next ✦ at $X lifetime` progress on
-  the Ascend screen (the "ascend now or wait?" decision); (3) the new-industry entry banner
-  now reads `~About 5m away at your current income`. All derived from idle income via a
-  coarse, flicker-free `formatEta()` (caps far-off goals at `10h+`).
-- **Every choice now states its outcome** — upgrade cards lead with the effect (`×2 profit`,
-  `−10% cost`); assigned staff slots show each member's contribution (`Lv N · <effect>`);
-  and the marquee **Assign → +$/s** preview shows the exact idle-income gain before assigning
-  a benched employee (computed in buildView against a non-mutating clone, gated to the open
-  sheet). Plus a **"🏭 Welcome to <Industry>!"** celebration when you enter a new industry.
-- **Fixed a stale Stats denominator** — "Industries entered" hardcoded `/7` but an 8th
-  industry exists; now derived from `INDUSTRY_ORDER.length` so it can't drift again.
-- **Save-compat regression guard** — a test locks in that saves written before newer
-  businesses/industries existed gain them with defaults on load while preserving owned counts.
-- Counts in this doc corrected to the real totals (30 achievements / 34 upgrades /
-  25 contracts / 17 talents / 32 businesses across 8 industries).
+## Risks, balancing & UX notes for the main dev
 
-**Goal-run — deep content + full feel layer (continued).** On the standing /goal,
-~18 further validated commits (each build + 173 tests + lint + browser-verified, pushed):
-- **8th industry — Quantum Frontier** (Quantum Computer → Antimatter → Wormhole →
-  Multiverse Exchange) + a **Dyson Sphere** space capstone, all appended at the top of
-  the cost curve so the monotonic-efficiency invariant holds with zero rank shifts;
-  plus a Quantum-affinity gambler (Zeta Quark), 2 Quantum upgrades, the **Quantum Leap**
-  synergy (2+ gamblers), 2 Quantum achievements, and ultra-endgame contracts (to $1Sx).
-- **Per-business milestones extended to 2000 owned** (harness byte-identical).
-- **Talent tree 10 → 17**: novel Golden Touch (Time-Warp value), Lucky Streak (Golden
-  Deal frequency), Empire Training (scales all staff effects), + stackable tiers.
-- **Full feel layer**: floating "+$" pops + haptics on every income source (work / tap /
-  golden / offline / ascension); reactive founder mascot (scoped to the Business tab);
-  cash-HUD magnitude tier-up pop; juicy celebration toasts; nav reward badges; ready-to-
-  collect pulse; a **Settings** panel (haptics + FX toggles, persisted); a first-run hint;
-  cloud-sync status shown in words.
-- **Hardening/tests**: added num + spend formatting/behaviour tests; defensive talent
-  folds; fixed a partial-state crash and an incomplete cooldown replace.
-
-**Session — depth + "satisfaction" pass** (standing /goal: deepest, most satisfying
-mobile idle mogul). Shipped in ~15 validated commits (each: `npm run build` + 165
-Vitest + oxlint + browser-verified on a throwaway dev server, then pushed):
-- **Pacing:** Food Truck unlocks in ~1 min (was ~80) — gentler cost-growth steepness
-  + lower Food gates; income-efficiency monotonicity invariant intact.
-- **Mobile cash HUD:** two-tier layout so cash is never truncated on a phone.
-- **Staff UX:** HIRE-first (no list shift on hire), a Hire-staff path from a business's
-  assignment sheet, self-documenting trait chips.
-- **Quick-spend:** "Spend Cash" (best-value greedy) + "Buy all affordable" upgrades.
-- **Depth:** achievements 14→28, upgrades 14→32 (endgame ladder to ~$1e21), contracts
-  14→22, ascension milestones 5→10, talents 10→15 (incl. a novel **Golden Touch** that
-  boosts Time-Warp payouts). All data-driven; harness/balance pacing unaffected.
-- **Satisfaction/feel:** floating "+$" pops + profit-burst + haptics on taps / Golden
-  Deals / rewards; reactive founder mascot (idle→working→excited); celebratory
-  welcome-back; nav badges for claimable contracts + worthwhile ascension; idle
-  "ready" pulse on manual businesses. A **Settings** section (Stats tab) toggles
-  haptics + floating numbers (persisted).
-- **Art:** integrated the generated money-themed layer (city backdrop, mascot poses,
-  cash VFX/props) behind a non-interactive ambient layer.
-
-**Bug fix — Supabase new publishable-key (`sb_publishable_…`) auth:** signup/login
-was failing with "Failed to fetch" because supabase-js sent the publishable key as
-`Authorization: Bearer …` (it's not a JWT). Fixed in `src/lib/supabase.ts` with a
-`global.fetch` patch (`sanitizeAuthHeaders`) that strips the bad bearer for
-publishable keys only — apikey-only request now; real access tokens + legacy `eyJ…`
-anon JWTs untouched (cloud save after login still works). Added `supabase.test.ts`
-(5 cases); docs clarify publishable vs anon vs never-secret. **lint ✓, 154 tests ✓,
-build ✓; verified live** (login request sends `apikey: sb_publishable_…`,
-`Authorization: null`).
-
-**Merged balance overhaul + committed/pushed everything:** brought the
-`happy-buck-3ad260` worktree (efficiency-monotonic economy re-tune + Senior
-Consultant retirement end-state + `balance.test`) into `main` via a clean
-zero-conflict 3-way merge (`d38a116`); **build ✓, lint ✓, 149 tests ✓**.
-Committed the whole project (cloud save, art, polish, balance) and **pushed
-`origin/main`** → Vercel auto-deploys. Worktree de-registered. This iteration:
-reconciled the roadmap with the merged reality (Senior Consultant, balance
-invariant, 149 tests, deployed). All three goals complete + live.
-
-**Iteration 7 — empty-state illustrations (Goal 3):** committed the full snapshot
-(`e1c5f23`), then wired two on-brand `state_empty_*` SVGs into the **Upgrades**
-(all-owned) and **Staff** (no-staff) empty states via an `art` prop on
-`Placeholder`. Build ✓, lint ✓, 146 tests ✓; assets serve 200. (3-file change
-left uncommitted for the user to fold in.)
-
-**Iteration 6 — art audit refresh (Goal 2):** confirmed all quality art is wired
-+ rendering (icons, 17 portraits in roster *and* hire list, banners, patterns);
-documented the remaining unused early **placeholder** assets (`states/*`,
-prestige visuals, `ART_UI` glyphs) as intentional (emoji reads cleaner) and the
-obsolete `artManifest.example.ts` as removable. No code change (avoided churn);
-146 tests green. **Goals 1–3 substantially complete** — next high-value steps are
-user-side: commit/push the untracked art, and provision Supabase for the live
-sync test.
-
-**Direct request — implemented newly-created artwork:** audited the generated art
-vs what the UI actually shows. Icons (27 businesses, 7 industries, 14 upgrades)
-and 17 employee portraits were already registered + rendered; the **7 industry
-banners + 7 patterns were registered but never displayed**. Wired them in: a new
-`IndustryBanner` slim header on the business screen (banner art + gradient + name)
-and the industry pattern as a faint texture on the entry box. **Build ✓, lint ✓,
-146 tests ✓**; browser-verified the banner/pattern swap per industry incl. the new
-Space art, no console errors / no failed asset loads. (Untracked art files still
-need a commit+push to deploy on Vercel.)
-
-**Iteration 5 — Goal 3 UI polish (industry-entry affordance):** the not-owned
-industry banner now shows a green "✓ You can afford to start — buy {first
-business} below" when affordable (symmetric with the existing unaffordable
-cue), clarifying the early-game industry-entry moment. **Build ✓, lint ✓, 146
-tests ✓**; clean-boot verified. Goals 1–3 substantially complete — remaining
-work is optional micro-polish + the user-side Supabase provisioning for the live
-sync test.
-
-**Iteration 4 — Goal 3 UI polish (overflow safety):** TopHUD made overflow-safe
-(cash `min-w-0`+`truncate`, controls `shrink-0`) so cash + buy-modes + the new
-account pill never overflow; WorkCard promotion line wraps gracefully. Confirmed
-`Icon` already prevents layout shift and Upgrades already has an empty state.
-**Build ✓, lint ✓, 146 tests ✓**; browser-verified at 360×740 (0 header/doc
-overflow, pill on-screen, 44px tap). Goals 1–3 now substantially complete.
-
-**Iteration 3 — Goal 3 UI polish (first pass, no redesign):** NavBar active tab
-now has a tint + inset accent bar + bold label; IndustryTabs colors entry cost by
-affordability (green ✓ when affordable, faint when not) and dims locked-out
-industries; BuyButton gained a soft accent shadow + press-scale; Work-shift +
-industry chips gained press feedback. Also fixed a repo-hygiene issue (vitest was
-running a parallel worktree copy → excluded `**/.claude/**`, back to 146/26).
-**Build ✓, lint ✓, 146 tests ✓**; verified the nav/industry styling via computed
-styles before a self-inflicted preview service-worker glitch (CSS-only changes;
-app code unaffected). Art coverage unchanged (complete). Remaining Goal-3 polish
-queued for iteration 4. Full entry in `dev-progress.md`.
-
-**Iteration 2 — Goal 1 (Supabase login + cloud save) implemented:** added
-`@supabase/supabase-js`, `src/lib/supabase.ts` (env-gated client + `vite-env.d.ts`
-typing), `src/save/cloud.ts` (game_saves upsert/fetch), save-layer cloud bridge
-(`snapshotEnvelope`/`readLocalEnvelope`/`applyEnvelope`/`summarizeEnvelope` +
-after-save hook), `src/store/accountStore.ts` (auth session, sync status,
-non-destructive reconcile/conflict), and account UI (`AccountModal`,
-`AccountButton` HUD pill); wired into HUD/App/main. Also (parallel work) **all
-gameplay art was generated + registered** — coverage now complete; refreshed
-`roadmap`/`art-missing` accordingly. **Build ✓, lint ✓, 146 tests ✓;
-browser-verified anonymous play unaffected** (clean boot, "Local" pill,
-not-configured modal). Configured login/sync paths await real Supabase creds.
-Known issue: bundle ~153 kB gzip (Supabase) — code-split deferred. Next:
-**Goal 3 UI polish**. Full entry in `dev-progress.md`.
-
-**Iteration 1 — docs/foundation (zero runtime change):** baseline (build ✓,
-lint ✓, 146 tests ✓). Created roadmap/dev-progress/art-missing/supabase-notes/
-.env.example; updated .gitignore (env-ignore), art-plan (stale banner),
-deploy-notes (env vars). Goal 2 art audit + Goal 1 foundation specced.
+- **The token re-tune is unproven.** `c038473` cut yield ~100,000× by eyeball. Task 1 exists specifically to verify it. Do **not** layer Task 2's perks on top until the loop curve is printed and bounded — a perk that multiplies token yield could re-open the blowup.
+- **Sink/supply mismatch is live.** Deep Mastery talents (`industrialist`/`grandmaster`/`overclock`, rank-50, growth 1.55) were sized for the *old* token flood. After Task 1 prints `cumulativeTokens` over N ascensions, decide: are they reachable? If not, either lower `costBase`/`costGrowth` or accept them as a true infinity-sink and say so in a comment.
+- **Harness fidelity caveat:** the current bot never claims Golden Deals or spends tokens, so its pacing intentionally ignores those. Task 1's bot adds token-spend; keep Golden-Deal claiming out (or deterministic) so `balance.test.ts`'s first-run invariants don't shift.
+- **Save safety:** Tasks 2–3 touch the save shape. Every new field needs a default-on-load migration + a regression test (we already have a save-compat guard pattern — extend it).
+- **Parallel-session hygiene:** another Claude session commits to `main`. Fetch/rebase before pushing; stage only files you changed. Docs-only commits (this reviewer loop) should never collide with engine commits.
+- **Mobile-first:** any new ascension/perk UI must work at 375px width with 44px tap targets and no doc overflow — the bars we just fixed (Golden Deal, fixed overlays) are easy to regress.
