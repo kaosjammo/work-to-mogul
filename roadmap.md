@@ -24,7 +24,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - L5 specialisations; employee fusion/promotion.
 
 **Meta**
-- Prestige/ascension → Empire Tokens; 17-talent tree; ascension milestones; 25-contract rotating board; Golden Deals / Time-Warp; 30 achievements; 34 upgrades (ladder priced into the endgame).
+- Prestige/ascension → Empire Tokens; 17-talent tree; ascension milestones; 25-contract rotating board; Golden Deals / Time-Warp; 30 achievements (each grants difficulty-tiered Empire Tokens); 34 upgrades (ladder priced into the endgame).
 
 **Legibility / feel**
 - ⭐ Best-ROI reinvestment cue; ⏳ "time to afford" countdown on unaffordable businesses (derived from idle income); industry specialisation-bonus progress cue; rich Stats tab (economy/empire/progress + settings); haptics + floating-number toggles.
@@ -35,7 +35,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
 - PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
 - Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
-- **176 tests / 30 files**; oxlint clean; production build verified booting.
+- **179 tests / 30 files**; oxlint clean; production build verified booting.
 
 ## Current known issues / notes
 
@@ -114,14 +114,20 @@ stage only your own files before pushing.
 
 ## Latest loop summary
 
-**Goal-run — legibility + correctness pass.** On the standing /goal, small high-value
-increments (each build + 176 Vitest + oxlint + browser-verified on a throwaway dev
+**Goal-run — legibility, decision-support + meta depth.** On the standing /goal, high-value
+increments (each build + 179 Vitest + oxlint + browser-verified on a throwaway dev
 server, then fetch/rebase/pushed):
-- **⏳ "Time to afford" countdown** on every unaffordable business — derived from current
-  idle income (`totalPps`), shown as `~Affordable in 5.7h`. A coarse `formatEta()` rounds
-  to one unit so the live value doesn't flicker and caps far-off goals at `10h+`. Turns a
-  dead disabled Buy button into a progress signal; lands on the next industry's entry
-  business too (all industries' first business is `unlocked` from the start).
+- **Achievements now reward Empire Tokens** — each grants difficulty-tiered tokens (1–5,
+  ~85 total over the arc), spendable on talents (in the spirit of contracts + ascension
+  milestones). The Ascend list shows each locked goal's ✦ bounty; the unlock toast shows
+  `+N ✦`. A v1→v2 save migration back-grants rewards for already-unlocked achievements
+  (once, no double-grant). Harness-safe: the bot unlocks but never spends tokens, so pacing
+  is unchanged.
+- **"Saving toward" legibility, completed across all three surfaces** — (1) ⏳ "time to
+  afford" countdown on every unaffordable business; (2) `Next ✦ at $X lifetime` progress on
+  the Ascend screen (the "ascend now or wait?" decision); (3) the new-industry entry banner
+  now reads `~About 5m away at your current income`. All derived from idle income via a
+  coarse, flicker-free `formatEta()` (caps far-off goals at `10h+`).
 - **Fixed a stale Stats denominator** — "Industries entered" hardcoded `/7` but an 8th
   industry exists; now derived from `INDUSTRY_ORDER.length` so it can't drift again.
 - **Save-compat regression guard** — a test locks in that saves written before newer
