@@ -1,6 +1,6 @@
 import { money } from '../../engine/num'
 import { useUpgrades } from '../../store/gameStore'
-import { buyUpgrade } from '../../store/actions'
+import { buyUpgrade, buyAllUpgrades } from '../../store/actions'
 import { Placeholder } from '../shared/Placeholder'
 import { Icon } from '../shared/Icon'
 
@@ -14,6 +14,7 @@ export function UpgradesScreen() {
   })
 
   const allOwned = upgrades.length > 0 && upgrades.every((u) => u.purchased)
+  const affordableCount = upgrades.filter((u) => !u.purchased && u.affordable).length
 
   if (allOwned) {
     return (
@@ -27,9 +28,21 @@ export function UpgradesScreen() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-        UPGRADES
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+          UPGRADES
+        </h2>
+        {affordableCount > 0 && (
+          <button
+            type="button"
+            onClick={buyAllUpgrades}
+            className="rounded-full px-3 text-xs font-bold transition active:scale-[0.98]"
+            style={{ minHeight: '36px', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+          >
+            Buy all affordable ({affordableCount})
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {sorted.map((u) => (
         <div

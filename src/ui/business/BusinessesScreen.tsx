@@ -2,6 +2,7 @@ import { useGameStore, useActiveIndustry } from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money } from '../../engine/num'
+import { spendCash } from '../../store/actions'
 import { WorkCard } from '../work/WorkCard'
 import { IndustryTabs } from './IndustryTabs'
 import { IndustryBanner } from './IndustryBanner'
@@ -18,12 +19,31 @@ export function BusinessesScreen() {
   if (!ind || !industryView) return null
 
   const pattern = industryPattern(activeId)
+  // Global quick-spend is only useful once you actually own a business.
+  const hasAnyBusiness = Object.values(businesses).some((b) => b.owned > 0)
 
   return (
     <div>
       <WorkCard />
       <IndustryTabs />
       <IndustryBanner industryId={activeId} name={ind.name} totalOwned={industryView.totalOwned} />
+
+      {hasAnyBusiness && (
+        <button
+          type="button"
+          onClick={spendCash}
+          title="Spend your cash on the best-value buys across all your businesses"
+          className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-2xl px-3 text-sm font-bold transition active:scale-[0.99]"
+          style={{
+            minHeight: 'var(--tap)',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            color: 'var(--accent)',
+          }}
+        >
+          💸 Spend Cash <span className="font-normal" style={{ color: 'var(--text-dim)' }}>· best value</span>
+        </button>
+      )}
 
       {!industryView.ownsAny && (
         <div

@@ -5,6 +5,7 @@ import { PRESTIGE_SCALE } from './economy'
 import { hireEmployee, assignToFirstFreeSlot } from './employees/roster'
 import { initialGameState } from '../store/initialState'
 import { ACHIEVEMENTS } from '../content/achievements'
+import { UPGRADES } from '../content/upgrades'
 import type { GameState } from '../types/domain'
 
 describe('achievements', () => {
@@ -60,21 +61,29 @@ describe('achievements', () => {
 
   it('every achievement is reachable — a maxed state unlocks them all', () => {
     const s = initialGameState(0)
-    s.cash = 1e9
+    s.cash = 1e12
     s.career.totalShifts = 999
     s.career.level = 5
-    s.lifetimeEarnings = 1e9
-    s.prestige.resets = 1
-    // Own ≥1 in all 7 industries' first business (lemonade also at 500).
+    s.lifetimeEarnings = 1e18 // covers millionaire → quintillionaire
+    s.prestige.resets = 10 // covers first/3/10 ascensions
+    s.prestige.spentPoints = 10 // talented
+    s.upgradesPurchased = Object.keys(UPGRADES) // fully_upgraded
+    // Own ≥1 in all 7 industries' first business; lemonade maxed for the
+    // unit-count + specialist goals; Mars Colony for the capstone goal.
     const firstBiz = ['lemonade', 'corner_shop', 'mobile_app', 'apartments', 'courier', 'solar_farm', 'satellite']
     for (const id of firstBiz) {
-      s.businesses[id].owned = id === 'lemonade' ? 500 : 1
+      s.businesses[id].owned = id === 'lemonade' ? 1000 : 1
       s.businesses[id].unlocked = true
     }
-    // 10 staff incl. an operator that automates lemonade.
+    s.businesses.mars_colony.owned = 1
+    s.businesses.mars_colony.unlocked = true
+    // 25 staff incl. an operator that automates lemonade; one epic, one maxed level.
     const op = hireEmployee(s, 'mickey_gears')!
     assignToFirstFreeSlot(s, op, 'lemonade')
-    for (let i = 0; i < 9; i++) hireEmployee(s, 'flash_ortega')
+    for (let i = 0; i < 24; i++) hireEmployee(s, 'flash_ortega')
+    const emps = Object.values(s.employees)
+    emps[0].rarity = 'epic' // epic_hire
+    emps[1].level = 10 // maxed_employee
 
     checkAchievements(s)
     expect(s.achievementsUnlocked.length).toBe(ACHIEVEMENTS.length)

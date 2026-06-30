@@ -5,6 +5,7 @@
 import type { BusinessId, BuyMode, IndustryId, TabId } from '../types/domain'
 import { getEngineState, resetEngineState } from '../engine/engineState'
 import { purchase, tapBusiness } from '../engine/buy'
+import { spendCashBestValue, buyAllAffordableUpgrades } from '../engine/spend'
 import { resolveQuantity } from '../engine/economy'
 import { startShift, claimConsulting } from '../engine/career'
 import {
@@ -54,6 +55,32 @@ export function buyBusiness(id: BusinessId): void {
 
 export function tap(id: BusinessId): void {
   tapBusiness(getEngineState(), id)
+  publishNow()
+}
+
+/** Quick-spend: pour spare cash into the best-value business buys (optimised). */
+export function spendCash(): void {
+  const s = getEngineState()
+  const before = [...s.milestonesReached]
+  const { units, spent } = spendCashBestValue(s)
+  if (units <= 0) return
+  const msgs = newlyReached(before, s.milestonesReached)
+    .map(describeMilestone)
+    .filter((m): m is NonNullable<typeof m> => m != null)
+    .map((m) => m.text)
+  msgs.push(`💸 Spent ${money(spent)} · +${units} ${units === 1 ? 'unit' : 'units'}`)
+  useUiStore.getState().pushCelebrations(msgs)
+  publishNow()
+}
+
+/** Quick-spend: buy every affordable upgrade in one tap. */
+export function buyAllUpgrades(): void {
+  const s = getEngineState()
+  const { count, spent } = buyAllAffordableUpgrades(s)
+  if (count <= 0) return
+  useUiStore
+    .getState()
+    .pushCelebrations([`⚡ ${count} upgrade${count === 1 ? '' : 's'} · ${money(spent)}`])
   publishNow()
 }
 

@@ -7,6 +7,8 @@ import type { GameState } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
 import { ACHIEVEMENTS } from '../content/achievements'
 import { MAX_CAREER_LEVEL } from '../content/career'
+import { MAX_EMPLOYEE_LEVEL } from '../content/roles'
+import { UPGRADES } from '../content/upgrades'
 import { resolveBusiness } from './resolveBusiness'
 
 function totalOwned(s: GameState): number {
@@ -14,6 +16,21 @@ function totalOwned(s: GameState): number {
   for (const id in s.businesses) n += s.businesses[id].owned
   return n
 }
+
+function maxSingleOwned(s: GameState): number {
+  let max = 0
+  for (const id in s.businesses) max = Math.max(max, s.businesses[id].owned)
+  return max
+}
+
+function ownsInIndustry(s: GameState, industryId: string): boolean {
+  for (const id in s.businesses) {
+    if (s.businesses[id].owned > 0 && BUSINESSES[id].industryId === industryId) return true
+  }
+  return false
+}
+
+const UPGRADE_COUNT = Object.keys(UPGRADES).length
 
 function industriesEntered(s: GameState): number {
   const set = new Set<string>()
@@ -46,6 +63,22 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   millionaire: (s) => s.lifetimeEarnings >= 1e6,
   billionaire: (s) => s.lifetimeEarnings >= 1e9,
   first_ascension: (s) => s.prestige.resets >= 1,
+
+  // ---- End-game ladder ----
+  trillionaire: (s) => s.lifetimeEarnings >= 1e12,
+  quadrillionaire: (s) => s.lifetimeEarnings >= 1e15,
+  quintillionaire: (s) => s.lifetimeEarnings >= 1e18,
+  thousand_units: (s) => totalOwned(s) >= 1000,
+  specialist: (s) => maxSingleOwned(s) >= 500,
+  reach_space: (s) => ownsInIndustry(s, 'space'),
+  mars_colony: (s) => (s.businesses.mars_colony?.owned ?? 0) >= 1,
+  ascend_three: (s) => s.prestige.resets >= 3,
+  ascend_ten: (s) => s.prestige.resets >= 10,
+  talented: (s) => s.prestige.spentPoints >= 10,
+  epic_hire: (s) => Object.values(s.employees).some((e) => e.rarity === 'epic'),
+  maxed_employee: (s) => Object.values(s.employees).some((e) => e.level >= MAX_EMPLOYEE_LEVEL),
+  big_team: (s) => Object.keys(s.employees).length >= 25,
+  fully_upgraded: (s) => s.upgradesPurchased.length >= UPGRADE_COUNT,
 }
 
 /**
