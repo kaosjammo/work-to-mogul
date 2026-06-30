@@ -121,7 +121,7 @@ export function EmployeesScreen() {
               type="button"
               onClick={autoAssign}
               className="rounded-full px-3 text-xs font-bold"
-              style={{ minHeight: '36px', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+              style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
             >
               ✨ Auto-Assign ({benchedCount})
             </button>

@@ -144,7 +144,7 @@ export function AssignmentSheet() {
                     type="button"
                     onClick={goHire}
                     className="rounded-full px-2.5 py-1 text-xs font-bold"
-                    style={{ minHeight: '32px', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+                    style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
                   >
                     ＋ Hire staff
                   </button>

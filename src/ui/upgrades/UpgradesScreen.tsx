@@ -37,7 +37,7 @@ export function UpgradesScreen() {
             type="button"
             onClick={buyAllUpgrades}
             className="rounded-full px-3 text-xs font-bold transition active:scale-[0.98]"
-            style={{ minHeight: '36px', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+            style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
           >
             Buy all affordable ({affordableCount})
           </button>
