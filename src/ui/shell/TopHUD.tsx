@@ -50,7 +50,10 @@ export function TopHUD() {
         <div className="flex min-w-0 flex-1 flex-col">
           <span
             key={popKey}
-            className={`tnum truncate text-2xl font-bold leading-tight ${popKey > 0 ? 'cash-pop' : ''}`}
+            // leading-normal (not -tight): the 24px bold glyph ink is ~32px tall, so a
+            // 30px tight line box + truncate's overflow:hidden shaved the top & bottom of
+            // the hero number. Normal leading clears the ink with margin to spare.
+            className={`tnum truncate text-2xl font-bold leading-normal ${popKey > 0 ? 'cash-pop' : ''}`}
             style={{ color: 'var(--accent)', transformOrigin: 'left center' }}
           >
             {money(cash)}

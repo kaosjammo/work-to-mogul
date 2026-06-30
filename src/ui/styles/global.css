@@ -124,7 +124,8 @@ body {
 
 .wealth-stage {
   position: relative;
-  min-height: clamp(230px, 32vh, 360px);
+  /* Explicit height (not min-height) so the mascot's % height resolves against it. */
+  height: clamp(230px, 32vh, 360px);
   margin-top: 18px;
   overflow: hidden;
   pointer-events: none;
@@ -171,7 +172,10 @@ body {
 .wealth-stage__mascot {
   left: 50%;
   bottom: 0;
-  width: clamp(150px, 22vw, 235px);
+  /* Size by HEIGHT so the whole figure (head included) always fits the stage —
+     the mascot is a ~1:2 tall figure and was overflowing the top when sized by width. */
+  height: 94%;
+  width: auto;
   transform: translateX(-50%);
 }
 
@@ -197,7 +201,7 @@ body {
   }
 
   .wealth-stage {
-    min-height: 220px;
+    height: 220px;
     margin-top: 12px;
   }
 
@@ -215,10 +219,8 @@ body {
     right: -10px;
     width: 112px;
   }
-
-  .wealth-stage__mascot {
-    width: 148px;
-  }
+  /* mascot stays height-bound (94% of the stage) — no width override, so it
+     never overflows the shorter mobile stage. */
 }
 
 button {
