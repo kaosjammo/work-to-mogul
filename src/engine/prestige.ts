@@ -4,7 +4,7 @@
 //  milestones) and keeps only the permanent prestige multiplier.
 // ============================================================
 import type { GameState } from '../types/domain'
-import { prestigePointsFor, PRESTIGE_SCALE } from './economy'
+import { prestigePointsFor, PRESTIGE_SCALE, PRESTIGE_YIELD_EXP } from './economy'
 import { initialGameState } from '../store/initialState'
 import { startCash, tokenYieldMult } from './talents'
 import { checkPrestigeMilestones } from './prestigeMilestones'
@@ -15,22 +15,28 @@ export function prestigePending(state: GameState): number {
   return Math.floor(base * tokenYieldMult(state))
 }
 
+// Lifetime that yields exactly `base` prestige points: invert floor((L/scale)^exp),
+// i.e. L = base^(1/exp) × scale. (1/0.2 = 5, a fifth-power band boundary.)
+function lifetimeForBase(base: number): number {
+  return Math.pow(base, 1 / PRESTIGE_YIELD_EXP) * PRESTIGE_SCALE
+}
+
 /**
  * Lifetime earnings at which `prestigePending` next increases — the start of the
- * next sqrt "band". `prestigePending` is constant within a band (base is integer),
+ * next yield "band". `prestigePending` is constant within a band (base is integer),
  * so the next gain always lands at this boundary. Lets the UI answer the core
  * prestige decision: "ascend now, or hold out for one more token?".
  */
 export function nextTokenLifetime(state: GameState): number {
   const base = prestigePointsFor(state.lifetimeEarnings)
-  return (base + 1) * (base + 1) * PRESTIGE_SCALE
+  return lifetimeForBase(base + 1)
 }
 
 /** Progress (0..1) through the current band toward the next token. */
 export function nextTokenProgress(state: GameState): number {
   const base = prestigePointsFor(state.lifetimeEarnings)
-  const bandStart = base * base * PRESTIGE_SCALE
-  const bandEnd = (base + 1) * (base + 1) * PRESTIGE_SCALE
+  const bandStart = lifetimeForBase(base)
+  const bandEnd = lifetimeForBase(base + 1)
   if (bandEnd <= bandStart) return 0
   return Math.min(1, Math.max(0, (state.lifetimeEarnings - bandStart) / (bandEnd - bandStart)))
 }

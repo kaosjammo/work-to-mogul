@@ -96,9 +96,10 @@ describe('resolveBusiness folds × owned (rule #1)', () => {
 })
 
 describe('prestige', () => {
-  it('grants ~1 point at the prestige scale and scales by sqrt', () => {
+  it('grants ~1 point at the prestige scale and scales gently (fifth-root)', () => {
     expect(prestigePointsFor(PRESTIGE_SCALE)).toBe(1)
-    expect(prestigePointsFor(4 * PRESTIGE_SCALE)).toBe(2)
+    expect(prestigePointsFor(32 * PRESTIGE_SCALE)).toBe(2) // 32^0.2 = 2
+    expect(prestigePointsFor(243 * PRESTIGE_SCALE)).toBe(3) // 3^5 = 243
     expect(prestigePointsFor(0)).toBe(0)
   })
 })

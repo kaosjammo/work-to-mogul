@@ -42,7 +42,7 @@ describe('prestige', () => {
 
   it('grants spendable tokens and wipes the run', () => {
     const s = initialGameState(0)
-    s.lifetimeEarnings = 4 * PRESTIGE_SCALE // sqrt(4) → 2 tokens
+    s.lifetimeEarnings = 32 * PRESTIGE_SCALE // 32^0.2 = 2 tokens
     s.cash = 123456
     s.career.level = 3
     s.businesses.lemonade.owned = 50
@@ -63,19 +63,19 @@ describe('prestige', () => {
 
   it('reports the lifetime needed for the next token + band progress', () => {
     const s = initialGameState(0)
-    // Just past the 2-token boundary (sqrt(4)=2): next token (3) lands at 9×scale.
-    s.lifetimeEarnings = 4 * PRESTIGE_SCALE
+    // At the 2-token boundary (2^5 = 32×scale): next token (3) lands at 3^5 = 243×scale.
+    s.lifetimeEarnings = 32 * PRESTIGE_SCALE
     expect(prestigePointsFor(s.lifetimeEarnings)).toBe(2)
-    expect(nextTokenLifetime(s)).toBe(9 * PRESTIGE_SCALE)
+    expect(nextTokenLifetime(s)).toBeCloseTo(243 * PRESTIGE_SCALE)
     expect(nextTokenProgress(s)).toBeCloseTo(0) // at the band start
 
-    // Halfway through the 2→3 band (between 4× and 9× scale).
-    s.lifetimeEarnings = 6.5 * PRESTIGE_SCALE
-    expect(nextTokenProgress(s)).toBeCloseTo((6.5 - 4) / (9 - 4))
+    // Halfway through the 2→3 band (between 32× and 243× scale).
+    s.lifetimeEarnings = 137.5 * PRESTIGE_SCALE
+    expect(nextTokenProgress(s)).toBeCloseTo((137.5 - 32) / (243 - 32))
 
     // From a standing start, the first token is one scale-unit of lifetime away.
     s.lifetimeEarnings = 0
-    expect(nextTokenLifetime(s)).toBe(PRESTIGE_SCALE)
+    expect(nextTokenLifetime(s)).toBeCloseTo(PRESTIGE_SCALE)
   })
 
   it('accumulates tokens across multiple ascensions and preserves talents', () => {
@@ -83,7 +83,7 @@ describe('prestige', () => {
     s.lifetimeEarnings = PRESTIGE_SCALE
     prestigeReset(s) // +1
     buyTalent(s, 'magnate') // spend the token on a talent
-    s.lifetimeEarnings = 9 * PRESTIGE_SCALE
+    s.lifetimeEarnings = 243 * PRESTIGE_SCALE // 243^0.2 = 3 tokens
     prestigeReset(s) // +3 → total 4
     expect(s.prestige.totalPoints).toBe(4)
     expect(s.prestige.talents.magnate).toBe(1) // talent survives the ascension

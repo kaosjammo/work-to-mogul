@@ -185,7 +185,7 @@ describe('tempo talents', () => {
     s.prestige.totalPoints = 99
     buyTalent(s, 'prestige_scholar') // +15% token yield
     expect(tokenYieldMult(s)).toBeCloseTo(1.15)
-    s.lifetimeEarnings = 100 * PRESTIGE_SCALE // sqrt(100) = 10 base tokens → floor(10*1.15)=11
+    s.lifetimeEarnings = 100_000 * PRESTIGE_SCALE // 100000^0.2 = 10 base tokens → floor(10*1.15)=11
     const before = s.prestige.totalPoints
     prestigeReset(s)
     expect(s.prestige.totalPoints - before).toBe(11)
