@@ -53,6 +53,11 @@ export const CONTRACTS: ContractDef[] = [
   { id: 'earn_1qa', name: 'Fifteen Figures', description: 'Earn $1Qa lifetime', icon: '🏦', metric: 'lifetime', target: 1e15, rewardTokens: 6 },
   { id: 'own_5000', name: 'Galactic Empire', description: 'Own 5,000 businesses', icon: '🌐', metric: 'totalOwned', target: 5000, rewardTokens: 8 },
   { id: 'earn_1qi', name: 'Astronomical Wealth', description: 'Earn $1Qi lifetime', icon: '🌌', metric: 'lifetime', target: 1e18, rewardTokens: 8 },
+
+  // ---- Quantum / ultra-endgame (requires reaching the 8th industry) ----
+  { id: 'all_eight', name: 'Multiversal', description: 'Operate in all 8 industries', icon: '🔮', metric: 'industries', target: 8, rewardTokens: 10 },
+  { id: 'own_10000', name: 'Cosmic Conglomerate', description: 'Own 10,000 businesses', icon: '♾️', metric: 'totalOwned', target: 10000, rewardTokens: 12 },
+  { id: 'earn_1sx', name: 'Sextillionaire', description: 'Earn $1Sx lifetime', icon: '💠', metric: 'lifetime', target: 1e21, rewardTokens: 12 },
 ]
 
 export const CONTRACT_BY_ID: Record<string, ContractDef> = Object.fromEntries(
