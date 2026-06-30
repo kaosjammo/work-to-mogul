@@ -6,7 +6,7 @@
 // ============================================================
 import type { GameState, GoldenState } from '../types/domain'
 import { automatedIncomePerSec } from './catchUp'
-import { offlineMult, goldenValueMult } from './talents'
+import { offlineMult, goldenValueMult, goldenFreqMult } from './talents'
 
 export const GOLDEN_SPAWN_INTERVAL_MS = 120_000 // ~2 min between deals
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
@@ -37,7 +37,7 @@ export function tickGolden(state: GameState, dtMs: number): void {
   g.cooldownMs -= dtMs
   if (g.cooldownMs <= 0) {
     g.offerMsLeft = GOLDEN_OFFER_WINDOW_MS
-    g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS
+    g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
   }
 }
 
@@ -50,7 +50,7 @@ export function claimGoldenDeal(state: GameState): number {
   if (!g || g.offerMsLeft <= 0) return 0
   const earned = timeWarpValue(state)
   g.offerMsLeft = 0
-  g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS
+  g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
   if (earned > 0 && Number.isFinite(earned)) {
     state.cash += earned
     state.lifetimeEarnings += earned

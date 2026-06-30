@@ -10,10 +10,11 @@ import {
   offlineMult,
   tokenYieldMult,
   goldenValueMult,
+  goldenFreqMult,
   staffEffectMult,
   startCash,
 } from './talents'
-import { timeWarpValue } from './golden'
+import { timeWarpValue, claimGoldenDeal, GOLDEN_SPAWN_INTERVAL_MS } from './golden'
 import { computeEmployeeEffects } from './employees/composition'
 import { economyMultipliers, PRESTIGE_SCALE } from './economy'
 import { prestigeReset } from './prestige'
@@ -149,6 +150,16 @@ describe('tempo talents', () => {
     expect(staffEffectMult(s)).toBeCloseTo(1.1)
     const after = computeEmployeeEffects(s, BUSINESSES.lemonade, s.businesses.lemonade).profitAdd
     expect(after).toBeCloseTo(before * 1.1, 5)
+  })
+
+  it('lucky streak makes Golden Deals more frequent (shorter cooldown)', () => {
+    const s = withTokens(99)
+    expect(goldenFreqMult(s)).toBeCloseTo(1)
+    buyTalent(s, 'lucky_streak') // +20% frequency
+    expect(goldenFreqMult(s)).toBeCloseTo(1.2)
+    s.golden = { offerMsLeft: 1000, cooldownMs: 0 } // an offer is up
+    claimGoldenDeal(s)
+    expect(s.golden.cooldownMs).toBeCloseTo(GOLDEN_SPAWN_INTERVAL_MS / 1.2, 1)
   })
 
   it('prestige scholar increases tokens banked at ascension', () => {

@@ -31,6 +31,7 @@ export interface TalentDef {
   tokenYieldPerRank?: number // prestige tokens gained ×(1 + x·rank)
   goldenMultPerRank?: number // Golden Deal / Time-Warp payout ×(1 + x·rank)
   staffEffectPerRank?: number // every employee's effect magnitude ×(1 + x·rank)
+  goldenFreqPerRank?: number // Golden Deals spawn ×(1 + x·rank) as often (shorter cooldown)
 }
 
 export const TALENTS: Record<string, TalentDef> = {
@@ -179,6 +180,16 @@ export const TALENTS: Record<string, TalentDef> = {
     cost: [3, 7, 12, 18],
     goldenMultPerRank: 0.25,
   },
+  lucky_streak: {
+    id: 'lucky_streak',
+    name: 'Lucky Streak',
+    blurb: 'Golden Deals appear more often.',
+    theme: 'Tempo',
+    icon: '🎰',
+    maxRank: 4,
+    cost: [3, 7, 12, 18],
+    goldenFreqPerRank: 0.2,
+  },
   idle_mastery: {
     id: 'idle_mastery',
     name: 'Idle Mastery',
@@ -218,6 +229,7 @@ export const TALENT_ORDER: string[] = [
   'momentum',
   'idle_mastery',
   'golden_touch',
+  'lucky_streak',
   'prestige_scholar',
 ]
 

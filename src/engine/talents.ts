@@ -59,6 +59,7 @@ type ScalarTalentKey =
   | 'tokenYieldPerRank'
   | 'goldenMultPerRank'
   | 'staffEffectPerRank'
+  | 'goldenFreqPerRank'
 
 function sumPerRank(state: GameState, key: ScalarTalentKey): number {
   let sum = 0
@@ -138,6 +139,11 @@ export function staffEffectMult(state: GameState): number {
   return 1 + sumPerRank(state, 'staffEffectPerRank')
 }
 
+/** Golden Deal frequency multiplier (≥ 1, from Lucky Streak) — divides the cooldown. */
+export function goldenFreqMult(state: GameState): number {
+  return 1 + sumPerRank(state, 'goldenFreqPerRank')
+}
+
 /** Cash granted at the start of each run (highest Seed Capital rank). */
 export function startCash(state: GameState): number {
   let cash = 0
@@ -170,5 +176,6 @@ export function talentLabel(def: TalentDef, rank: number): string {
   if (def.tokenYieldPerRank) return `+${pct(def.tokenYieldPerRank)}% token yield`
   if (def.goldenMultPerRank) return `+${pct(def.goldenMultPerRank)}% Time Warp value`
   if (def.staffEffectPerRank) return `+${pct(def.staffEffectPerRank)}% staff effectiveness`
+  if (def.goldenFreqPerRank) return `Golden Deals +${pct(def.goldenFreqPerRank)}% as often`
   return ''
 }
