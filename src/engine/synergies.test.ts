@@ -59,6 +59,23 @@ describe('named synergies', () => {
     expect(eff.critMult).toBeCloseTo(5.5, 5)
   })
 
+  it('Great Workplace (HR + a team of 3+) adds profit', () => {
+    const s = setup(['hr', 'closer', 'runner'])
+    const eff = computeEmployeeEffects(s, BUSINESSES.lemonade, s.businesses.lemonade)
+    expect(eff.activeSynergies).toContain('great_workplace')
+  })
+
+  it('Great Workplace needs HR present AND 3+ total staff', () => {
+    const noHr = setup(['closer', 'runner', 'buyer']) // 3 staff, no HR
+    expect(
+      computeEmployeeEffects(noHr, BUSINESSES.lemonade, noHr.businesses.lemonade).activeSynergies,
+    ).not.toContain('great_workplace')
+    const tooFew = setup(['hr', 'closer']) // HR but only 2 total
+    expect(
+      computeEmployeeEffects(tooFew, BUSINESSES.lemonade, tooFew.businesses.lemonade).activeSynergies,
+    ).not.toContain('great_workplace')
+  })
+
   it('no synergy with a single role', () => {
     const s = setup(['runner'])
     const eff = computeEmployeeEffects(s, BUSINESSES.lemonade, s.businesses.lemonade)

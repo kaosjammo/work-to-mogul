@@ -75,6 +75,15 @@ export const SYNERGY_DEFS: SynergyDef[] = [
       m.profitAdd += 0.4
     },
   },
+  {
+    id: 'great_workplace',
+    label: 'Great Workplace',
+    blurb: 'HR + a team of 3+ — happy staff earn more',
+    test: (c) => has(c, 'hr') && Object.values(c).reduce((a, b) => a + (b ?? 0), 0) >= 3,
+    apply: (m) => {
+      m.profitAdd += 0.2
+    },
+  },
 ]
 
 export const SYNERGY_LABEL: Record<string, string> = Object.fromEntries(
