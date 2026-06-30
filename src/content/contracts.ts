@@ -43,6 +43,16 @@ export const CONTRACTS: ContractDef[] = [
   { id: 'hire_12', name: 'Full Payroll', description: 'Have 12 employees', icon: '🏢', metric: 'employees', target: 12, rewardTokens: 4 },
   { id: 'own_400', name: 'Tycoon', description: 'Own 400 businesses', icon: '👑', metric: 'totalOwned', target: 400, rewardTokens: 4 },
   { id: 'all_seven', name: 'Master of All', description: 'Operate in all 7 industries', icon: '🌟', metric: 'industries', target: 7, rewardTokens: 4 },
+
+  // ---- Endgame ladder (keeps the board feeding well past the mid-game) ----
+  { id: 'automate_15', name: 'Lights-Out Operation', description: 'Automate 15 businesses', icon: '🦾', metric: 'automated', target: 15, rewardTokens: 4 },
+  { id: 'hire_20', name: 'Corporation', description: 'Have 20 employees', icon: '🏛️', metric: 'employees', target: 20, rewardTokens: 5 },
+  { id: 'own_1000', name: 'Industrial Powerhouse', description: 'Own 1,000 businesses', icon: '🏭', metric: 'totalOwned', target: 1000, rewardTokens: 5 },
+  { id: 'earn_1t', name: 'Twelve Figures', description: 'Earn $1T lifetime', icon: '🪙', metric: 'lifetime', target: 1e12, rewardTokens: 5 },
+  { id: 'own_2500', name: 'Megacorp', description: 'Own 2,500 businesses', icon: '🌃', metric: 'totalOwned', target: 2500, rewardTokens: 6 },
+  { id: 'earn_1qa', name: 'Fifteen Figures', description: 'Earn $1Qa lifetime', icon: '🏦', metric: 'lifetime', target: 1e15, rewardTokens: 6 },
+  { id: 'own_5000', name: 'Galactic Empire', description: 'Own 5,000 businesses', icon: '🌐', metric: 'totalOwned', target: 5000, rewardTokens: 8 },
+  { id: 'earn_1qi', name: 'Astronomical Wealth', description: 'Earn $1Qi lifetime', icon: '🌌', metric: 'lifetime', target: 1e18, rewardTokens: 8 },
 ]
 
 export const CONTRACT_BY_ID: Record<string, ContractDef> = Object.fromEntries(
