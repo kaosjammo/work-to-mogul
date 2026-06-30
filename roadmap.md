@@ -12,7 +12,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 
 **Core loop & economy**
 - Work/Career early game (6 levels, wages/promotions) as the manual income bridge — players start here, **not** a Lemonade Stand. At max level the career "retires" into a **Senior Consultant** end-state: an optional over-time consulting bonus pool (capped) you Collect by tapping (`career.ts` + WorkCard strip).
-- Geometric-cost businesses with Buy x1/x10/x100/Max; 27 businesses across 7 industries; per-business milestones (25→600 owned).
+- Geometric-cost businesses with Buy x1/x10/x100/Max; **32 businesses across 8 industries** (incl. the ultra-endgame Quantum Frontier + Dyson Sphere capstone); per-business milestones **(25→2000 owned)**. Quick-spend: "Spend Cash" (best-value) + "Buy all affordable" upgrades.
 - **Balance overhaul (merged):** economy re-tuned for income-efficiency monotonicity — a pricier business is never a worse $/s-per-$ deal, both globally and within each industry ladder. Guarded by `src/content/balance.test.ts`.
 - Industries visible from the start, gated only by cost-of-entry (no artificial unlock payments).
 - 10 Hz fixed-timestep engine outside React; throttled view publish; manual→automated income pivot.
@@ -32,7 +32,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
 - PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
 - Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
-- **149 tests / 27 files**; oxlint clean; production build verified booting.
+- **173 tests / 30 files**; oxlint clean; production build verified booting.
 
 ## Current known issues / notes
 
@@ -110,6 +110,24 @@ stage only your own files before pushing.
 - Native packaging (Electron/Tauri/Capacitor/Steam) — explicitly not now.
 
 ## Latest loop summary
+
+**Goal-run — deep content + full feel layer (continued).** On the standing /goal,
+~18 further validated commits (each build + 173 tests + lint + browser-verified, pushed):
+- **8th industry — Quantum Frontier** (Quantum Computer → Antimatter → Wormhole →
+  Multiverse Exchange) + a **Dyson Sphere** space capstone, all appended at the top of
+  the cost curve so the monotonic-efficiency invariant holds with zero rank shifts;
+  plus a Quantum-affinity gambler (Zeta Quark), 2 Quantum upgrades, the **Quantum Leap**
+  synergy (2+ gamblers), 2 Quantum achievements, and ultra-endgame contracts (to $1Sx).
+- **Per-business milestones extended to 2000 owned** (harness byte-identical).
+- **Talent tree 10 → 17**: novel Golden Touch (Time-Warp value), Lucky Streak (Golden
+  Deal frequency), Empire Training (scales all staff effects), + stackable tiers.
+- **Full feel layer**: floating "+$" pops + haptics on every income source (work / tap /
+  golden / offline / ascension); reactive founder mascot (scoped to the Business tab);
+  cash-HUD magnitude tier-up pop; juicy celebration toasts; nav reward badges; ready-to-
+  collect pulse; a **Settings** panel (haptics + FX toggles, persisted); a first-run hint;
+  cloud-sync status shown in words.
+- **Hardening/tests**: added num + spend formatting/behaviour tests; defensive talent
+  folds; fixed a partial-state crash and an incomplete cooldown replace.
 
 **Session — depth + "satisfaction" pass** (standing /goal: deepest, most satisfying
 mobile idle mogul). Shipped in ~15 validated commits (each: `npm run build` + 165
