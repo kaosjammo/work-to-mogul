@@ -61,6 +61,18 @@ All current employee templates have generated portraits and are registered in
 `ART_EMPLOYEES`. The Staff and Hire UI now renders portraits through
 `employeeArt(templateId)`.
 
+### Generated Raster Polish
+
+These PNG assets were generated, cleaned up, registered in `ART_GENERATED`, and
+the ambient background/mascot/money props are wired through the app shell.
+
+| Group | Paths | Status |
+|---|---|---|
+| Background | `public/assets/generated/backgrounds/tycoon_city_background.png` | Generated, registered, and wired |
+| Founder mascot | `public/assets/generated/mascot/*.png` | Four poses plus source sheet generated and registered |
+| Money props | `public/assets/generated/props/*.png` | Six props plus source sheet generated and registered |
+| Cash burst VFX | `public/assets/generated/vfx/*.png` | Eight animation frames plus source sheet generated and registered |
+
 ## Still Optional / Emoji-Based
 
 The post-launch depth features remain intentionally emoji-based and introduce no

@@ -8,12 +8,12 @@ The game still degrades gracefully if future content is added without art:
 `src/content/artManifest.test.ts` verifies that every authored manifest path
 exists.
 
-_Last audited: post art-wiring pass (industry banners + patterns now rendered)._
+_Last audited: generated raster art pass (background, mascot, money props, VFX)._
 
 ## Referenced-but-missing asset ids
 
 **None.** Every path currently authored in `src/content/artManifest.ts` resolves
-to a real SVG under `public/assets/`.
+to a real asset file under `public/assets/`.
 
 ## Generated and Implemented
 
@@ -30,6 +30,10 @@ generated and registered in `src/content/artManifest.ts`.
 | Industry patterns (`logistics`, `energy`, `space`) | 3 | Generated and implemented |
 | Upgrade icons listed in the previous audit | 10 | Generated and implemented |
 | Employee portraits for all current hire templates | 17 | Generated and implemented in the Staff and Hire UI |
+| Tycoon city background | 1 | Generated, registered, and wired behind the app shell |
+| Founder mascot poses | 4 poses + 1 source sheet | Generated, split, registered, and one pose wired into the app shell |
+| Money prop assets | 6 props + 1 source sheet | Generated, split, registered, and money bag / cash stack wired into the app shell |
+| Cash burst animation | 8 frames + 1 source sheet | Generated, split, and registered for future animation use |
 
 ### Rendering status (where each is actually shown)
 
@@ -38,6 +42,8 @@ All the above now **render in the UI**, not just registered in the manifest:
 - **Employee portraits** → roster + Hire list (`employeeArt(templateId)`).
 - **Industry banners** → `IndustryBanner` slim header on the business screen (gradient scrim + industry name). *(Wired this pass — were previously registered but never displayed.)*
 - **Industry patterns** → faint tiled texture behind the "Cost of entry" box. *(Wired this pass.)*
+- **Generated raster background / mascot / props** -> `App` ambient backdrop layer.
+- **Cash burst frames** -> registered art asset for future lightweight reward animation.
 
 ## Generated Asset Paths
 
@@ -100,6 +106,24 @@ All the above now **render in the UI**, not just registered in the manifest:
 - `public/assets/portraits/employees/cargo_kate.svg`
 - `public/assets/portraits/employees/cole_voltaic.svg`
 - `public/assets/portraits/employees/astra_vance.svg`
+
+### P1 Generated Raster Polish
+
+- `public/assets/generated/backgrounds/tycoon_city_background.png`
+- `public/assets/generated/mascot/founder_pose_sheet.png`
+- `public/assets/generated/mascot/founder_idle.png`
+- `public/assets/generated/mascot/founder_working.png`
+- `public/assets/generated/mascot/founder_excited.png`
+- `public/assets/generated/mascot/founder_upgrade.png`
+- `public/assets/generated/props/money_prop_sheet.png`
+- `public/assets/generated/props/money_bag.png`
+- `public/assets/generated/props/cash_stack.png`
+- `public/assets/generated/props/coin_pile.png`
+- `public/assets/generated/props/cash_briefcase.png`
+- `public/assets/generated/props/profit_burst.png`
+- `public/assets/generated/props/flying_banknotes.png`
+- `public/assets/generated/vfx/cash_burst_sheet.png`
+- `public/assets/generated/vfx/cash_burst_01.png` through `cash_burst_08.png`
 
 ## Optional / Still Emoji-Based by Design
 

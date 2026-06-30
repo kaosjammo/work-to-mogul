@@ -28,6 +28,41 @@ export const ART_UI = {
   ascend: '/assets/icons/ui/icon_ascend.svg',
 }
 
+export const ART_GENERATED = {
+  background: {
+    tycoonCity: '/assets/generated/backgrounds/tycoon_city_background.png',
+  },
+  mascot: {
+    founderIdle: '/assets/generated/mascot/founder_idle.png',
+    founderWorking: '/assets/generated/mascot/founder_working.png',
+    founderExcited: '/assets/generated/mascot/founder_excited.png',
+    founderUpgrade: '/assets/generated/mascot/founder_upgrade.png',
+    founderPoseSheet: '/assets/generated/mascot/founder_pose_sheet.png',
+  },
+  props: {
+    moneyBag: '/assets/generated/props/money_bag.png',
+    cashStack: '/assets/generated/props/cash_stack.png',
+    coinPile: '/assets/generated/props/coin_pile.png',
+    cashBriefcase: '/assets/generated/props/cash_briefcase.png',
+    profitBurst: '/assets/generated/props/profit_burst.png',
+    flyingBanknotes: '/assets/generated/props/flying_banknotes.png',
+    moneyPropSheet: '/assets/generated/props/money_prop_sheet.png',
+  },
+  vfx: {
+    cashBurstSheet: '/assets/generated/vfx/cash_burst_sheet.png',
+    cashBurstFrames: [
+      '/assets/generated/vfx/cash_burst_01.png',
+      '/assets/generated/vfx/cash_burst_02.png',
+      '/assets/generated/vfx/cash_burst_03.png',
+      '/assets/generated/vfx/cash_burst_04.png',
+      '/assets/generated/vfx/cash_burst_05.png',
+      '/assets/generated/vfx/cash_burst_06.png',
+      '/assets/generated/vfx/cash_burst_07.png',
+      '/assets/generated/vfx/cash_burst_08.png',
+    ],
+  },
+}
+
 export const ART_WORK = {
   shift: '/assets/icons/work/work_shift.svg',
   promotion: '/assets/icons/work/work_promotion.svg',

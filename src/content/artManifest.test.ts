@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import {
   ART_FALLBACK,
   ART_BRAND,
+  ART_GENERATED,
   ART_UI,
   ART_WORK,
   ART_MILESTONE,
@@ -23,10 +24,18 @@ import { EMPLOYEE_TEMPLATES } from './employeeTemplates'
 const PUBLIC = join(process.cwd(), 'public')
 const onDisk = (webPath: string) => existsSync(join(PUBLIC, webPath.replace(/^\//, '')))
 
+function collectStrings(value: unknown): string[] {
+  if (typeof value === 'string') return [value]
+  if (Array.isArray(value)) return value.flatMap(collectStrings)
+  if (value && typeof value === 'object') return Object.values(value).flatMap(collectStrings)
+  return []
+}
+
 function allPaths(): string[] {
   const paths: string[] = [
     ...Object.values(ART_FALLBACK),
     ...Object.values(ART_BRAND),
+    ...collectStrings(ART_GENERATED),
     ...Object.values(ART_UI),
     ...Object.values(ART_WORK),
     ...Object.values(ART_MILESTONE),

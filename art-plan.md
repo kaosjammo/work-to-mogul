@@ -17,6 +17,9 @@
 >   "example"), `ui/shared/Icon.tsx` renders it with emoji/SVG fallback, and a
 >   coverage test (`artManifest.test.ts`) guards it. Emoji business icons are
 >   **no longer** read from `businesses.ts` for arted ids.
+> - A first proper raster polish batch now exists: generated tycoon city
+>   background, founder mascot poses, money props, and cash-burst VFX frames.
+>   The background, mascot, and money props are wired into the app shell.
 > - Validation now: **146 tests / 26 files** (this doc's "33 tests" is old), and
 >   `tsc -b` runs inside `npm run build` (still no separate `typecheck` script).
 > - Newer **depth systems** (talents, ascension milestones, L5 specialisations,
@@ -29,7 +32,7 @@
 
 This plan is based on the current mobile-first React, TypeScript, and Vite idle tycoon project. It reflects the content and UI that exist now: Work/Career definitions are present, businesses and industries are present, employee role types are present, and Staff, Upgrades, and Ascend screens are still placeholders.
 
-No final raster artwork is generated here. The optional files added alongside this plan are lightweight SVG placeholders and planning references only.
+This file started before final raster artwork existed. The project now includes a first generated raster polish batch under `public/assets/generated/`; the older tables below are retained mainly as planning history and style guidance.
 
 ## 1. Current Asset Inventory
 
@@ -671,9 +674,9 @@ Commands run after this update:
 - `npm.cmd test` - passed, 26 test files and 146 tests.
 - `npm.cmd run build` - passed.
 - `npm run typecheck` was not run because `package.json` does not define a `typecheck` script; the build command runs `tsc -b`.
-- Manifest asset-path check - passed.
+- Manifest asset-path check - passed, including registered generated PNG assets.
 - SVG XML parse check - passed, 121 generated SVG files parse as XML.
-- The real manifest now registers all current industries, businesses, upgrades, roles, and employee portraits.
+- The real manifest now registers all current industries, businesses, upgrades, roles, employee portraits, generated background, mascot poses, money props, and cash-burst VFX frames.
 
 Files created:
 
@@ -752,6 +755,10 @@ Files created:
 - `public/assets/states/state_locked.svg`
 - `public/assets/states/state_unaffordable.svg`
 - `public/assets/visuals/prestige/prestige_empire_reset.svg`
+- `public/assets/generated/backgrounds/tycoon_city_background.png`
+- `public/assets/generated/mascot/*.png`
+- `public/assets/generated/props/*.png`
+- `public/assets/generated/vfx/*.png`
 
 Files changed:
 
@@ -764,10 +771,11 @@ Files changed:
 - `src/store/buildView.ts`
 - `src/ui/employees/EmployeesScreen.tsx`
 - `src/ui/shared/art.ts`
+- `src/App.tsx`
+- `src/ui/styles/global.css`
 
 Blockers and assumptions:
 
-- Git validation commands were not available because `git rev-parse --show-toplevel` reports `fatal: not a git repository (or any of the parent directories): .git`; the visible `.git` directory appears unusable in this checkout.
 - Newly generated business, industry, upgrade, and employee portrait SVGs are registered in `src/content/artManifest.ts`; employee portraits are used in the Staff and Hire UI.
+- Generated PNG background, mascot poses, money props, and VFX frames are registered in `src/content/artManifest.ts`; the background, founder pose, money bag, and cash stack are used in the app shell ambient layer.
 - No gameplay, economy, save/load, career, or business logic was changed.
-- Final raster artwork was not generated.
