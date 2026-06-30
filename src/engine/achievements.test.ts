@@ -4,7 +4,7 @@ import { prestigeReset } from './prestige'
 import { PRESTIGE_SCALE } from './economy'
 import { hireEmployee, assignToFirstFreeSlot } from './employees/roster'
 import { initialGameState } from '../store/initialState'
-import { ACHIEVEMENTS } from '../content/achievements'
+import { ACHIEVEMENTS, ACHIEVEMENT_REWARD } from '../content/achievements'
 import { UPGRADES } from '../content/upgrades'
 import type { GameState } from '../types/domain'
 
@@ -31,6 +31,20 @@ describe('achievements', () => {
     s.career.totalShifts = 5
     checkAchievements(s)
     expect(checkAchievements(s)).toEqual([])
+  })
+
+  it('banks each achievement reward as spendable tokens, exactly once', () => {
+    const s = initialGameState(0)
+    s.career.totalShifts = 1 // first_shift
+    s.businesses.lemonade.owned = 1 // first_business
+    const before = s.prestige.totalPoints
+    const fresh = checkAchievements(s)
+    const expected = fresh.reduce((sum, id) => sum + ACHIEVEMENT_REWARD[id], 0)
+    expect(expected).toBeGreaterThan(0)
+    expect(s.prestige.totalPoints).toBe(before + expected)
+    // Re-checking the same satisfied conditions grants nothing more.
+    checkAchievements(s)
+    expect(s.prestige.totalPoints).toBe(before + expected)
   })
 
   it('unlocks first_automation when an operator automates a business', () => {

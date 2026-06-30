@@ -74,6 +74,26 @@ describe('tolerant load', () => {
     expect(deserialize('not json')).toBeNull()
     expect(deserialize('{"version":1}')).toBeNull() // no state
   })
+
+  it('back-grants achievement token rewards when upgrading a v1 save (once)', () => {
+    // A v1 save predates achievement token rewards: the migration banks the
+    // rewards for what was already unlocked so the player isn't shortchanged.
+    const env = JSON.stringify({
+      version: 1,
+      savedAt: 0,
+      state: {
+        cash: 0,
+        achievementsUnlocked: ['first_shift', 'first_business'], // 1 + 1 = +2
+        prestige: { totalPoints: 2, spentPoints: 0, talents: {}, multiplier: 1, resets: 0 },
+      },
+    })
+    const loaded = deserialize(env, 0)!
+    expect(loaded.prestige.totalPoints).toBe(4) // 2 saved + 2 back-granted
+
+    // Re-saving (now v2) and reloading does NOT grant again.
+    const again = deserialize(serialize(loaded, 0), 0)!
+    expect(again.prestige.totalPoints).toBe(4)
+  })
 })
 
 describe('full-state round-trip', () => {

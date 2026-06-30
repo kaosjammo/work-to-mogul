@@ -295,6 +295,7 @@ export interface AchievementView {
   description: string
   icon: string
   unlocked: boolean
+  reward: number // Empire Tokens granted on unlock
 }
 
 export interface PrestigeMilestoneView {
@@ -594,6 +595,7 @@ export function buildView(state: GameState): ViewSnapshot {
     description: a.description,
     icon: a.icon,
     unlocked: unlockedAch.has(a.id),
+    reward: a.reward,
   }))
 
   const claimedPm = new Set(state.prestigeMilestonesClaimed)

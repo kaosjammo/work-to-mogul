@@ -190,12 +190,20 @@ export function PrestigeScreen() {
                 {a.unlocked ? a.icon : '🔒'}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold">{a.name}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-semibold">{a.name}</span>
+                  <span
+                    className="shrink-0 text-xs font-bold"
+                    style={{ color: a.unlocked ? 'var(--good)' : 'var(--accent)' }}
+                    title={a.unlocked ? 'Unlocked' : `Unlock to bank ${a.reward} Empire Tokens`}
+                  >
+                    {a.unlocked ? '✓' : `✦${a.reward}`}
+                  </span>
+                </div>
                 <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
                   {a.description}
                 </div>
               </div>
-              {a.unlocked && <span style={{ color: 'var(--good)' }}>✓</span>}
             </div>
           ))}
         </div>

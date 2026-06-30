@@ -14,12 +14,13 @@ import { TRAIT_DEFS } from '../content/traits'
 import { TALENTS } from '../content/talents'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
+import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
 import { reconcileSlots } from '../engine/employees/composition'
 import { checkUnlocks } from '../engine/simulate'
 
 export const SAVE_KEY = 'tycoon:save'
-export const CURRENT_SAVE_VERSION = 1
+export const CURRENT_SAVE_VERSION = 2
 
 interface Envelope {
   version: number
@@ -31,9 +32,24 @@ interface Envelope {
 export type SaveEnvelope = Envelope
 
 // Versioned migrations for BREAKING save changes (renamed/removed fields).
-// Tolerant deep-merge handles purely-additive fields, so this stays empty until
-// a real breaking change lands. Each entry upgrades from key-1 to key.
-const MIGRATIONS: Record<number, (s: Partial<GameState>) => Partial<GameState>> = {}
+// Tolerant deep-merge handles purely-additive fields, so most changes need no entry.
+// Each entry upgrades a save from key-1 to key; it runs at most once per save.
+const MIGRATIONS: Record<number, (s: Partial<GameState>) => Partial<GameState>> = {
+  // v2: achievements now grant Empire Tokens. Back-grant the rewards for everything
+  // already unlocked so existing players aren't shortchanged. Runs once (v1 → v2);
+  // a v2 save never re-enters this step, so there's no double-grant.
+  2: (s) => {
+    const earned = (s.achievementsUnlocked ?? []).reduce(
+      (sum, id) => sum + (ACHIEVEMENT_REWARD[id] ?? 0),
+      0,
+    )
+    if (earned > 0) {
+      const prestige = (s.prestige ?? {}) as Partial<GameState['prestige']>
+      s.prestige = { ...prestige, totalPoints: num(prestige.totalPoints, 0) + earned } as GameState['prestige']
+    }
+    return s
+  },
+}
 
 function migrate(fromVersion: number, state: Partial<GameState>): Partial<GameState> {
   let v = Number.isFinite(fromVersion) ? fromVersion : CURRENT_SAVE_VERSION

@@ -84,8 +84,10 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
 }
 
 /**
- * Unlock any newly-satisfied achievements. Mutates state.achievementsUnlocked
- * and returns the ids unlocked this call (for toast notifications).
+ * Unlock any newly-satisfied achievements. Mutates state.achievementsUnlocked,
+ * banks each one's Empire-Token reward (spendable on talents), and returns the
+ * ids unlocked this call (for toast notifications). Idempotent: an already-unlocked
+ * achievement is skipped, so the reward is granted exactly once.
  */
 export function checkAchievements(s: GameState): string[] {
   const unlocked = new Set(s.achievementsUnlocked)
@@ -95,6 +97,7 @@ export function checkAchievements(s: GameState): string[] {
     const pred = PREDICATES[def.id]
     if (pred && pred(s)) {
       s.achievementsUnlocked.push(def.id)
+      if (def.reward > 0) s.prestige.totalPoints += def.reward
       fresh.push(def.id)
     }
   }
