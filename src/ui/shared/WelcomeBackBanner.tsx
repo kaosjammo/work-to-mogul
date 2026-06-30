@@ -1,4 +1,5 @@
 import { money, formatDuration } from '../../engine/num'
+import { OFFLINE_CAP_MS } from '../../engine/catchUp'
 import { useUiStore } from '../../store/uiStore'
 import { haptic } from '../../lib/haptics'
 import { ART_GENERATED } from '../../content/artManifest'
@@ -49,6 +50,7 @@ export function WelcomeBackBanner() {
         </p>
         <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
           while you were away for {formatDuration(welcome.elapsedMs / 1000)}
+          {welcome.elapsedMs >= OFFLINE_CAP_MS && ' (offline earnings cap at 2h)'}
         </p>
         <button
           type="button"
