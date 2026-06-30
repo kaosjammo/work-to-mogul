@@ -62,10 +62,11 @@ describe('buyTalent', () => {
   })
 
   it('formula-cost (deep Mastery) talents escalate geometrically and drain a surplus', () => {
-    // industrialist: costBase 50, costGrowth 1.55 → cost[rank] = round(50·1.55^rank)
-    expect(talentCostAt(TALENTS.industrialist, 0)).toBe(50)
-    expect(talentCostAt(TALENTS.industrialist, 1)).toBe(78) // round(50·1.55)
-    expect(talentCostAt(TALENTS.industrialist, 10)).toBe(Math.round(50 * 1.55 ** 10))
+    // industrialist: costBase 20, costGrowth 1.55 → cost[rank] = round(20·1.55^rank).
+    // (costBase lowered 50→20 in the slope re-tune so rank 1 is reachable.)
+    expect(talentCostAt(TALENTS.industrialist, 0)).toBe(20)
+    expect(talentCostAt(TALENTS.industrialist, 1)).toBe(31) // round(20·1.55)
+    expect(talentCostAt(TALENTS.industrialist, 10)).toBe(Math.round(20 * 1.55 ** 10))
 
     // A huge surplus buys many ranks (the sink), not just a few.
     const s = withTokens(1_000_000)
@@ -82,16 +83,16 @@ describe('talent economy fold', () => {
   it('magnate raises global profit; efficiency raises speed; wholesale cuts cost', () => {
     const s = withTokens(99)
     const base = economyMultipliers(s, BUSINESSES.lemonade)
-    buyTalent(s, 'magnate') // +12% profit
+    buyTalent(s, 'magnate') // +25% profit (boosted from +12% in the slope re-tune)
     buyTalent(s, 'efficiency') // +8% speed
     buyTalent(s, 'wholesale') // -6% buy cost
     const eco = talentEconomy(s)
-    expect(eco.profit).toBeCloseTo(1.12)
+    expect(eco.profit).toBeCloseTo(1.25)
     expect(eco.speed).toBeCloseTo(1.08)
     expect(eco.costReduc).toBeCloseTo(0.94)
 
     const after = economyMultipliers(s, BUSINESSES.lemonade)
-    expect(after.profit).toBeCloseTo(base.profit * 1.12)
+    expect(after.profit).toBeCloseTo(base.profit * 1.25)
     expect(after.speed).toBeCloseTo(base.speed * 1.08)
     expect(after.baseCostFactor).toBeCloseTo(base.baseCostFactor * 0.94)
   })
@@ -185,10 +186,11 @@ describe('tempo talents', () => {
     s.prestige.totalPoints = 99
     buyTalent(s, 'prestige_scholar') // +15% token yield
     expect(tokenYieldMult(s)).toBeCloseTo(1.15)
-    s.lifetimeEarnings = 100_000 * PRESTIGE_SCALE // 100000^0.2 = 10 base tokens → floor(10*1.15)=11
+    // 100000^0.26 ≈ 19.95 → floor 19 base tokens → floor(19 × 1.15) = 21.
+    s.lifetimeEarnings = 100_000 * PRESTIGE_SCALE
     const before = s.prestige.totalPoints
     prestigeReset(s)
-    expect(s.prestige.totalPoints - before).toBe(11)
+    expect(s.prestige.totalPoints - before).toBe(21)
   })
 })
 

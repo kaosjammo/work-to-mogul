@@ -50,7 +50,7 @@ export const TALENTS: Record<string, TalentDef> = {
     icon: '📈',
     maxRank: 5,
     cost: [1, 2, 3, 5, 8],
-    profitMultPerRank: 0.12,
+    profitMultPerRank: 0.25,
   },
   seed_capital: {
     id: 'seed_capital',
@@ -80,7 +80,7 @@ export const TALENTS: Record<string, TalentDef> = {
     icon: '🔥',
     maxRank: 3,
     cost: [4, 9, 16],
-    profitMultPerRank: 0.3,
+    profitMultPerRank: 0.6,
   },
   tycoon: {
     id: 'tycoon',
@@ -90,7 +90,7 @@ export const TALENTS: Record<string, TalentDef> = {
     icon: '💼',
     maxRank: 5,
     cost: [6, 12, 20, 32, 50],
-    profitMultPerRank: 0.18,
+    profitMultPerRank: 0.35,
   },
   liquidation: {
     id: 'liquidation',
@@ -220,7 +220,13 @@ export const TALENTS: Record<string, TalentDef> = {
   // ---------- Mastery (deep, late-game token sinks) ----------
   // Many ranks with a geometrically-escalating cost: a near-bottomless sink for
   // the Empire Tokens that pile up across many ascensions, with small per-rank
-  // gains so dumping a huge surplus is meaningful but never runaway.
+  // gains so dumping a huge surplus is meaningful but never runaway. These are the
+  // ONLY uncapped growth in the tree (the base talents each cap out), so they're
+  // what keeps "ascend → next run is faster" alive once the base tree is mostly
+  // filled. Rank-1 entry was 50–60 (unreachable — the sim banked only ~26 cum
+  // tokens over 6 ascensions), leaving them dead content. Lowered to ~20–24 so the
+  // first rank lands within ~3–4 ascensions and surplus tokens convert into the
+  // uncapped climb; the 1.55 growth still makes deep ranks a real sink.
   industrialist: {
     id: 'industrialist',
     name: 'Industrialist',
@@ -228,7 +234,7 @@ export const TALENTS: Record<string, TalentDef> = {
     theme: 'Economy',
     icon: '🏭',
     maxRank: 50,
-    costBase: 50,
+    costBase: 20,
     costGrowth: 1.55,
     profitMultPerRank: 0.04,
   },
@@ -239,7 +245,7 @@ export const TALENTS: Record<string, TalentDef> = {
     theme: 'Workforce',
     icon: '🎖️',
     maxRank: 50,
-    costBase: 60,
+    costBase: 24,
     costGrowth: 1.55,
     staffEffectPerRank: 0.04,
   },
@@ -250,7 +256,7 @@ export const TALENTS: Record<string, TalentDef> = {
     theme: 'Tempo',
     icon: '⚡',
     maxRank: 50,
-    costBase: 50,
+    costBase: 20,
     costGrowth: 1.55,
     speedMultPerRank: 0.03,
   },

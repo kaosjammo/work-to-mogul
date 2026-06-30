@@ -41,12 +41,27 @@ describe('progression loop — multi-ascension prestige economy', () => {
     const last = result.ascensions[result.ascensions.length - 1].baseTreeFilledPct
     expect(first).toBeLessThan(1) // run #1 does NOT fill the whole tree (the old bug)
     expect(last).toBeGreaterThan(first) // progress accrues across ascensions
+    // Slope re-tune target: by run #6 the tree is a real journey — well past the old
+    // glacial ~41%, but still far from maxed (the expensive back half is aspirational).
+    expect(last).toBeGreaterThan(0.45)
+    expect(last).toBeLessThan(0.85)
   })
 
-  it('run lifetime increases run-over-run as talents compound', () => {
+  it('the deep Mastery sink is reachable — cumulative tokens clear the first rank', () => {
+    // The re-tune lowered Mastery rank-1 to 20 tokens and lifted yield so a player who
+    // ascends ~6× can actually dip into the uncapped sink (was 26 cum vs 50 needed →
+    // dead content). Guards against the sink drifting back out of reach.
+    const cum = result.ascensions[result.ascensions.length - 1].cumulativeTokens
+    expect(cum).toBeGreaterThanOrEqual(20)
+  })
+
+  it('run lifetime KEEPS climbing — the back half does not plateau', () => {
     const lifes = result.ascensions.map((a) => a.runLifetime)
-    // Later runs reach more lifetime in the same wall-clock (talents stack), but not
-    // by an insane factor each time.
-    expect(lifes[lifes.length - 1]).toBeGreaterThan(lifes[0])
+    // The bug this locks in: pre-re-tune the curve flattened from run #3 (+8% across
+    // the last three ascensions). The profit re-tune restores a sustained climb, so
+    // the back half (run #3 → run #6) must grow meaningfully, not just trend up.
+    expect(lifes[lifes.length - 1]).toBeGreaterThan(lifes[0]) // overall climb
+    const backHalfGrowth = lifes[lifes.length - 1] / lifes[2] // run #6 / run #3
+    expect(backHalfGrowth).toBeGreaterThan(1.4) // was ~1.08 (a plateau) before the re-tune
   })
 })

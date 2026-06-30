@@ -96,10 +96,12 @@ describe('resolveBusiness folds × owned (rule #1)', () => {
 })
 
 describe('prestige', () => {
-  it('grants ~1 point at the prestige scale and scales gently (fifth-root)', () => {
+  it('grants ~1 point at the prestige scale and scales gently (fourth-root)', () => {
+    // Yield exponent is 0.26 (the slope re-tune lifted it from 0.2): tokens stay
+    // scarce but accumulate fast enough that the talent tree is a journey, not a crawl.
     expect(prestigePointsFor(PRESTIGE_SCALE)).toBe(1)
-    expect(prestigePointsFor(32 * PRESTIGE_SCALE)).toBe(2) // 32^0.2 = 2
-    expect(prestigePointsFor(243 * PRESTIGE_SCALE)).toBe(3) // 3^5 = 243
+    expect(prestigePointsFor(100 * PRESTIGE_SCALE)).toBe(3) // 100^0.26 ≈ 3.31
+    expect(prestigePointsFor(1e4 * PRESTIGE_SCALE)).toBe(10) // 1e4^0.26 ≈ 10.97
     expect(prestigePointsFor(0)).toBe(0)
   })
 })

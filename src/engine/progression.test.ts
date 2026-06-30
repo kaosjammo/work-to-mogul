@@ -3,7 +3,7 @@ import { initialGameState } from '../store/initialState'
 import { buyUpgrade } from './upgrades'
 import { prestigeReset, nextTokenLifetime, nextTokenProgress } from './prestige'
 import { buyTalent } from './talents'
-import { economyMultipliers, prestigePointsFor, PRESTIGE_SCALE } from './economy'
+import { economyMultipliers, prestigePointsFor, PRESTIGE_SCALE, PRESTIGE_YIELD_EXP } from './economy'
 import { BUSINESSES } from '../content/businesses'
 import { UPGRADES } from '../content/upgrades'
 
@@ -63,15 +63,20 @@ describe('prestige', () => {
 
   it('reports the lifetime needed for the next token + band progress', () => {
     const s = initialGameState(0)
-    // At the 2-token boundary (2^5 = 32×scale): next token (3) lands at 3^5 = 243×scale.
-    s.lifetimeEarnings = 32 * PRESTIGE_SCALE
+    // The N-token band starts at lifetime N^(1/exp) × scale (the inverse of the yield
+    // curve). Computed from the live exponent so this survives yield re-tunes.
+    const bandStart = (n: number) => Math.pow(n, 1 / PRESTIGE_YIELD_EXP) * PRESTIGE_SCALE
+    const start2 = bandStart(2)
+    const start3 = bandStart(3)
+
+    s.lifetimeEarnings = start2
     expect(prestigePointsFor(s.lifetimeEarnings)).toBe(2)
-    expect(nextTokenLifetime(s)).toBeCloseTo(243 * PRESTIGE_SCALE)
+    expect(nextTokenLifetime(s)).toBeCloseTo(start3, -2) // next token (3) lands at 3^(1/exp)×scale
     expect(nextTokenProgress(s)).toBeCloseTo(0) // at the band start
 
-    // Halfway through the 2→3 band (between 32× and 243× scale).
-    s.lifetimeEarnings = 137.5 * PRESTIGE_SCALE
-    expect(nextTokenProgress(s)).toBeCloseTo((137.5 - 32) / (243 - 32))
+    // Halfway through the 2→3 band.
+    s.lifetimeEarnings = (start2 + start3) / 2
+    expect(nextTokenProgress(s)).toBeCloseTo(0.5)
 
     // From a standing start, the first token is one scale-unit of lifetime away.
     s.lifetimeEarnings = 0
@@ -83,7 +88,8 @@ describe('prestige', () => {
     s.lifetimeEarnings = PRESTIGE_SCALE
     prestigeReset(s) // +1
     buyTalent(s, 'magnate') // spend the token on a talent
-    s.lifetimeEarnings = 243 * PRESTIGE_SCALE // 243^0.2 = 3 tokens
+    // A lifetime in the 3-token band (3^(1/exp)×scale) banks 3 tokens on ascension.
+    s.lifetimeEarnings = Math.pow(3, 1 / PRESTIGE_YIELD_EXP) * PRESTIGE_SCALE
     prestigeReset(s) // +3 → total 4
     expect(s.prestige.totalPoints).toBe(4)
     expect(s.prestige.talents.magnate).toBe(1) // talent survives the ascension

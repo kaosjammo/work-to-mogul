@@ -138,10 +138,14 @@ export const PRESTIGE_SCALE = 1e15
 
 // Token-yield curve exponent. Was 0.5 (sqrt), which exploded — late-game lifetimes
 // (1e30+) minted hundreds of millions of tokens per ascension, trivialising the
-// talent tree. A much gentler 0.2 (fifth-root) keeps tokens scarce and meaningful:
-// ~1 at first prestige, ~15 at $1Sx, ~2.5k even at $1e32 (vs ~286M before), so the
-// base tree is a multi-ascension journey and the deep Mastery talents absorb the rest.
-export const PRESTIGE_YIELD_EXP = 0.2
+// talent tree. 0.2 (fifth-root) stopped the blowup but OVER-corrected: the
+// progression sim showed run yield stuck at ~5/run, the tree crawling, and the deep
+// Mastery sink unreachable (26 cum tokens vs 50 for rank 1) — a flat, unrewarding
+// prestige loop. 0.25 (fourth-root) is the measured middle ground: run #1 still banks
+// 1 token (small first ascension preserved), but late runs yield enough that the tree
+// fills as a satisfying journey and surplus tokens reach the uncapped Mastery talents,
+// so each ascension visibly accelerates the next run without re-opening the blowup.
+export const PRESTIGE_YIELD_EXP = 0.26
 
 /** Prestige points earned for a given lifetime earnings (gentle fifth-root scaling). */
 export function prestigePointsFor(lifetimeEarnings: Num): number {
