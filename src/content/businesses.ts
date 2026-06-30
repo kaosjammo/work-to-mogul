@@ -40,7 +40,13 @@ const prev = (businessId: BusinessId, count: number): UnlockCondition => ({
 //    next unlocks — this is what spreads the climb into a long, smooth curve.
 //  • REVENUE_SCALE — uniform multiplier on all baseRevenue (preserves the E
 //    ordering exactly); the master pace dial — lower = slower money = longer game.
-const GROWTH_STEEPNESS = 7.0
+// GROWTH_STEEPNESS at 7 made even the FIRST business punishing — Lemonade's
+// effective per-unit growth became 1.49 (each costs +49%), so the last few units
+// before the 25-gate cost tens of thousands and the start stalled for ~80 min on
+// a single business. Dialled back to 5 (Lemonade → ~1.35) so stacking the early,
+// cheap tiers stays affordable and the opening has momentum; the long arc is held
+// by the per-tier unlock gates + REVENUE_SCALE instead of brutal cost growth.
+const GROWTH_STEEPNESS = 6.0
 const GATE_MULT = 1
 const REVENUE_SCALE = 0.28
 const steepen = (growthRate: number): number => 1 + (growthRate - 1) * GROWTH_STEEPNESS
@@ -55,9 +61,12 @@ const steepen = (growthRate: number): number => 1 + (growthRate - 1) * GROWTH_ST
 const ROWS: Row[] = [
   // ---- Food & Hospitality (cheap, fast, mass-buy) ----
   { id: 'lemonade', industryId: 'food', name: 'Lemonade Stand', icon: '🍋', baseCost: 4, growthRate: 1.07, baseRevenue: 1, cycleMs: 600, unlock: { kind: 'free' }, preferred: ['cycleSpeed', 'morale'] },
-  { id: 'food_truck', industryId: 'food', name: 'Food Truck', icon: '🚚', baseCost: 60, growthRate: 1.08, baseRevenue: 77.6, cycleMs: 3000, unlock: prev('lemonade', 25), preferred: ['cycleSpeed', 'morale'] },
-  { id: 'pizzeria', industryId: 'food', name: 'Pizzeria', icon: '🍕', baseCost: 720, growthRate: 1.09, baseRevenue: 1930, cycleMs: 6000, unlock: prev('food_truck', 25), preferred: ['cycleSpeed', 'profitMult'] },
-  { id: 'sushi_bar', industryId: 'food', name: 'Sushi Bar', icon: '🍣', baseCost: 8640, growthRate: 1.1, baseRevenue: 47900, cycleMs: 12000, unlock: prev('pizzeria', 25), preferred: ['profitMult', 'morale'] },
+  // Food is the onboarding industry: its unlock gates are lower than the rest so
+  // the player reaches "what's next after Lemonade" in the first few minutes and
+  // gets early momentum. Later industries keep the higher 20/15 gates.
+  { id: 'food_truck', industryId: 'food', name: 'Food Truck', icon: '🚚', baseCost: 60, growthRate: 1.08, baseRevenue: 77.6, cycleMs: 3000, unlock: prev('lemonade', 10), preferred: ['cycleSpeed', 'morale'] },
+  { id: 'pizzeria', industryId: 'food', name: 'Pizzeria', icon: '🍕', baseCost: 720, growthRate: 1.09, baseRevenue: 1930, cycleMs: 6000, unlock: prev('food_truck', 15), preferred: ['cycleSpeed', 'profitMult'] },
+  { id: 'sushi_bar', industryId: 'food', name: 'Sushi Bar', icon: '🍣', baseCost: 8640, growthRate: 1.1, baseRevenue: 47900, cycleMs: 12000, unlock: prev('pizzeria', 18), preferred: ['profitMult', 'morale'] },
 
   // ---- Retail & Services (employee-synergy, steady) ----
   { id: 'corner_shop', industryId: 'retail', name: 'Corner Shop', icon: '🏪', baseCost: 18000, growthRate: 1.08, baseRevenue: 68900, cycleMs: 8000, unlock: { kind: 'free' }, preferred: ['costReduction', 'profitMult'] },

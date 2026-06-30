@@ -28,9 +28,17 @@ export interface SimSample {
 export interface SimEvents {
   firstBusiness?: number
   firstAutomation?: number
+  /** Time the second business in the FIRST industry (Food Truck) unlocks — the
+   *  early-game "what's next after Lemonade" beat. A key onboarding-momentum
+   *  landmark: if this drags, the start feels like an unrewarding grind. */
+  secondBusinessUnlocked?: number
   secondIndustry?: number
   prestigeEligible?: number
 }
+
+// The second business in the starting (Food) industry — the first unlock the
+// player chases after their opening business.
+const SECOND_BUSINESS_ID = BUSINESS_ORDER[1]
 
 export interface SimResult {
   samples: SimSample[]
@@ -192,6 +200,9 @@ export function simulateSession(
 
     if (events.firstBusiness == null && totalOwned(s) > 0) events.firstBusiness = tSec
     if (events.firstAutomation == null && anyAutomated(s)) events.firstAutomation = tSec
+    if (events.secondBusinessUnlocked == null && s.businesses[SECOND_BUSINESS_ID]?.unlocked) {
+      events.secondBusinessUnlocked = tSec
+    }
     if (events.secondIndustry == null && industriesEntered(s) >= 2) events.secondIndustry = tSec
     if (events.prestigeEligible == null && s.lifetimeEarnings >= PRESTIGE_UNLOCK_LIFETIME) {
       events.prestigeEligible = tSec

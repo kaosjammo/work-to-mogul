@@ -13,6 +13,7 @@ describe('balancing harness — 10-hour greedy session', () => {
     console.log('\n[harness] key events:')
     console.log('  first business :', ev.firstBusiness != null ? formatDuration(ev.firstBusiness) : 'never')
     console.log('  first automation:', ev.firstAutomation != null ? formatDuration(ev.firstAutomation) : 'never')
+    console.log('  2nd business unl:', ev.secondBusinessUnlocked != null ? formatDuration(ev.secondBusinessUnlocked) : 'never')
     console.log('  second industry :', ev.secondIndustry != null ? formatDuration(ev.secondIndustry) : 'never')
     console.log('  prestige unlock :', ev.prestigeEligible != null ? formatDuration(ev.prestigeEligible) : 'never')
     console.log('[harness] curve (t / cash / pps / owned / careerLvl / industries):')
@@ -36,11 +37,21 @@ describe('balancing harness — 10-hour greedy session', () => {
     expect(result.events.firstAutomation).toBeDefined()
   })
 
+  it('gives the start momentum — unlocks the second business quickly', () => {
+    // The opening beat: after the first business, the player should reach the
+    // next unlock ("what do I save up for?") in the first few minutes, not after
+    // a long single-business grind. Guards against the start feeling too slow.
+    expect(result.events.secondBusinessUnlocked).toBeDefined()
+    expect(result.events.secondBusinessUnlocked!).toBeLessThan(5 * 60) // within ~5 min
+  })
+
   it('climbs into every industry over the long arc (not a 5-minute sprint)', () => {
     expect(result.events.secondIndustry).toBeDefined()
-    // The point of the rebalance: optimal play takes hours, not minutes, to reach
-    // the final industry — but it DOES get there within the 10h horizon.
-    expect(result.events.secondIndustry!).toBeGreaterThan(20 * 60) // not trivially fast
+    // The opening was retuned to give the start momentum (Food Truck in ~1-2 min),
+    // which also pulls the first branch into a 2nd industry earlier — but the player
+    // still spends a meaningful first stretch building Food before expanding, and
+    // reaching ALL industries takes the long arc (hours), not a quick sprint.
+    expect(result.events.secondIndustry!).toBeGreaterThan(10 * 60) // > 10 min — not trivially fast
     expect(result.industriesEntered).toBe(7)
   })
 
