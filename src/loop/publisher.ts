@@ -8,6 +8,7 @@ import { useUiStore } from '../store/uiStore'
 import { buildView } from '../store/buildView'
 import { getEngineState } from '../engine/engineState'
 import { ACHIEVEMENT_NAME } from '../content/achievements'
+import { haptic } from '../lib/haptics'
 
 const PUBLISH_INTERVAL_MS = 140 // ~7 Hz
 let lastPublish = 0
@@ -24,6 +25,7 @@ function toastNewAchievements(): void {
   if (ids.length > seenAchievements) {
     const fresh = ids.slice(seenAchievements)
     useUiStore.getState().pushCelebrations(fresh.map((id) => `🏆 ${ACHIEVEMENT_NAME[id] ?? id}`))
+    haptic(26) // a notable reward — buzz like the other celebratory moments
     seenAchievements = ids.length
   }
 }
