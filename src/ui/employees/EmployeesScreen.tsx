@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Rarity } from '../../types/domain'
+import type { EmployeeView } from '../../store/buildView'
 import { money } from '../../engine/num'
 import { useEmployees, useHireOptions } from '../../store/gameStore'
 import { hire, unassign, levelUp, autoAssign, chooseSpecialisation, fuse } from '../../store/actions'
@@ -191,104 +193,144 @@ export function EmployeesScreen() {
             </span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-            {employees.map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center gap-3 rounded-2xl p-3"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-              >
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-                  style={{ background: 'var(--surface-2)' }}
-                >
-                  <Icon art={employeeArt(e.templateId)} size={40} alt={e.name} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <RarityDot rarity={e.rarity} />
-                    <span className="truncate font-semibold">{e.name}</span>
-                    <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
-                      Lv {e.level}
-                    </span>
-                  </div>
-                  <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                    {e.roleName} · {e.effectLabel}
-                    {e.nextEffectLabel && e.nextEffectLabel !== e.effectLabel && (
-                      <span style={{ color: 'var(--text-faint)' }}> → {e.nextEffectLabel} next lvl</span>
-                    )}
-                    {e.affinityName ? ` · ${e.affinityName} ⭐` : ''}
-                  </div>
-                  <TraitChips names={e.traitNames} />
-                  <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
-                    {e.assignedToName ? `Working: ${e.assignedToName}` : 'On the bench'}
-                  </div>
-                  {e.canSpecialise && (
-                    <SpecPicker
-                      label={e.specialisationName ? 'Specialisation' : '🎓 Pick a specialisation'}
-                      options={e.specOptions}
-                      onPick={(specId) => chooseSpecialisation(e.id, specId)}
-                    />
-                  )}
-                  {e.canMastery && (
-                    <SpecPicker
-                      label={e.specialisation2Name ? '⭐ Mastery' : '⭐ Pick a Mastery spec'}
-                      options={e.specOptions2}
-                      onPick={(specId) => chooseSpecialisation(e.id, specId, 2)}
-                    />
-                  )}
-                </div>
-                <div className="flex shrink-0 flex-col items-stretch gap-1">
-                  {e.atMaxLevel ? (
-                    <span
-                      className="rounded-lg px-3 py-1 text-center text-xs font-bold"
-                      style={{ color: 'var(--accent)' }}
-                    >
-                      MAX
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={!e.levelUpAffordable}
-                      onClick={() => levelUp(e.id)}
-                      className="flex flex-col items-center rounded-lg px-3 py-1 text-xs font-bold"
-                      style={{
-                        minHeight: 'var(--tap)',
-                        background: e.levelUpAffordable ? 'var(--accent)' : 'var(--surface-3)',
-                        color: e.levelUpAffordable ? 'var(--accent-ink)' : 'var(--text-faint)',
-                      }}
-                    >
-                      <span>Lv up</span>
-                      <span className="tnum opacity-90">{money(e.levelUpCost)}</span>
-                    </button>
-                  )}
-                  {e.assignedToBusinessId && (
-                    <button
-                      type="button"
-                      onClick={() => unassign(e.id)}
-                      className="rounded-lg px-3 text-xs font-semibold"
-                      style={{ background: 'var(--surface-3)', color: 'var(--text-dim)' }}
-                    >
-                      Bench
-                    </button>
-                  )}
-                  {e.canFuse && e.fuseWithId && (
-                    <button
-                      type="button"
-                      onClick={() => fuse(e.id, e.fuseWithId!)}
-                      title={`Consume a duplicate to promote this ${e.rarity} to ${e.fuseToRarity}`}
-                      className="rounded-lg px-3 text-xs font-bold"
-                      style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
-                    >
-                      ✨ Fuse → {e.fuseToRarity}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <RosterGroups employees={employees} />
         )}
       </section>
+    </div>
+  )
+}
+
+// The roster can grow past 20 staff (the harness ends a long run with ~24), so a
+// flat list becomes a wall. When some staff are idle, split into "Benched" (the
+// call-to-action — they're earning nothing) and "On the job"; otherwise keep one
+// clean grid. Grouping is by current state, so assigning a benched employee simply
+// moves it to the working group — an expected, legible transition.
+function RosterGroups({ employees }: { employees: EmployeeView[] }) {
+  const benched = employees.filter((e) => e.assignedToBusinessId == null)
+  const working = employees.filter((e) => e.assignedToBusinessId != null)
+  const grid = (list: EmployeeView[]) => (
+    <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+      {list.map((e) => (
+        <EmployeeRow key={e.id} e={e} />
+      ))}
+    </div>
+  )
+  // Only sub-group when it actually helps (both states present); otherwise one grid.
+  if (benched.length === 0 || working.length === 0) return grid(employees)
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <GroupLabel>🪑 BENCHED · {benched.length}</GroupLabel>
+        {grid(benched)}
+      </div>
+      <div>
+        <GroupLabel>⚙️ ON THE JOB · {working.length}</GroupLabel>
+        {grid(working)}
+      </div>
+    </div>
+  )
+}
+
+function GroupLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
+      {children}
+    </div>
+  )
+}
+
+function EmployeeRow({ e }: { e: EmployeeView }) {
+  return (
+    <div
+      className="flex items-center gap-3 rounded-2xl p-3"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+    >
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+        style={{ background: 'var(--surface-2)' }}
+      >
+        <Icon art={employeeArt(e.templateId)} size={40} alt={e.name} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <RarityDot rarity={e.rarity} />
+          <span className="truncate font-semibold">{e.name}</span>
+          <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
+            Lv {e.level}
+          </span>
+        </div>
+        <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+          {e.roleName} · {e.effectLabel}
+          {e.nextEffectLabel && e.nextEffectLabel !== e.effectLabel && (
+            <span style={{ color: 'var(--text-faint)' }}> → {e.nextEffectLabel} next lvl</span>
+          )}
+          {e.affinityName ? ` · ${e.affinityName} ⭐` : ''}
+        </div>
+        <TraitChips names={e.traitNames} />
+        <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
+          {e.assignedToName ? `Working: ${e.assignedToName}` : 'On the bench'}
+        </div>
+        {e.canSpecialise && (
+          <SpecPicker
+            label={e.specialisationName ? 'Specialisation' : '🎓 Pick a specialisation'}
+            options={e.specOptions}
+            onPick={(specId) => chooseSpecialisation(e.id, specId)}
+          />
+        )}
+        {e.canMastery && (
+          <SpecPicker
+            label={e.specialisation2Name ? '⭐ Mastery' : '⭐ Pick a Mastery spec'}
+            options={e.specOptions2}
+            onPick={(specId) => chooseSpecialisation(e.id, specId, 2)}
+          />
+        )}
+      </div>
+      <div className="flex shrink-0 flex-col items-stretch gap-1">
+        {e.atMaxLevel ? (
+          <span
+            className="rounded-lg px-3 py-1 text-center text-xs font-bold"
+            style={{ color: 'var(--accent)' }}
+          >
+            MAX
+          </span>
+        ) : (
+          <button
+            type="button"
+            disabled={!e.levelUpAffordable}
+            onClick={() => levelUp(e.id)}
+            className="flex flex-col items-center rounded-lg px-3 py-1 text-xs font-bold"
+            style={{
+              minHeight: 'var(--tap)',
+              background: e.levelUpAffordable ? 'var(--accent)' : 'var(--surface-3)',
+              color: e.levelUpAffordable ? 'var(--accent-ink)' : 'var(--text-faint)',
+            }}
+          >
+            <span>Lv up</span>
+            <span className="tnum opacity-90">{money(e.levelUpCost)}</span>
+          </button>
+        )}
+        {e.assignedToBusinessId && (
+          <button
+            type="button"
+            onClick={() => unassign(e.id)}
+            className="rounded-lg px-3 text-xs font-semibold"
+            style={{ background: 'var(--surface-3)', color: 'var(--text-dim)' }}
+          >
+            Bench
+          </button>
+        )}
+        {e.canFuse && e.fuseWithId && (
+          <button
+            type="button"
+            onClick={() => fuse(e.id, e.fuseWithId!)}
+            title={`Consume a duplicate to promote this ${e.rarity} to ${e.fuseToRarity}`}
+            className="rounded-lg px-3 text-xs font-bold"
+            style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+          >
+            ✨ Fuse → {e.fuseToRarity}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
