@@ -4,6 +4,54 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Direct request — Merge the balance-overhaul worktree into main
+
+**Analysed**
+- The `.claude/worktrees/happy-buck-3ad260` worktree held an uncommitted **balance overhaul** ("Target B": income-efficiency monotonicity so a pricier business is never a worse $/s-per-$ deal) + career/Senior-Consultant tuning + WorkCard changes + a new `src/content/balance.test.ts`, built on the old base commit while `main` had moved far ahead.
+- Risk assessment: the balance-core files (`businesses.ts`, `industries.ts`, `career.ts`, `economy.ts`, `harness.ts`, `balance.test.ts`) were untouched by my work → clean; overlap only in `buildView.ts`/`WorkCard.tsx`/`domain.ts`/`actions.ts`/`serialize.ts` + some tests.
+
+**Done**
+- Committed the worktree's work onto its branch (`3805e20`), then `git merge --no-ff` into `main` → **merged cleanly with ZERO conflicts** (ort 3-way; my feature changes and the balance changes occupied different regions). Merge commit `d38a116`.
+- De-registered the worktree (`git worktree remove` + `prune`); leftover folder is OS-locked (OneDrive) but harmless — no longer a git worktree, excluded from vitest.
+
+**Commands run / results**
+- `npm run build` ✓; `npm run lint` ✓; `npm run test` ✓ — **149 tests / 27 files** (was 146/26; +`balance.test.ts` with 3 monotonicity invariants). The economy re-tune + new career/consulting code integrate correctly with cloud save / art / polish.
+
+**Known issues / notes**
+- Merge is committed locally on `main` (`d38a116`); **not pushed**. The iteration-7 empty-state polish (`Placeholder`/`UpgradesScreen`/`EmployeesScreen`) + these docs remain uncommitted.
+
+---
+
+## Loop (current session) — Iteration 7: empty-state illustrations + commit
+
+**Analysed**
+- Working tree is now **committed** (commit `e1c5f23` — cloud save + full art set + polish; 85 files). Baseline 146 tests green. Reviewed the early `state_empty_*` SVGs — they're clean/on-brand (dark `#181b22` + accent shapes), nicer than a bare emoji.
+
+**UI improvements made (Goal 3 — better empty states, using committed art)**
+- `Placeholder` now accepts an optional `art` illustration path (renders an `<img>` with reserved 120×90 dims, `aria-hidden`) and falls back to the emoji `icon`.
+- **Upgrades** all-owned state uses `state_empty_upgrades.svg`.
+- **Staff** empty state now shows `state_empty_staff.svg` above the hire hint.
+
+**Missing art callouts (Goal 2)**
+- Two more previously-unused placeholder SVGs (`state_empty_staff/upgrades`) are now wired into empty states. Remaining unused: `state_locked`/`state_unaffordable`, prestige visuals, `ART_UI` glyphs (still intentionally unused — emoji/text reads fine).
+
+**Files changed**
+- `src/ui/shared/Placeholder.tsx`, `src/ui/upgrades/UpgradesScreen.tsx`, `src/ui/employees/EmployeesScreen.tsx`.
+
+**Commands run**
+- `npm run build` ✓; `npm run lint` ✓; `npm run test` ✓ (146/26).
+
+**Results**
+- All green. Verified clean boot + both state SVGs serve `200`. (The empty-state screens are behind progression-gated tabs, so couldn't be reached directly in the prod preview without cash; the `img` addition is trivial + build-validated.)
+
+**Known issues / notes**
+- This iteration's 3-file change is **uncommitted** (left for the user to fold into a commit/push, consistent with "commit when asked"). Bundle ~153 kB gzip (Supabase) still deferred for code-split.
+
+**Recommended next action**
+- Commit + push this small polish if wanted; otherwise the loop is in optional-polish tail. User-side: push `main` to deploy, provision Supabase for live sync.
+
+---
+
 ## Loop (current session) — Iteration 6: art audit refresh + honest status
 
 **Analysed**

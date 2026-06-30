@@ -18,7 +18,7 @@ export function UpgradesScreen() {
   if (allOwned) {
     return (
       <Placeholder
-        icon="⚡"
+        art="/assets/states/state_empty_upgrades.svg"
         title="All upgrades owned"
         body="You've bought every upgrade available in this build. More arrive with future content."
       />

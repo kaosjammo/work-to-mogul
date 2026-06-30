@@ -47,12 +47,24 @@ export function EmployeesScreen() {
         </div>
         {employees.length === 0 ? (
           <div
-            className="rounded-2xl p-5 text-center text-sm"
+            className="flex flex-col items-center gap-3 rounded-2xl p-6 text-center text-sm"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
           >
-            No staff yet. Hire someone below, then assign them to a business from its
-            <span className="font-semibold"> 👤 staff </span>
-            button.
+            <img
+              src="/assets/states/state_empty_staff.svg"
+              width={120}
+              height={90}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              decoding="async"
+              style={{ width: 120, height: 90 }}
+            />
+            <span>
+              No staff yet. Hire someone below, then assign them to a business from its
+              <span className="font-semibold"> 👤 staff </span>
+              button.
+            </span>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">

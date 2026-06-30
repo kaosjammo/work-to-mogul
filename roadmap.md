@@ -105,6 +105,12 @@ login/sync paths on a phone (see `deploy-notes.md`). Optional: code-split
 
 ## Latest loop summary
 
+**Iteration 7 — empty-state illustrations (Goal 3):** committed the full snapshot
+(`e1c5f23`), then wired two on-brand `state_empty_*` SVGs into the **Upgrades**
+(all-owned) and **Staff** (no-staff) empty states via an `art` prop on
+`Placeholder`. Build ✓, lint ✓, 146 tests ✓; assets serve 200. (3-file change
+left uncommitted for the user to fold in.)
+
 **Iteration 6 — art audit refresh (Goal 2):** confirmed all quality art is wired
 + rendering (icons, 17 portraits in roster *and* hire list, banners, patterns);
 documented the remaining unused early **placeholder** assets (`states/*`,
