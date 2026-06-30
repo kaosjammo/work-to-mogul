@@ -171,9 +171,11 @@ export interface CareerView {
   isMaxLevel: boolean
   nextTitle: string | null
   nextWage: number | null
-  // Salary Draw: what a completed shift actually pays right now, and whether the
-  // next one is a Golden Shift (periodic multiplier).
+  // Salary Draw: what a completed shift actually pays right now, how many times
+  // the flat base wage that is (the empire-income boost), and whether the next
+  // one is a Golden Shift (periodic multiplier).
   salaryDrawValue: number
+  salaryDrawMult: number // salaryDrawValue / base wage; 1 when the flat wage still wins
   nextShiftIsGolden: boolean
   // Senior Consultant (retired) stage: optional over-time bonus.
   retired: boolean
@@ -620,6 +622,7 @@ export function buildView(state: GameState): ViewSnapshot {
   const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
   const passivePerSec = automatedIncomePerSec(state)
   const retired = isRetired(state)
+  const drawValue = shiftPayout(state, passivePerSec)
   const career: CareerView = {
     level: c.level,
     title: cdef.title,
@@ -636,7 +639,8 @@ export function buildView(state: GameState): ViewSnapshot {
     isMaxLevel,
     nextTitle: nextDef?.title ?? null,
     nextWage: nextDef?.wage ?? null,
-    salaryDrawValue: shiftPayout(state, passivePerSec),
+    salaryDrawValue: drawValue,
+    salaryDrawMult: cdef.wage > 0 ? drawValue / cdef.wage : 1,
     nextShiftIsGolden: (c.totalShifts + 1) % GOLDEN_SHIFT_EVERY === 0,
     retired,
     consultingValue: consultingPayout(state, passivePerSec),

@@ -1,4 +1,4 @@
-import { money, formatDuration } from '../../engine/num'
+import { money, format, formatDuration } from '../../engine/num'
 import { useCareer } from '../../store/gameStore'
 import { workShift, consult } from '../../store/actions'
 import { ProgressBar } from '../business/ProgressBar'
@@ -83,6 +83,17 @@ export function WorkCard() {
           </div>
           <div className="tnum text-xs" style={{ color: 'var(--text-dim)' }}>
             {money(c.salaryDrawValue)} / shift · {formatDuration(c.shiftMs / 1000)}
+            {c.salaryDrawMult > 1.01 && (
+              <span
+                className="ml-1 font-bold"
+                style={{ color: WORK_ACCENT }}
+                title={`Salary draw: each shift pays a slice of your empire's income — ×${format(
+                  c.salaryDrawMult,
+                )} your ${money(c.wage)} base wage.`}
+              >
+                · ×{format(c.salaryDrawMult)} salary draw
+              </span>
+            )}
             {c.nextShiftIsGolden && (
               <span className="ml-1 font-bold" style={{ color: 'var(--accent)' }}>
                 · ⭐ Golden ×5 next!
