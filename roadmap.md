@@ -68,7 +68,7 @@ give 2–3 industries a felt, name-matching mechanic before adding any more cont
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
-| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food "Rush Hour" window (1st of ~3); Finance compounding + Quantum signature next |
+| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food "Rush Hour" shipped (`ffc8fe5`, 1st of ~3); Finance compounding + Quantum signature next |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
@@ -157,10 +157,10 @@ are exactly the interchangeable industries. Slowing the climb buys engagement ti
 are complementary: the slowdown only pays off in retention if the industries you now dwell
 in feel genuinely different. Differentiate **before** slowing further.
 
-**🔨 In progress (uncommitted): Food "Rush Hour" — the first felt mechanic.** Design
-review — strong, exactly to spec: `rushHour.ts` opens a 12s **tappable window** every ~3 min
-that grants a 25s **×3 Food speed surge**, on the deterministic `golden.ts` tick-counter
-cadence (no RNG), with `FloatingRushHour.tsx` as the countdown cue. State is transient (not
+**✅ Shipped (`ffc8fe5`): Food "Rush Hour" — the first felt mechanic.** Design review —
+strong, exactly to spec: `rushHour.ts` opens a 12s **tappable window** every ~3 min that
+grants a 25s **×3 Food speed surge**, on the deterministic `golden.ts` tick-counter cadence
+(no RNG), with `FloatingRushHour.tsx` as the countdown cue. State is transient (not
 persisted → no save migration). Harness-safe by construction (the bot never claims, so
 `surgeMsLeft` stays 0 and first-run landmarks don't move); 14 tests green across
 rushHour/harness/balance.
