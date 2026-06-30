@@ -132,6 +132,11 @@ dev server, then fetch/rebase/pushed):
   the Ascend screen (the "ascend now or wait?" decision); (3) the new-industry entry banner
   now reads `~About 5m away at your current income`. All derived from idle income via a
   coarse, flicker-free `formatEta()` (caps far-off goals at `10h+`).
+- **Every choice now states its outcome** — upgrade cards lead with the effect (`×2 profit`,
+  `−10% cost`); assigned staff slots show each member's contribution (`Lv N · <effect>`);
+  and the marquee **Assign → +$/s** preview shows the exact idle-income gain before assigning
+  a benched employee (computed in buildView against a non-mutating clone, gated to the open
+  sheet). Plus a **"🏭 Welcome to <Industry>!"** celebration when you enter a new industry.
 - **Fixed a stale Stats denominator** — "Industries entered" hardcoded `/7` but an 8th
   industry exists; now derived from `INDUSTRY_ORDER.length` so it can't drift again.
 - **Save-compat regression guard** — a test locks in that saves written before newer
