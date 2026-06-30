@@ -41,7 +41,12 @@ a template is in [`.env.example`](.env.example).
 | Var | Source |
 |---|---|
 | `VITE_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public key |
+| `VITE_SUPABASE_ANON_KEY` | A **public** frontend key: the new **publishable** key (`sb_publishable_…`) **or** the legacy **anon public** JWT (`eyJ…`) |
+
+> **Never** put a **secret** key (`sb_secret_…`) or the **service_role** key in
+> Vercel env / the frontend — they bypass Row Level Security. The browser only
+> needs the publishable/anon key. (Publishable keys are sent as `apikey`, never as
+> a bearer token — the client handles this; see `supabase-notes.md`.)
 
 ### Setting them on Vercel
 1. Vercel → your project → **Settings → Environment Variables**.

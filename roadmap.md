@@ -11,8 +11,9 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 ## Current implemented features
 
 **Core loop & economy**
-- Work/Career early game (6 levels, wages/promotions) as the manual income bridge — players start here, **not** a Lemonade Stand.
+- Work/Career early game (6 levels, wages/promotions) as the manual income bridge — players start here, **not** a Lemonade Stand. At max level the career "retires" into a **Senior Consultant** end-state: an optional over-time consulting bonus pool (capped) you Collect by tapping (`career.ts` + WorkCard strip).
 - Geometric-cost businesses with Buy x1/x10/x100/Max; 27 businesses across 7 industries; per-business milestones (25→600 owned).
+- **Balance overhaul (merged):** economy re-tuned for income-efficiency monotonicity — a pricier business is never a worse $/s-per-$ deal, both globally and within each industry ladder. Guarded by `src/content/balance.test.ts`.
 - Industries visible from the start, gated only by cost-of-entry (no artificial unlock payments).
 - 10 Hz fixed-timestep engine outside React; throttled view publish; manual→automated income pivot.
 - Offline/away catch-up (cap 2h) with welcome-back banner.
@@ -30,8 +31,8 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - **Cloud save + accounts (NEW, env-gated):** Supabase Auth (email+password) + `game_saves` table (RLS, anon key only). Account modal (login/signup/logout), HUD sync-status pill (Local/Syncing/Synced/Sync failed), debounced cloud upload on autosave, and a non-destructive local-vs-cloud conflict chooser on login. Fully disabled (anonymous local play) when `VITE_SUPABASE_*` are unset.
 - **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
 - PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
-- Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`.
-- 146 tests / 26 files; oxlint clean; production build verified booting.
+- Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
+- **149 tests / 27 files**; oxlint clean; production build verified booting.
 
 ## Current known issues / notes
 
@@ -41,11 +42,13 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
   shipped in prior loops — so this is documented as an intentional pre-existing
   state, not something to expand further this loop. No rollback (would break
   saves/tests); no further employee-depth additions while focusing on Goals 1–3.
-- **Cloud save needs real Supabase creds to fully test.** The code is built +
-  env-gated; the configured paths (login → reconcile → conflict chooser → sync)
-  are verified only by code review locally, since no `VITE_SUPABASE_*` are set
-  here. Provision Supabase (see `supabase-notes.md`) + set Vercel env vars to
-  exercise them on-device (steps in `deploy-notes.md`).
+- **Cloud save needs real Supabase creds for a full on-device test.** Code is
+  built + env-gated; the **auth header handling is now verified** (publishable-key
+  fetch patch confirmed via a fake-key build — login sends apikey only, no bad
+  bearer). The reconcile → conflict chooser → sync paths are still code-reviewed
+  only locally (no live backend). Provision Supabase (`supabase-notes.md`) + set
+  Vercel env vars (`deploy-notes.md`) to exercise on-device. Use the **publishable**
+  (`sb_publishable_…`) or legacy anon JWT key — never a secret/service_role key.
 - **Bundle size grew** ~322 kB → ~539 kB raw (~98 kB → ~153 kB gzip) from
   bundling `@supabase/supabase-js`. Acceptable, but a deferred optimization is to
   code-split it (dynamic import) so anonymous/unconfigured builds stay lean.
@@ -104,6 +107,25 @@ login/sync paths on a phone (see `deploy-notes.md`). Optional: code-split
 - Native packaging (Electron/Tauri/Capacitor/Steam) — explicitly not now.
 
 ## Latest loop summary
+
+**Bug fix — Supabase new publishable-key (`sb_publishable_…`) auth:** signup/login
+was failing with "Failed to fetch" because supabase-js sent the publishable key as
+`Authorization: Bearer …` (it's not a JWT). Fixed in `src/lib/supabase.ts` with a
+`global.fetch` patch (`sanitizeAuthHeaders`) that strips the bad bearer for
+publishable keys only — apikey-only request now; real access tokens + legacy `eyJ…`
+anon JWTs untouched (cloud save after login still works). Added `supabase.test.ts`
+(5 cases); docs clarify publishable vs anon vs never-secret. **lint ✓, 154 tests ✓,
+build ✓; verified live** (login request sends `apikey: sb_publishable_…`,
+`Authorization: null`).
+
+**Merged balance overhaul + committed/pushed everything:** brought the
+`happy-buck-3ad260` worktree (efficiency-monotonic economy re-tune + Senior
+Consultant retirement end-state + `balance.test`) into `main` via a clean
+zero-conflict 3-way merge (`d38a116`); **build ✓, lint ✓, 149 tests ✓**.
+Committed the whole project (cloud save, art, polish, balance) and **pushed
+`origin/main`** → Vercel auto-deploys. Worktree de-registered. This iteration:
+reconciled the roadmap with the merged reality (Senior Consultant, balance
+invariant, 149 tests, deployed). All three goals complete + live.
 
 **Iteration 7 — empty-state illustrations (Goal 3):** committed the full snapshot
 (`e1c5f23`), then wired two on-brand `state_empty_*` SVGs into the **Upgrades**

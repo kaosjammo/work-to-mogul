@@ -21,8 +21,19 @@ RLS ensures a user can only read/write their own save row.
 1. Create a free project at <https://supabase.com>.
 2. **Project Settings → API** → copy:
    - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
-3. Never copy the **service_role** key into the frontend or this repo.
+   - A **public frontend key** → `VITE_SUPABASE_ANON_KEY`. Either format works:
+     - new **publishable** key, starting `sb_publishable_…` (current dashboards), or
+     - legacy **anon public** JWT, starting `eyJ…`.
+3. **Never** copy a **secret** key (`sb_secret_…`) or the **service_role** key into
+   the frontend, env vars, or this repo. Those bypass Row Level Security.
+
+### Key-format note (why this matters)
+The new **publishable** keys are *not* JWTs and must be sent only as the `apikey`
+header — never as `Authorization: Bearer`. The browser client (`src/lib/supabase.ts`)
+detects an `sb_publishable_` key and strips the bad bearer header automatically, so
+signup/login/refresh work. (Symptom if this is wrong: login fails with
+"Failed to fetch" and the request carries `Authorization: Bearer sb_publishable_…`.)
+Legacy `eyJ…` anon keys are JWTs and are used as both `apikey` and bearer, as before.
 
 ## 2. Auth method
 

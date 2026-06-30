@@ -78,6 +78,17 @@ function safeSet(key: string, value: string): void {
   }
 }
 
+/** Friendly auth-error text + a safe (key-free) diagnostic for network failures. */
+function authErrorMessage(error: { message?: string }): string {
+  const msg = error?.message ?? 'Something went wrong. Please try again.'
+  if (/failed to fetch|load failed|networkerror|network request failed|fetch/i.test(msg)) {
+    // Never log the URL/key values — just that the request didn't reach the server.
+    console.warn('[supabase] auth request could not reach the server (network or config issue).')
+    return 'Couldn’t reach the sign-in server. Check your connection and that the Supabase URL/key are configured correctly.'
+  }
+  return msg
+}
+
 export const useAccountStore = create<AccountStore>((set, get) => ({
   configured: isSupabaseConfigured,
   ready: !isSupabaseConfigured, // unconfigured → immediately ready in local-only mode
@@ -136,7 +147,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     const { data, error } = await supabase.auth.signUp({ email, password })
     set({ authBusy: false })
     if (error) {
-      set({ authError: error.message })
+      set({ authError: authErrorMessage(error) })
       return
     }
     // Confirmation ON → user exists but no session yet; tell them to check email.
@@ -151,7 +162,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     set({ authBusy: true, authError: null, authNotice: null })
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     set({ authBusy: false })
-    if (error) set({ authError: error.message })
+    if (error) set({ authError: authErrorMessage(error) })
   },
 
   signOut: async () => {

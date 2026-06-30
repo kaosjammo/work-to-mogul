@@ -4,6 +4,60 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Bug fix — Supabase new publishable-key format ("Failed to fetch" on login)
+
+**Problem:** with a new `sb_publishable_…` key, `@supabase/supabase-js` put the
+project key in BOTH `apikey` AND `Authorization: Bearer …` on unauthenticated
+requests. Publishable keys are not JWTs, so GoTrue rejected the bad bearer →
+signup/login failed with "Failed to fetch".
+
+**Fix (smallest safe change — kept supabase-js, no auth/cloud rewrite):**
+- `src/lib/supabase.ts`: pass `global.fetch = apiKeySafeFetch`, which calls a pure,
+  exported `sanitizeAuthHeaders(headers, key)` that — **only for `sb_publishable_`
+  keys** — strips `Authorization` when it equals `Bearer <key>` (anon role then comes
+  from the `apikey` header). Real user access tokens (after login) and legacy `eyJ…`
+  anon JWTs are left untouched, so cloud-save requests still send
+  `Authorization: Bearer <access_token>`. `isPublishable()` helper added. DEV-only
+  safe diagnostic logs the key KIND, never the value.
+- `src/store/accountStore.ts`: `authErrorMessage()` maps network/fetch failures to a
+  clear message + a key-free `console.warn` diagnostic (req 7).
+- Docs: `supabase-notes.md` + `deploy-notes.md` clarify — frontend uses the
+  **publishable** (`sb_publishable_`) **or** legacy **anon JWT** (`eyJ…`) key;
+  **never** a secret/service_role key; publishable keys are sent as `apikey`, never
+  as a bearer.
+
+**Files changed**
+- `src/lib/supabase.ts`, `src/store/accountStore.ts`, new `src/lib/supabase.test.ts`,
+  `supabase-notes.md`, `deploy-notes.md`.
+
+**Commands run / results**
+- `npm run lint` ✓; `npm run test` ✓ **154/28** (+5 sanitiser tests); `npm run build` ✓.
+
+**Verified (acceptance criteria)**
+- Built a configured client with a fake `sb_publishable_` key + a fetch spy:
+  `POST /auth/v1/token?grant_type=password` now sends **`apikey: sb_publishable_…`**
+  and **`Authorization: null`** (the `Bearer sb_publishable_…` bug is gone). Unit
+  tests confirm access tokens / legacy JWTs are left intact (cloud save after login
+  still works). Anonymous local play unaffected (supabase `null` when unconfigured).
+  No secret/service_role key anywhere.
+
+---
+
+## Loop (current session) — Iteration 8: post-merge reconciliation + deploy
+
+**Analysed / done**
+- Committed remaining empty-state polish (`6d8c839`) and **pushed `main` → `origin/main`** (`07a09b4..6d8c839`) — Vercel auto-deploys the full stack (balance overhaul + cloud save + art + polish). No secrets pushed.
+- Verified the merged **Senior Consultant** end-state is fully wired (career.ts logic, `buildView` `consultingValue/Fraction/Full`, WorkCard strip + Collect, `consult()` action, `consultingMs` persisted) and the balance re-tune holds — **build ✓, lint ✓, 149 tests ✓**.
+- **Roadmap reconciled** with merged reality: added the balance-overhaul (efficiency-monotonic economy + `balance.test`) and Senior Consultant to implemented features, bumped to 149 tests / 27 files, noted committed+pushed/deployed.
+
+**Files changed**
+- `roadmap.md`, `dev-progress.md` (docs only).
+
+**Results / status**
+- All three goals complete and **live on Vercel**. Highest-value remaining work is user-side: set `VITE_SUPABASE_*` in Vercel to enable cloud login; delete the OS-locked leftover worktree folder when free.
+
+---
+
 ## Direct request — Merge the balance-overhaul worktree into main
 
 **Analysed**
