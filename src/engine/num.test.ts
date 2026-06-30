@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { format, money, formatRate, formatDuration, sanitize } from './num'
+import { format, money, formatRate, formatDuration, formatEta, sanitize } from './num'
 
 describe('format', () => {
   it('shows small numbers as integers or one-decimal fractions', () => {
@@ -50,5 +50,23 @@ describe('formatDuration', () => {
     expect(formatDuration(59.9)).toBe('59.9s')
     expect(formatDuration(65)).toBe('1m 05s')
     expect(formatDuration(125)).toBe('2m 05s')
+  })
+})
+
+describe('formatEta', () => {
+  it('rounds to a single coarse unit so a ticking countdown does not flicker', () => {
+    expect(formatEta(0)).toBe('now')
+    expect(formatEta(-3)).toBe('now') // already affordable
+    expect(formatEta(0.5)).toBe('1s') // rounds the final sub-second up
+    expect(formatEta(8.2)).toBe('9s') // ceil within the final minute
+    expect(formatEta(90)).toBe('2m') // rounds to nearest minute
+    expect(formatEta(3600)).toBe('1.0h')
+    expect(formatEta(9000)).toBe('2.5h')
+    expect(formatEta(40000)).toBe('10h+') // far-off goals cap politely
+  })
+
+  it('treats non-finite input as immediate', () => {
+    expect(formatEta(Infinity)).toBe('now')
+    expect(formatEta(NaN)).toBe('now')
   })
 })

@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { BusinessView } from '../../store/buildView'
-import { formatRate, money } from '../../engine/num'
+import { formatRate, money, formatEta } from '../../engine/num'
 import { tap } from '../../store/actions'
 import { haptic } from '../../lib/haptics'
 import { useUiStore } from '../../store/uiStore'
@@ -139,6 +139,11 @@ function BusinessCardImpl({ view, accent }: Props) {
           {view.nextMilestoneThreshold != null && (
             <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
               ★ at {view.nextMilestoneThreshold} → {view.nextMilestoneLabel}
+            </span>
+          )}
+          {!view.affordable && view.affordEtaSec != null && (
+            <span className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
+              ⏳ Affordable in ~{formatEta(view.affordEtaSec)}
             </span>
           )}
           {view.riskEnabled && (

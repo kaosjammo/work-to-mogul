@@ -73,6 +73,9 @@ export interface BusinessView {
   buyQty: number
   buyCost: number
   affordable: boolean
+  // Estimated seconds until the next purchase is affordable on current idle income
+  // (null when already affordable or when there's no idle income to estimate from).
+  affordEtaSec: number | null
   isBestBuy: boolean // highest reinvestment ROI right now (among owned, affordable)
   nextMilestoneThreshold: number | null
   nextMilestoneLabel: string | null
@@ -403,6 +406,7 @@ export function buildView(state: GameState): ViewSnapshot {
       buyQty: qty,
       buyCost: cost,
       affordable: qty > 0 && state.cash >= cost,
+      affordEtaSec: null,
       isBestBuy: false,
       nextMilestoneThreshold: nm?.threshold ?? null,
       nextMilestoneLabel: nm ? milestoneLabel(nm.effect) : null,
@@ -501,6 +505,19 @@ export function buildView(state: GameState): ViewSnapshot {
   })
 
   if (bestBuyId) businesses[bestBuyId].isBestBuy = true
+
+  // "Time to afford" estimate: now that total idle income is known, give each
+  // unaffordable unlocked business a countdown so a disabled Buy button reads as
+  // progress, not a dead end. Assumes all idle income is saved toward it (the
+  // standard idle-game convention) — only shown when there's income to estimate from.
+  if (totalPps > 0) {
+    for (const id in businesses) {
+      const bv = businesses[id]
+      if (bv.unlocked && !bv.affordable && bv.buyCost > state.cash) {
+        bv.affordEtaSec = (bv.buyCost - state.cash) / totalPps
+      }
+    }
+  }
 
   const industries: IndustryView[] = INDUSTRY_ORDER.map((iid) => {
     const ind = INDUSTRIES[iid]

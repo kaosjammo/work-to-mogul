@@ -63,3 +63,16 @@ export function formatDuration(seconds: number): string {
   const s = Math.floor(seconds % 60)
   return `${m}m ${s.toString().padStart(2, '0')}s`
 }
+
+/**
+ * Coarse "time remaining" label for a live-updating estimate (e.g. time-to-afford),
+ * which is recomputed several times a second. Rounds to a single coarse unit so the
+ * digits don't flicker as it ticks down, and caps far-off goals at a friendly "10h+".
+ */
+export function formatEta(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'now'
+  if (seconds < 60) return `${Math.ceil(seconds)}s`
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`
+  if (seconds < 36000) return `${(seconds / 3600).toFixed(1)}h`
+  return '10h+'
+}
