@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **192 tests / 31 files green** (`npm.cmd test`), oxlint clean, production build boots.
+- **197 tests / 32 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige token cut validated — and found over-corrected (`c038473` + `673dbdc`):** the `sqrt → fifth-root` re-tune (`PRESTIGE_YIELD_EXP = 0.2`) is now confirmed by the new multi-ascension sim to *not* explode (run #1 banks 1 token, no ascension blows up — the 1.48B-overnight bug is a CI guard). But the **same sim shows it over-shot**: the prestige loop is now too flat to reward repeated ascensions (see Next task + Risks). **The live balance question flipped from "too much" to "too little."**
 
@@ -72,7 +72,7 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 | # | Task | Why it matters for retention | Status |
 |---|---|---|---|
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass** | Harness landed (`673dbdc`) — proved the cut is non-exploding but **over-corrected to a flat loop**; the power-curve re-tune is the live work | **harness DONE · re-tune NEXT** |
-| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **🔨 IN PROGRESS** (uncommitted) — 4 trade-off perks, data-driven, tested; looks to-spec |
+| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ SHIPPED** (`79ecc94`, 197 tests) — perks live; ⚠️ harness-wiring + slope re-tune still open |
 | **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | Backlog |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
@@ -131,10 +131,11 @@ active.
 
 ---
 
-## Task 2 (🔨 in progress, uncommitted): Prestige v1 — founder perk choices
+## Task 2 (✅ shipped `79ecc94` — follow-ups open): Prestige v1 — founder perk choices
 
 On ascend the player picks 1 of N founder perks that re-flavour the whole run (not just
-+stats). **Design review of the uncommitted work — it's good:** `founderPerks.ts` ships
++stats). **Design review of the shipped work (197 tests green) — it's good:**
+`founderPerks.ts` ships
 4 *divergent trade-offs* — Industrialist (×1.5 profit / ×0.78 speed), Sprinter (×1.6
 speed / ×0.8 profit), Speculator (×2 Golden / ×0.9 profit), Homebody (×2 offline / ×0.92
 profit) — each with a real downside, data-driven (`FOUNDER_PERKS` + `FOUNDER_PERK_ORDER`),
@@ -145,7 +146,7 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 - [x] Data-driven table + a wired-effect test guard (no dead-perk repeat).
 - [ ] **Confirm per-run lifecycle:** the perk persists for the run, shows in HUD/Stats, and is **re-chosen each ascension** (wiped on reset) — verify in `prestige.ts`/`actions.ts`.
 - [ ] **Save migration:** existing saves load with **no perk** (neutral) until their next ascension; add a regression test (the diff touches `serialize.ts`/`initialState.ts`/`domain.ts` — make sure old saves don't crash).
-- [ ] ⚠️ **CRITICAL — wire perks into `simulateProgression`.** `harness.ts` is *not* in the change set, so the prestige-loop sim will keep measuring the economy **without** the perk the player always has. The bot must pick a perk each ascension (round-robin over `FOUNDER_PERK_ORDER`) or the slope guard silently rots. Do this in the same PR as the perks.
+- [ ] ⚠️ **CRITICAL — wire perks into `simulateProgression` (now a live gap).** `harness.ts` was **not** in `79ecc94`, so the prestige-loop sim is now measuring the economy **without** the perk the player always has — the slope guard already rots. Make the bot pick a perk each ascension (round-robin over `FOUNDER_PERK_ORDER`); this is the **next commit**, before any slope re-tune (so the re-tune is measured against real play).
 - [ ] **Mobile:** the ascend confirm flow shows the perks with one-line effect text, one-tap choose, at 375px / 44px targets.
 
 > **Coordination note (reviewer):** perks are landing *before* the slope re-tune, and
