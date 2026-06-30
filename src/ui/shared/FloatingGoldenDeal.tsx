@@ -28,7 +28,10 @@ export function FloatingGoldenDeal() {
         claimGolden()
       }}
       aria-label={`${g.mega ? 'MEGA ' : ''}Golden Deal: Time Warp for ${money(g.warpValue)}`}
-      className="golden-pulse fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 font-bold shadow-lg"
+      // Centered with auto-margins (not a translate) so the pulse animation's
+      // scale() can't fight the horizontal centering. w-max sizes to content; the
+      // max-width keeps a huge payout string from exceeding a narrow screen.
+      className="golden-pulse fixed inset-x-0 z-40 mx-auto flex w-max max-w-[92vw] items-center gap-2 rounded-full px-4 py-2 font-bold shadow-lg"
       style={{
         bottom: 'calc(var(--nav-h, 64px) + env(safe-area-inset-bottom) + 14px)',
         // MEGA deals get a hotter gradient + bolder ring so the jackpot reads instantly.

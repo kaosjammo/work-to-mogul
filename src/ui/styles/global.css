@@ -40,15 +40,15 @@ body {
     var(--bg);
 }
 
-#root > :not(.app-backdrop) {
-  position: relative;
-  z-index: 1;
-}
-
+/* The backdrop sits BEHIND all content via a negative z-index inside #root's
+   isolated stacking context. (Previously a `#root > :not(.app-backdrop)` rule
+   forced position:relative on every child to lift it above a z-index:0 backdrop —
+   but that selector out-specifies Tailwind's `.fixed`, so it silently broke the
+   fixed overlays, e.g. the Golden Deal flowed inline at full width off-screen.) */
 .app-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -259,13 +259,14 @@ button {
 
 /* Golden Deal pulse — draws the eye to the limited-time tap reward. */
 @keyframes golden-pulse {
+  /* No translateX here — the button is centered via auto-margins, so this only scales. */
   0%,
   100% {
-    transform: translateX(-50%) scale(1);
+    transform: scale(1);
     box-shadow: 0 4px 18px rgba(245, 197, 24, 0.45);
   }
   50% {
-    transform: translateX(-50%) scale(1.06);
+    transform: scale(1.06);
     box-shadow: 0 6px 26px rgba(245, 197, 24, 0.7);
   }
 }
