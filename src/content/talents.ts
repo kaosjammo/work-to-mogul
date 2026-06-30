@@ -29,6 +29,7 @@ export interface TalentDef {
   levelCostReducPerRank?: number // employee level-up cost ×(1 − x·rank)
   offlineMultPerRank?: number // offline / away earnings ×(1 + x·rank)
   tokenYieldPerRank?: number // prestige tokens gained ×(1 + x·rank)
+  goldenMultPerRank?: number // Golden Deal / Time-Warp payout ×(1 + x·rank)
 }
 
 export const TALENTS: Record<string, TalentDef> = {
@@ -73,6 +74,26 @@ export const TALENTS: Record<string, TalentDef> = {
     cost: [4, 9, 16],
     profitMultPerRank: 0.3,
   },
+  tycoon: {
+    id: 'tycoon',
+    name: 'Tycoon',
+    blurb: 'A premium profit engine that compounds with every other gain.',
+    theme: 'Economy',
+    icon: '💼',
+    maxRank: 5,
+    cost: [6, 12, 20, 32, 50],
+    profitMultPerRank: 0.18,
+  },
+  liquidation: {
+    id: 'liquidation',
+    name: 'Liquidation',
+    blurb: 'Bulk-buying businesses gets even cheaper.',
+    theme: 'Economy',
+    icon: '📦',
+    maxRank: 5,
+    cost: [4, 8, 13, 20, 30],
+    costReducPerRank: 0.05,
+  },
 
   // ---------- Workforce ----------
   fast_learners: {
@@ -105,6 +126,16 @@ export const TALENTS: Record<string, TalentDef> = {
     cost: [1, 2, 3, 5, 8],
     levelCostReducPerRank: 0.1,
   },
+  dynasty: {
+    id: 'dynasty',
+    name: 'Dynasty',
+    blurb: 'New hires arrive with even more experience.',
+    theme: 'Workforce',
+    icon: '🏅',
+    maxRank: 3,
+    cost: [6, 12, 20],
+    hireLevelPerRank: 1,
+  },
 
   // ---------- Tempo ----------
   efficiency: {
@@ -116,6 +147,26 @@ export const TALENTS: Record<string, TalentDef> = {
     maxRank: 5,
     cost: [1, 2, 3, 5, 8],
     speedMultPerRank: 0.08,
+  },
+  momentum: {
+    id: 'momentum',
+    name: 'Momentum',
+    blurb: 'Production cycles run faster still.',
+    theme: 'Tempo',
+    icon: '🚀',
+    maxRank: 5,
+    cost: [3, 6, 10, 15, 22],
+    speedMultPerRank: 0.06,
+  },
+  golden_touch: {
+    id: 'golden_touch',
+    name: 'Golden Touch',
+    blurb: 'Time Warps from Golden Deals pay out more.',
+    theme: 'Tempo',
+    icon: '🍀',
+    maxRank: 4,
+    cost: [3, 7, 12, 18],
+    goldenMultPerRank: 0.25,
   },
   idle_mastery: {
     id: 'idle_mastery',
@@ -143,13 +194,18 @@ export const TALENTS: Record<string, TalentDef> = {
 export const TALENT_ORDER: string[] = [
   'magnate',
   'overdrive',
+  'tycoon',
   'seed_capital',
   'wholesale',
+  'liquidation',
   'fast_learners',
+  'dynasty',
   'headhunter',
   'mentorship',
   'efficiency',
+  'momentum',
   'idle_mastery',
+  'golden_touch',
   'prestige_scholar',
 ]
 

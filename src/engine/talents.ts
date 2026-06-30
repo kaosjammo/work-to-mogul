@@ -57,6 +57,7 @@ type ScalarTalentKey =
   | 'levelCostReducPerRank'
   | 'offlineMultPerRank'
   | 'tokenYieldPerRank'
+  | 'goldenMultPerRank'
 
 function sumPerRank(state: GameState, key: ScalarTalentKey): number {
   let sum = 0
@@ -126,6 +127,11 @@ export function tokenYieldMult(state: GameState): number {
   return 1 + sumPerRank(state, 'tokenYieldPerRank')
 }
 
+/** Multiplier on Golden Deal / Time-Warp payouts (≥ 1, from Golden Touch). */
+export function goldenValueMult(state: GameState): number {
+  return 1 + sumPerRank(state, 'goldenMultPerRank')
+}
+
 /** Cash granted at the start of each run (highest Seed Capital rank). */
 export function startCash(state: GameState): number {
   let cash = 0
@@ -156,5 +162,6 @@ export function talentLabel(def: TalentDef, rank: number): string {
   if (def.levelCostReducPerRank) return `−${pct(def.levelCostReducPerRank)}% level-up cost`
   if (def.offlineMultPerRank) return `+${pct(def.offlineMultPerRank)}% offline earnings`
   if (def.tokenYieldPerRank) return `+${pct(def.tokenYieldPerRank)}% token yield`
+  if (def.goldenMultPerRank) return `+${pct(def.goldenMultPerRank)}% Time Warp value`
   return ''
 }

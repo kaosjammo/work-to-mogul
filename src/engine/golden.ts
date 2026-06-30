@@ -6,7 +6,7 @@
 // ============================================================
 import type { GameState, GoldenState } from '../types/domain'
 import { automatedIncomePerSec } from './catchUp'
-import { offlineMult } from './talents'
+import { offlineMult, goldenValueMult } from './talents'
 
 export const GOLDEN_SPAWN_INTERVAL_MS = 120_000 // ~2 min between deals
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
@@ -18,7 +18,7 @@ export function initialGoldenState(): GoldenState {
 
 /** Cash a Time Warp would grant right now (idle income × warp window). */
 export function timeWarpValue(state: GameState): number {
-  return automatedIncomePerSec(state) * GOLDEN_WARP_SECONDS * offlineMult(state)
+  return automatedIncomePerSec(state) * GOLDEN_WARP_SECONDS * offlineMult(state) * goldenValueMult(state)
 }
 
 /**

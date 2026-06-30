@@ -9,8 +9,10 @@ import {
   levelCostMult,
   offlineMult,
   tokenYieldMult,
+  goldenValueMult,
   startCash,
 } from './talents'
+import { timeWarpValue } from './golden'
 import { economyMultipliers, PRESTIGE_SCALE } from './economy'
 import { prestigeReset } from './prestige'
 import { hireEmployee, levelUpCost } from './employees/roster'
@@ -111,6 +113,22 @@ describe('tempo talents', () => {
     expect(offlineMult(s)).toBeCloseTo(1.3)
     const boosted = applyOfflineEarnings(s, 60_000).earned
     expect(boosted).toBeCloseTo(baseline * 1.3, 1)
+  })
+
+  it('golden touch boosts Time-Warp payout value', () => {
+    const s = withTokens(99)
+    s.businesses.lemonade.owned = 5
+    s.businesses.lemonade.unlocked = true
+    s.businesses.lemonade.assigned = ['op']
+    s.employees.op = {
+      id: 'op', templateId: 'mickey_gears', name: 'Op', role: 'operator',
+      rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null,
+    }
+    const base = timeWarpValue(structuredClone(s))
+    expect(goldenValueMult(s)).toBeCloseTo(1)
+    buyTalent(s, 'golden_touch') // +25%
+    expect(goldenValueMult(s)).toBeCloseTo(1.25)
+    expect(timeWarpValue(s)).toBeCloseTo(base * 1.25, 1)
   })
 
   it('prestige scholar increases tokens banked at ascension', () => {
