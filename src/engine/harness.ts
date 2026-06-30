@@ -135,18 +135,33 @@ function botStep(s: GameState, step: number): void {
     }
   }
 
-  // Buy the cheapest affordable unlocked unit, reserving cash for the next
-  // operator while any business still needs automating.
+  // Buy the best-VALUE affordable unlocked unit — the one whose next unit adds the
+  // most $/s per dollar spent (marginal ROI) — reserving cash for the next operator
+  // while any business still needs automating. (Buying "cheapest" is wrong under a
+  // monotonic-efficiency economy, where the cheapest business is the worst deal.)
   const reserve = needsAutomation(s) ? CHEAPEST_OPERATOR_COST : 0
   for (let i = 0; i < 40; i++) {
     let bestId: string | null = null
-    let bestCost = Infinity
+    let bestRoi = 0
     for (const id of BUSINESS_ORDER) {
       const bs = s.businesses[id]
       if (!bs.unlocked) continue
-      const c = unitCost(BUSINESSES[id], bs.owned)
-      if (c <= s.cash - reserve && c < bestCost) {
-        bestCost = c
+      const def = BUSINESSES[id]
+      const r = resolveBusiness(s, def)
+      const cost = unitCost(def, bs.owned) * r.buyCostMult
+      if (!(cost > 0) || cost > s.cash - reserve) continue
+      // $/s the next unit adds (revenue is linear in owned, so per-unit = pps/owned).
+      let perUnitPps: number
+      if (bs.owned > 0) {
+        perUnitPps = r.pps / bs.owned
+      } else {
+        bs.owned = 1
+        perUnitPps = resolveBusiness(s, def).pps
+        bs.owned = 0
+      }
+      const roi = perUnitPps / cost
+      if (roi > bestRoi) {
+        bestRoi = roi
         bestId = id
       }
     }

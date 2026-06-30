@@ -111,12 +111,20 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
 
 // ----- Prestige -----
 
+// Prestige is denominated in lifetime earnings, which the efficiency rebalance
+// inflated by many orders of magnitude (top-tier revenue had to rise to keep
+// efficiency monotonic). PRESTIGE_SCALE re-anchors the sqrt curve so first-prestige
+// lands at a sane point and token yield stays in the tens–hundreds, not millions.
+// NOTE: provisional — final value belongs with the broader cost rescale (upgrades,
+// employees, contracts are still priced on the old dollar scale).
+export const PRESTIGE_SCALE = 1e15
+
 /** Prestige points earned for a given lifetime earnings (sqrt scaling). */
 export function prestigePointsFor(lifetimeEarnings: Num): number {
-  return Math.floor(Math.sqrt(Math.max(0, lifetimeEarnings) / 1e6))
+  return Math.floor(Math.sqrt(Math.max(0, lifetimeEarnings) / PRESTIGE_SCALE))
 }
 
-export const PRESTIGE_UNLOCK_LIFETIME = 1e6
+export const PRESTIGE_UNLOCK_LIFETIME = PRESTIGE_SCALE
 
 // ----- Combined economy multipliers (milestone × industry × prestige × upgrades) -----
 

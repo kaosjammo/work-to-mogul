@@ -6,7 +6,7 @@ import type { BusinessId, BuyMode, IndustryId, TabId } from '../types/domain'
 import { getEngineState, resetEngineState } from '../engine/engineState'
 import { purchase, tapBusiness } from '../engine/buy'
 import { resolveQuantity } from '../engine/economy'
-import { startShift } from '../engine/career'
+import { startShift, claimConsulting } from '../engine/career'
 import {
   hireEmployee,
   assignEmployee,
@@ -61,6 +61,15 @@ export function tap(id: BusinessId): void {
 export function workShift(): void {
   startShift(getEngineState())
   publishNow()
+}
+
+/** Collect the accrued Senior Consultant bonus (optional late-game top-up). */
+export function consult(): void {
+  const earned = claimConsulting(getEngineState())
+  if (earned > 0) {
+    useUiStore.getState().pushCelebrations([`💼 Consulting fee +${money(earned)}`])
+    publishNow()
+  }
 }
 
 // ----- Employees -----

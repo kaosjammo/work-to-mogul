@@ -193,6 +193,9 @@ export interface CareerState {
   shiftProgressMs: number // 0 = idle; > 0 = a shift is in progress
   shiftsThisLevel: number // progress toward the next promotion
   totalShifts: number
+  // Senior Consultant (post-retirement): accrued idle time for the optional
+  // over-time consulting bonus, claimed by tapping. Only accrues at max career level.
+  consultingMs: number
 }
 
 /** Golden Deals — transient active-play tap rewards (Time Warp). */

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { checkAchievements } from './achievements'
 import { prestigeReset } from './prestige'
+import { PRESTIGE_SCALE } from './economy'
 import { hireEmployee, assignToFirstFreeSlot } from './employees/roster'
 import { initialGameState } from '../store/initialState'
 import { ACHIEVEMENTS } from '../content/achievements'
@@ -46,7 +47,7 @@ describe('achievements', () => {
   it('persists achievements through an ascension', () => {
     const s = initialGameState(0)
     s.career.totalShifts = 1
-    s.lifetimeEarnings = 4_000_000
+    s.lifetimeEarnings = 4 * PRESTIGE_SCALE // enough to ascend
     checkAchievements(s) // unlocks first_shift, millionaire
     const before = [...s.achievementsUnlocked]
     expect(before.length).toBeGreaterThan(0)

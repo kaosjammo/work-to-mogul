@@ -3,7 +3,7 @@ import { initialGameState } from '../store/initialState'
 import { buyUpgrade } from './upgrades'
 import { prestigeReset } from './prestige'
 import { buyTalent } from './talents'
-import { economyMultipliers, prestigePointsFor } from './economy'
+import { economyMultipliers, prestigePointsFor, PRESTIGE_SCALE } from './economy'
 import { BUSINESSES } from '../content/businesses'
 import { UPGRADES } from '../content/upgrades'
 
@@ -35,14 +35,14 @@ describe('upgrades', () => {
 describe('prestige', () => {
   it('refuses below the first token threshold', () => {
     const s = initialGameState(0)
-    s.lifetimeEarnings = 500_000 // < $1M → 0 points
+    s.lifetimeEarnings = 0.5 * PRESTIGE_SCALE // < PRESTIGE_SCALE → 0 points
     expect(prestigePointsFor(s.lifetimeEarnings)).toBe(0)
     expect(prestigeReset(s)).toBe(false)
   })
 
   it('grants spendable tokens and wipes the run', () => {
     const s = initialGameState(0)
-    s.lifetimeEarnings = 4_000_000 // sqrt(4) → 2 tokens
+    s.lifetimeEarnings = 4 * PRESTIGE_SCALE // sqrt(4) → 2 tokens
     s.cash = 123456
     s.career.level = 3
     s.businesses.lemonade.owned = 50
@@ -63,10 +63,10 @@ describe('prestige', () => {
 
   it('accumulates tokens across multiple ascensions and preserves talents', () => {
     const s = initialGameState(0)
-    s.lifetimeEarnings = 1_000_000
+    s.lifetimeEarnings = PRESTIGE_SCALE
     prestigeReset(s) // +1
     buyTalent(s, 'magnate') // spend the token on a talent
-    s.lifetimeEarnings = 9_000_000
+    s.lifetimeEarnings = 9 * PRESTIGE_SCALE
     prestigeReset(s) // +3 → total 4
     expect(s.prestige.totalPoints).toBe(4)
     expect(s.prestige.talents.magnate).toBe(1) // talent survives the ascension

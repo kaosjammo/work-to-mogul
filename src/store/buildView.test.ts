@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildView, REVEAL_UPGRADES_LIFETIME } from './buildView'
 import { initialGameState } from './initialState'
+import { PRESTIGE_SCALE } from '../engine/economy'
 
 describe('onboarding staged tab reveal', () => {
   it('a fresh player sees only the Business tab', () => {
@@ -25,9 +26,9 @@ describe('onboarding staged tab reveal', () => {
     expect(buildView(s).revealedTabs.upgrades).toBe(true)
   })
 
-  it('reveals Ascend once prestige is unlocked ($1M lifetime)', () => {
+  it('reveals Ascend once prestige is unlocked (at the prestige scale)', () => {
     const s = initialGameState(0)
-    s.lifetimeEarnings = 1_000_000
+    s.lifetimeEarnings = PRESTIGE_SCALE // PRESTIGE_UNLOCK_LIFETIME
     expect(buildView(s).revealedTabs.prestige).toBe(true)
   })
 

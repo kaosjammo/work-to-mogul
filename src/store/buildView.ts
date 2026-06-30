@@ -28,6 +28,14 @@ import { TRAIT_NAME } from '../content/traits'
 import { TALENTS, TALENT_ORDER, type TalentTheme } from '../content/talents'
 import { SPECIALISATIONS, SPECS_BY_ROLE, REQUIRED_SPEC_LEVEL } from '../content/specialisations'
 import { resolveBusiness } from '../engine/resolveBusiness'
+import { automatedIncomePerSec } from '../engine/catchUp'
+import {
+  shiftPayout,
+  consultingPayout,
+  isRetired,
+  GOLDEN_SHIFT_EVERY,
+  CONSULT_CAP_MS,
+} from '../engine/career'
 import { computeEmployeeEffects } from '../engine/employees/composition'
 import { levelUpCost, hireCost, nextRarity } from '../engine/employees/roster'
 import {
@@ -162,6 +170,15 @@ export interface CareerView {
   isMaxLevel: boolean
   nextTitle: string | null
   nextWage: number | null
+  // Salary Draw: what a completed shift actually pays right now, and whether the
+  // next one is a Golden Shift (periodic multiplier).
+  salaryDrawValue: number
+  nextShiftIsGolden: boolean
+  // Senior Consultant (retired) stage: optional over-time bonus.
+  retired: boolean
+  consultingValue: number // cash a Collect tap grants right now
+  consultingFraction: number // 0..1 pool fill toward the cap
+  consultingFull: boolean
 }
 
 export interface UpgradeView {
@@ -599,6 +616,8 @@ export function buildView(state: GameState): ViewSnapshot {
   const cdef = careerLevelDef(c.level)
   const isMaxLevel = c.level >= MAX_CAREER_LEVEL
   const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
+  const passivePerSec = automatedIncomePerSec(state)
+  const retired = isRetired(state)
   const career: CareerView = {
     level: c.level,
     title: cdef.title,
@@ -615,6 +634,12 @@ export function buildView(state: GameState): ViewSnapshot {
     isMaxLevel,
     nextTitle: nextDef?.title ?? null,
     nextWage: nextDef?.wage ?? null,
+    salaryDrawValue: shiftPayout(state, passivePerSec),
+    nextShiftIsGolden: (c.totalShifts + 1) % GOLDEN_SHIFT_EVERY === 0,
+    retired,
+    consultingValue: consultingPayout(state, passivePerSec),
+    consultingFraction: Math.min(1, c.consultingMs / CONSULT_CAP_MS),
+    consultingFull: c.consultingMs >= CONSULT_CAP_MS,
   }
 
   return {

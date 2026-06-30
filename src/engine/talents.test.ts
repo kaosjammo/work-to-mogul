@@ -11,7 +11,7 @@ import {
   tokenYieldMult,
   startCash,
 } from './talents'
-import { economyMultipliers } from './economy'
+import { economyMultipliers, PRESTIGE_SCALE } from './economy'
 import { prestigeReset } from './prestige'
 import { hireEmployee, levelUpCost } from './employees/roster'
 import { applyOfflineEarnings } from './catchUp'
@@ -118,7 +118,7 @@ describe('tempo talents', () => {
     s.prestige.totalPoints = 99
     buyTalent(s, 'prestige_scholar') // +15% token yield
     expect(tokenYieldMult(s)).toBeCloseTo(1.15)
-    s.lifetimeEarnings = 100_000_000 // sqrt(100) = 10 base tokens → floor(10*1.15)=11
+    s.lifetimeEarnings = 100 * PRESTIGE_SCALE // sqrt(100) = 10 base tokens → floor(10*1.15)=11
     const before = s.prestige.totalPoints
     prestigeReset(s)
     expect(s.prestige.totalPoints - before).toBe(11)
@@ -131,7 +131,7 @@ describe('seed capital', () => {
     s.prestige.totalPoints = 99
     buyTalent(s, 'seed_capital') // rank 1 → $1,000
     expect(startCash(s)).toBe(1_000)
-    s.lifetimeEarnings = 1_000_000 // enough to ascend
+    s.lifetimeEarnings = PRESTIGE_SCALE // enough to ascend
     prestigeReset(s)
     expect(s.cash).toBe(1_000) // fresh run starts with the seed, not broke
     expect(s.prestige.talents.seed_capital).toBe(1) // talent preserved
