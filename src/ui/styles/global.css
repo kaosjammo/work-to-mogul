@@ -335,6 +335,22 @@ button {
   animation: cash-pop 0.6s ease-out;
 }
 
+/* Quick scale pop on a count badge when it grows (buy confirmation). */
+@keyframes count-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.count-pop {
+  animation: count-pop 0.4s ease-out;
+}
+
 /* Gentle glow on a manual business that's ready to run — guides the early game. */
 @keyframes tap-ready {
   0%,

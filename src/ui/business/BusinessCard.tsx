@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { BusinessView } from '../../store/buildView'
 import { formatRate, money } from '../../engine/num'
 import { tap } from '../../store/actions'
@@ -17,6 +17,14 @@ interface Props {
 function BusinessCardImpl({ view, accent }: Props) {
   const tappable = view.owned > 0 && !view.isAutomated
   const idle = view.owned > 0 && !view.isAutomated && view.progressFraction <= 0
+
+  // Pop the owned-count badge whenever it grows (a satisfying buy confirmation).
+  const [ownedPop, setOwnedPop] = useState(0)
+  const prevOwned = useRef(view.owned)
+  useEffect(() => {
+    if (view.owned > prevOwned.current) setOwnedPop((k) => k + 1)
+    prevOwned.current = view.owned
+  }, [view.owned])
 
   return (
     <div
@@ -37,7 +45,8 @@ function BusinessCardImpl({ view, accent }: Props) {
           <div className="flex items-center justify-between gap-2">
             <span className="truncate font-semibold">{view.name}</span>
             <span
-              className="tnum shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
+              key={ownedPop}
+              className={`tnum shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ownedPop > 0 ? 'count-pop' : ''}`}
               style={{ background: 'var(--surface-3)', color: accent }}
             >
               ×{view.owned}
