@@ -22,6 +22,8 @@ export const EMPLOYEE_TEMPLATES: Record<string, EmployeeTemplateDef> = {
   cargo_kate: { templateId: 'cargo_kate', name: 'Cargo Kate', role: 'buyer', rarity: 'rare', affinity: 'logistics', traits: ['frugal'], baseHireCost: 120000 },
   cole_voltaic: { templateId: 'cole_voltaic', name: 'Cole Voltaic', role: 'operator', rarity: 'epic', affinity: 'energy', traits: [], baseHireCost: 2000000 },
   astra_vance: { templateId: 'astra_vance', name: 'Astra Vance', role: 'closer', rarity: 'epic', affinity: 'space', traits: ['lucky'], baseHireCost: 80000000 },
+  // Quantum Frontier specialist — a crit-jackpot gambler matching the new industry.
+  zeta_quark: { templateId: 'zeta_quark', name: 'Zeta Quark', role: 'gambler', rarity: 'epic', affinity: 'quantum', traits: ['lucky'], baseHireCost: 5000000000 },
 }
 
 export const HIRE_ORDER: string[] = [
@@ -42,4 +44,5 @@ export const HIRE_ORDER: string[] = [
   'cole_voltaic',
   'nova_star',
   'astra_vance',
+  'zeta_quark',
 ]
