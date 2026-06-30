@@ -1,9 +1,10 @@
 import type { Milestone, MilestoneEffect } from '../types/domain'
 
-const THRESHOLDS = [25, 50, 100, 200, 300, 400, 500, 600]
+const THRESHOLDS = [25, 50, 100, 200, 300, 400, 500, 600, 800, 1000, 1500, 2000]
 
 // AdCap-style alternation: mostly profit doublings, periodic speed doublings,
-// one special profit×3 at 100.
+// one special profit×3 at 100. Extended into the long tail (800→2000) so deeply
+// stacking a single business keeps rewarding you well into the late game.
 const DEFAULT_PATTERN: MilestoneEffect[] = [
   { kind: 'speedMult', factor: 2 }, // 25
   { kind: 'profitMult', factor: 2 }, // 50
@@ -13,6 +14,10 @@ const DEFAULT_PATTERN: MilestoneEffect[] = [
   { kind: 'profitMult', factor: 2 }, // 400
   { kind: 'profitMult', factor: 2 }, // 500
   { kind: 'speedMult', factor: 2 }, // 600
+  { kind: 'profitMult', factor: 2 }, // 800
+  { kind: 'profitMult', factor: 3 }, // 1000 — the "four-figure" club
+  { kind: 'speedMult', factor: 2 }, // 1500
+  { kind: 'profitMult', factor: 3 }, // 2000
 ]
 
 // Tech leans profit-heavy: the 200 and 400 entries become profit×3.
