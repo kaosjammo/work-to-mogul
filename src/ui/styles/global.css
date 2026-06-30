@@ -335,6 +335,27 @@ button {
   animation: cash-pop 0.6s ease-out;
 }
 
+/* Celebratory entrance for milestone / reward toasts (overshoot + settle). */
+@keyframes celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(-8px);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.08) translateY(0);
+  }
+  70% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.celebrate-pop {
+  animation: celebrate-pop 0.4s ease-out;
+}
+
 /* Quick scale pop on a count badge when it grows (buy confirmation). */
 @keyframes count-pop {
   0% {
