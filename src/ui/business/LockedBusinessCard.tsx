@@ -43,6 +43,17 @@ export function LockedBusinessCard({
           Unlock: {unlockText(def)}
           {progress ? ` (${progress.current}/${progress.target})` : ''}
         </div>
+        {progress && progress.target > 0 && (
+          <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{
+                background: 'var(--text-dim)',
+                width: `${Math.min(100, Math.round((progress.current / progress.target) * 100))}%`,
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
