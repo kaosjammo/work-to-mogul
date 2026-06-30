@@ -284,6 +284,13 @@ function EmployeeRow({ e }: { e: EmployeeView }) {
             onPick={(specId) => chooseSpecialisation(e.id, specId, 2)}
           />
         )}
+        {/* Make the level-cap reward a visible goal: a specced (L5+) employee that
+            hasn't hit the cap yet earns a SECOND spec at Lv 10. */}
+        {e.canSpecialise && !e.canMastery && (
+          <div className="mt-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
+            ⭐ Reach Lv 10 for a 2nd (Mastery) specialisation
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 flex-col items-stretch gap-1">
         {e.atMaxLevel ? (
