@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Automation Suite">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M18 20h28M18 44h28" stroke="#e7e9ee" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="26" cy="20" r="6" fill="#f5c518"/>
+  <circle cx="39" cy="44" r="6" fill="#f5c518"/>
+  <path d="M48 24c5 7 4 17-2 23M16 40c-5-7-4-17 2-23" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
+</svg>

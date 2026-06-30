@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Loyalty Program">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M17 22h30l-3 27H20z" fill="#2a2f3a" stroke="#2bb3e2" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 22a8 8 0 0 1 16 0" fill="none" stroke="#f5c518" stroke-width="3" stroke-linecap="round"/>
+  <path d="M25 35h14M32 28v14" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -28,9 +28,38 @@ root-domain Vercel deployment. Nothing needs changing.
 
 ## Environment variables
 
-**None.** The game is 100% client-side: all state lives in memory and is
-persisted to `localStorage` (`tycoon:save`). There is no backend, no API, and
-no secret of any kind to configure.
+**None required.** The game is 100% client-side and persists to `localStorage`
+(`tycoon:save`); it deploys and plays with no env vars at all.
+
+**Optional — Supabase cloud save (Goal 1, in progress).** When/if account login
++ cloud save is enabled, set these two **Vite public** vars. They are optional:
+if unset, the app simply runs anonymously with local saves (no errors). Only the
+**public anon key** is used client-side — never the service_role key. Full setup
+(table SQL, RLS, conflict strategy) is in [`supabase-notes.md`](supabase-notes.md);
+a template is in [`.env.example`](.env.example).
+
+| Var | Source |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public key |
+
+### Setting them on Vercel
+1. Vercel → your project → **Settings → Environment Variables**.
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (apply to Production +
+   Preview; Development too if you use `vercel dev`).
+3. Vite inlines `VITE_*` vars **at build time**, so after adding/changing them
+   you must **redeploy** (Deployments → ⋯ → Redeploy, or push a new commit) for
+   them to take effect — a running deployment won't pick them up live.
+4. Locally, put the same values in `.env.local` (gitignored) and restart `npm run dev`.
+
+### Testing login & sync on a phone (once Goal 1 ships)
+- Open the deployed URL, play anonymously, confirm local save persists across a reload.
+- Open the account modal → sign up / log in; watch the sync-status indicator go
+  **Syncing → Synced**.
+- If you had local progress, confirm the **"Use this device / Use cloud save"**
+  chooser appears (no silent overwrite).
+- Log in on a second device (or desktop) → confirm cloud progress loads.
+- Log out → confirm you fall back to local-only play without errors.
 
 ## Steps to deploy from GitHub to Vercel
 

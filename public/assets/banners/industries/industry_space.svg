@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Space and Frontier banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <circle cx="760" cy="122" r="88" fill="#d946ef" opacity=".18"/>
+  <path d="M0 304c210-84 380-56 550-120s300-82 474-40v240H0z" fill="#d946ef" opacity=".11"/>
+  <path d="M420 64c74 66 98 150 72 250l-72 58-72-58c-26-100-2-184 72-250z" fill="#20242d" stroke="#d946ef" stroke-width="12" opacity=".72"/>
+  <circle cx="420" cy="168" r="34" fill="#181b22" stroke="#f5c518" stroke-width="10" opacity=".8"/>
+  <g stroke="#e7e9ee" stroke-width="8" stroke-linecap="round" opacity=".35"><path d="M150 80h1M260 180h1M870 254h1"/></g>
+</svg>

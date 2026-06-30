@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Energy and Power banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <path d="M0 312c170-90 350-40 512-112s320-110 512-40v224H0z" fill="#a3e635" opacity=".14"/>
+  <path d="M470 54 338 240h94l-24 104 156-214h-96z" fill="#a3e635" opacity=".38"/>
+  <circle cx="790" cy="104" r="58" fill="#f5c518" opacity=".2"/>
+  <path d="M150 286h230M650 286h230" stroke="#e7e9ee" stroke-width="12" stroke-linecap="round" opacity=".2"/>
+</svg>

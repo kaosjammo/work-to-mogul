@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Mars Colony">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <circle cx="45" cy="18" r="8" fill="#d946ef" opacity=".8"/>
+  <path d="M14 50c7-13 15-20 28-20s20 7 28 20z" fill="#a33a2a" opacity=".75"/>
+  <path d="M19 47a13 13 0 0 1 26 0z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="3"/>
+  <path d="M32 34v13M19 47h26" stroke="#f5c518" stroke-width="3" stroke-linecap="round"/>
+  <path d="M13 52h39" stroke="#9aa1ad" stroke-width="3" stroke-linecap="round"/>
+</svg>

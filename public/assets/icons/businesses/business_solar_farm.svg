@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Solar Farm">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <circle cx="46" cy="18" r="8" fill="#f5c518"/>
+  <path d="M15 39h34l-6 13H9z" fill="#2a2f3a" stroke="#a3e635" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M18 43h27M24 39l-4 13M35 39l-4 13" stroke="#e7e9ee" stroke-width="2" opacity=".8"/>
+  <path d="M15 26h21" stroke="#a3e635" stroke-width="4" stroke-linecap="round"/>
+</svg>

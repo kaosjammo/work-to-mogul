@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Corporate Synergy">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <circle cx="24" cy="25" r="8" fill="#2bb3e2"/>
+  <circle cx="40" cy="25" r="8" fill="#f5c518"/>
+  <circle cx="32" cy="40" r="8" fill="#2bd47a"/>
+  <path d="M29 28h6M28 36l-4-6M36 36l4-6" stroke="#e7e9ee" stroke-width="3" stroke-linecap="round"/>
+</svg>

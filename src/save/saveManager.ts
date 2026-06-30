@@ -4,10 +4,17 @@
 //  private mode / quota can throw) so the game keeps running in-memory.
 // ============================================================
 import { getEngineState, setEngineState } from '../engine/engineState'
-import { serialize, deserialize, SAVE_KEY } from './serialize'
+import { serialize, deserialize, SAVE_KEY, type SaveEnvelope } from './serialize'
 
 const AUTOSAVE_MS = 20_000
 let timer: ReturnType<typeof setInterval> | null = null
+
+// Optional hook fired after every successful local save (used by cloud sync to
+// piggyback an upload on autosave). Decoupled so the engine never imports cloud.
+let afterSaveHook: (() => void) | null = null
+export function setAfterSave(fn: (() => void) | null): void {
+  afterSaveHook = fn
+}
 
 /** Load a saved game into the engine state if one exists and is valid. */
 export function loadGame(): boolean {
@@ -29,6 +36,50 @@ export function saveGame(): void {
     localStorage.setItem(SAVE_KEY, serialize(getEngineState(), Date.now()))
   } catch {
     // Quota / private mode — keep playing in-memory.
+  }
+  afterSaveHook?.() // e.g. debounced cloud upload when signed in
+}
+
+export interface SaveSummary {
+  savedAt: number
+  cash: number
+  lifetime: number
+}
+
+/** A fresh envelope of the live engine state (savedAt = now). For cloud upload. */
+export function snapshotEnvelope(): SaveEnvelope {
+  return JSON.parse(serialize(getEngineState(), Date.now())) as SaveEnvelope
+}
+
+/** The current localStorage envelope, or null. For conflict comparison. */
+export function readLocalEnvelope(): SaveEnvelope | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
+    return raw ? (JSON.parse(raw) as SaveEnvelope) : null
+  } catch {
+    return null
+  }
+}
+
+/** Load an arbitrary envelope (e.g. from cloud) into the engine + persist it. */
+export function applyEnvelope(obj: unknown): boolean {
+  const state = deserialize(JSON.stringify(obj))
+  if (!state) return false
+  setEngineState(state)
+  saveGame()
+  return true
+}
+
+/** Defensive at-a-glance summary of an envelope for the conflict chooser. */
+export function summarizeEnvelope(obj: unknown): SaveSummary | null {
+  if (!obj || typeof obj !== 'object') return null
+  const env = obj as { savedAt?: unknown; state?: { cash?: unknown; lifetimeEarnings?: unknown } }
+  const state = env.state
+  if (!state || typeof state !== 'object') return null
+  return {
+    savedAt: typeof env.savedAt === 'number' ? env.savedAt : 0,
+    cash: typeof state.cash === 'number' ? state.cash : 0,
+    lifetime: typeof state.lifetimeEarnings === 'number' ? state.lifetimeEarnings : 0,
   }
 }
 

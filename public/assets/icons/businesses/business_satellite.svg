@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Satellite Network">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <rect x="27" y="25" width="12" height="12" rx="2" fill="#f5c518" transform="rotate(45 33 31)"/>
+  <path d="M19 16 29 26M37 36l10 10" stroke="#e7e9ee" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 15h12v12H14zM40 37h12v12H40z" fill="#2a2f3a" stroke="#d946ef" stroke-width="3"/>
+  <path d="M44 16c5 4 8 9 8 15M49 13c7 5 11 12 11 21" stroke="#f5c518" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -6,6 +6,7 @@ import {
   ART_INDUSTRIES,
   ART_ROLES,
   ART_UPGRADES,
+  ART_EMPLOYEES,
   ART_FALLBACK,
   ART_MILESTONE,
 } from '../../content/artManifest'
@@ -35,6 +36,11 @@ export function roleArt(id: string, emoji?: string): ArtRef {
   const hit = ART_ROLES[id]
   if (hit) return { src: hit.icon }
   return emoji ? { emoji } : { src: ART_FALLBACK.role }
+}
+
+export function employeeArt(templateId: string): ArtRef {
+  const hit = ART_EMPLOYEES[templateId]
+  return hit ? { src: hit.portrait } : { src: '/assets/portraits/employees/employee_fallback.svg' }
 }
 
 /** Upgrade icon path: per-upgrade art if authored, else a milestone icon by effect. */

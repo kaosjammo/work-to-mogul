@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Asteroid Mine">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M20 24 35 15l14 9 2 17-15 10-18-5-6-15z" fill="#2a2f3a" stroke="#9aa1ad" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="29" cy="30" r="3" fill="#d946ef"/><circle cx="40" cy="39" r="3" fill="#f5c518"/>
+  <path d="M16 51 33 34M30 34l8 8" stroke="#e7e9ee" stroke-width="4" stroke-linecap="round"/>
+  <path d="M48 16h.1M14 15h.1" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+</svg>

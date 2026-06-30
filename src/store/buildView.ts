@@ -86,6 +86,7 @@ export interface BusinessView {
 
 export interface EmployeeView {
   id: string
+  templateId: string
   name: string
   role: RoleId
   roleName: string
@@ -429,6 +430,7 @@ export function buildView(state: GameState): ViewSnapshot {
     const specDef = e.specialisation ? SPECIALISATIONS[e.specialisation] : null
     return {
       id: e.id,
+      templateId: e.templateId,
       name: e.name,
       role: e.role,
       roleName: role?.name ?? e.role,

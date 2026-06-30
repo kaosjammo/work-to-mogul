@@ -12,11 +12,13 @@ import {
   ART_BUSINESSES,
   ART_ROLES,
   ART_UPGRADES,
+  ART_EMPLOYEES,
 } from './artManifest'
 import { BUSINESS_ORDER } from './businesses'
 import { INDUSTRY_ORDER } from './industries'
 import { UPGRADE_ORDER } from './upgrades'
 import { ROLE_DEFS } from './roles'
+import { EMPLOYEE_TEMPLATES } from './employeeTemplates'
 
 const PUBLIC = join(process.cwd(), 'public')
 const onDisk = (webPath: string) => existsSync(join(PUBLIC, webPath.replace(/^\//, '')))
@@ -31,6 +33,7 @@ function allPaths(): string[] {
     ...Object.values(ART_BUSINESSES).map((b) => b.icon),
     ...Object.values(ART_ROLES).map((r) => r.icon),
     ...Object.values(ART_UPGRADES).map((u) => u.icon),
+    ...Object.values(ART_EMPLOYEES).map((e) => e.portrait),
   ]
   for (const ind of Object.values(ART_INDUSTRIES)) {
     paths.push(ind.icon)
@@ -53,6 +56,8 @@ describe('art manifest', () => {
     expect(Object.keys(ART_INDUSTRIES).filter((id) => !ind.has(id))).toEqual([])
     const up = new Set(UPGRADE_ORDER)
     expect(Object.keys(ART_UPGRADES).filter((id) => !up.has(id))).toEqual([])
+    const employees = new Set(Object.keys(EMPLOYEE_TEMPLATES))
+    expect(Object.keys(ART_EMPLOYEES).filter((id) => !employees.has(id))).toEqual([])
   })
 
   it('every role has authored art (roles are fully covered)', () => {
@@ -65,10 +70,12 @@ describe('art manifest', () => {
     const bizGap = BUSINESS_ORDER.filter((id) => !ART_BUSINESSES[id])
     const indGap = INDUSTRY_ORDER.filter((id) => !ART_INDUSTRIES[id])
     const upGap = UPGRADE_ORDER.filter((id) => !ART_UPGRADES[id])
+    const employeeGap = Object.keys(EMPLOYEE_TEMPLATES).filter((id) => !ART_EMPLOYEES[id])
     // eslint-disable-next-line no-console
     console.log(
-      `[art] awaiting icons — businesses: ${bizGap.length} (${bizGap.join(', ')}); ` +
-        `industries: ${indGap.length} (${indGap.join(', ')}); upgrades: ${upGap.length}`,
+      `[art] awaiting assets - businesses: ${bizGap.length} (${bizGap.join(', ')}); ` +
+        `industries: ${indGap.length} (${indGap.join(', ')}); upgrades: ${upGap.length}; ` +
+        `employee portraits: ${employeeGap.length}`,
     )
     expect(true).toBe(true)
   })

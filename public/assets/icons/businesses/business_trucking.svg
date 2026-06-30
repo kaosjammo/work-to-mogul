@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Trucking Fleet">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <rect x="11" y="25" width="31" height="18" rx="2" fill="#2a2f3a" stroke="#f59e0b" stroke-width="3"/>
+  <path d="M42 31h8l5 7v5H42z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="3"/>
+  <path d="M17 31h19" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="22" cy="46" r="5" fill="#181b22" stroke="#f5c518" stroke-width="3"/>
+  <circle cx="48" cy="46" r="5" fill="#181b22" stroke="#f5c518" stroke-width="3"/>
+</svg>

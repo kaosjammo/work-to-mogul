@@ -5,6 +5,7 @@ import { AssignmentSheet } from './ui/employees/AssignmentSheet'
 import { WelcomeBackBanner } from './ui/shared/WelcomeBackBanner'
 import { MilestoneCelebration } from './ui/shared/MilestoneCelebration'
 import { FloatingGoldenDeal } from './ui/shared/FloatingGoldenDeal'
+import { AccountModal } from './ui/account/AccountModal'
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
       <NavBar />
       <FloatingGoldenDeal />
       <AssignmentSheet />
+      <AccountModal />
       <MilestoneCelebration />
       <WelcomeBackBanner />
     </>

@@ -13,13 +13,14 @@ export function BuyButton({ view }: { view: BusinessView }) {
         e.stopPropagation()
         buyBusiness(view.id)
       }}
-      className="flex flex-col items-center justify-center rounded-xl px-4 font-bold transition-opacity"
+      className="flex flex-col items-center justify-center rounded-xl px-4 font-bold transition active:scale-[0.97]"
       style={{
         minHeight: 'var(--tap-lg)',
         minWidth: '104px',
         background: disabled ? 'var(--surface-3)' : 'var(--accent)',
         color: disabled ? 'var(--text-faint)' : 'var(--accent-ink)',
         opacity: disabled ? 0.7 : 1,
+        boxShadow: disabled ? 'none' : '0 2px 10px rgba(245,197,24,0.25)',
       }}
     >
       <span className="text-sm leading-tight">Buy{qtyLabel}</span>

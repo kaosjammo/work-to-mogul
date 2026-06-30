@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Route Optimization">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M16 45c10-20 20-4 32-24" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="16" cy="45" r="5" fill="#f5c518"/>
+  <circle cx="48" cy="21" r="5" fill="#f5c518"/>
+  <path d="M37 21h11v11" fill="none" stroke="#e7e9ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

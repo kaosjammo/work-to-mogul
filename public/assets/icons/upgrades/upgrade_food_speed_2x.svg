@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Drive-Thru Windows">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M14 41h34" stroke="#e2502b" stroke-width="5" stroke-linecap="round"/>
+  <path d="M20 38a11 11 0 0 1 22 0z" fill="#f5c518"/>
+  <path d="M45 23h10M50 18l6 5-6 5" fill="none" stroke="#e7e9ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 24h18" stroke="#f5c518" stroke-width="3" stroke-linecap="round"/>
+</svg>

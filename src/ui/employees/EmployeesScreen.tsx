@@ -3,7 +3,7 @@ import { money } from '../../engine/num'
 import { useEmployees, useHireOptions } from '../../store/gameStore'
 import { hire, unassign, levelUp, autoAssign, chooseSpecialisation, fuse } from '../../store/actions'
 import { Icon } from '../shared/Icon'
-import { roleArt } from '../shared/art'
+import { employeeArt } from '../shared/art'
 
 const RARITY_COLOR: Record<Rarity, string> = {
   common: '#9aa1ad',
@@ -66,7 +66,7 @@ export function EmployeesScreen() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
                   style={{ background: 'var(--surface-2)' }}
                 >
-                  <Icon art={roleArt(e.role, e.roleIcon)} size={32} alt={e.roleName} />
+                  <Icon art={employeeArt(e.templateId)} size={40} alt={e.name} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export function EmployeesScreen() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
                 style={{ background: 'var(--surface-2)' }}
               >
-                <Icon art={roleArt(o.role, o.roleIcon)} size={32} alt={o.roleName} />
+                <Icon art={employeeArt(o.templateId)} size={40} alt={o.name} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">

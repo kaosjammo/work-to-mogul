@@ -19,12 +19,10 @@ function BusinessCardImpl({ view, accent }: Props) {
 
   return (
     <div
-      onClick={tappable ? () => tap(view.id) : undefined}
       className="flex flex-col gap-2 rounded-2xl p-3"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--border)',
-        cursor: tappable ? 'pointer' : 'default',
       }}
     >
       <div className="flex items-center gap-3">
@@ -52,6 +50,36 @@ function BusinessCardImpl({ view, accent }: Props) {
       </div>
 
       <ProgressBar fraction={view.owned > 0 ? view.progressFraction : 0} color={accent} />
+
+      {/* Manual businesses run one cycle per tap until an Operator (⚙️) automates them. */}
+      {tappable && (
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => tap(view.id)}
+            disabled={!idle}
+            className="w-full rounded-xl text-sm font-extrabold uppercase tracking-wide transition-opacity"
+            style={{
+              minHeight: 'var(--tap-lg)',
+              background: idle ? accent : 'var(--surface-3)',
+              color: idle ? 'var(--accent-ink)' : 'var(--text-faint)',
+              opacity: idle ? 1 : 0.85,
+            }}
+          >
+            {idle ? '▶ Run store' : 'Running…'}
+          </button>
+          <button
+            type="button"
+            onClick={() => useUiStore.getState().openAssignment(view.id)}
+            className="w-fit text-left text-xs"
+            style={{ color: 'var(--text-faint)' }}
+          >
+            {view.assignedCount === 0
+              ? '💡 Assign an Operator ⚙️ to run it automatically'
+              : '⚙️ Add an Operator to automate — other staff only boost it'}
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -103,11 +131,6 @@ function BusinessCardImpl({ view, accent }: Props) {
               style={{ color: view.riskEventActive ? 'var(--bad)' : 'var(--text-faint)' }}
             >
               {view.riskEventActive ? '⚠️ Disruption (−50%)' : `🛡️ Risk ${view.riskPct}%`}
-            </span>
-          )}
-          {idle && (
-            <span className="text-xs font-semibold" style={{ color: accent }}>
-              tap to collect
             </span>
           )}
         </div>

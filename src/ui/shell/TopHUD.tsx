@@ -2,6 +2,7 @@ import type { BuyMode } from '../../types/domain'
 import { money, formatRate } from '../../engine/num'
 import { useCash, useTotalPps, useBuyMode } from '../../store/gameStore'
 import { setBuyMode } from '../../store/actions'
+import { AccountButton } from '../account/AccountButton'
 
 const BUY_MODES: BuyMode[] = ['x1', 'x10', 'x100', 'max']
 
@@ -20,15 +21,16 @@ export function TopHUD() {
         borderColor: 'var(--border)',
       }}
     >
-      <div className="flex flex-col">
-        <span className="tnum text-2xl font-bold" style={{ color: 'var(--accent)' }}>
+      <div className="flex min-w-0 flex-col">
+        <span className="tnum truncate text-2xl font-bold" style={{ color: 'var(--accent)' }}>
           {money(cash)}
         </span>
-        <span className="tnum text-xs" style={{ color: 'var(--text-dim)' }}>
+        <span className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
           {pps > 0 ? `${formatRate(pps)} idle` : 'tap to earn'}
         </span>
       </div>
 
+      <div className="flex shrink-0 items-center gap-2">
       <div
         className="flex overflow-hidden rounded-full"
         style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
@@ -53,6 +55,8 @@ export function TopHUD() {
             </button>
           )
         })}
+      </div>
+        <AccountButton />
       </div>
     </header>
   )

@@ -47,7 +47,7 @@ export function WorkCard() {
         type="button"
         onClick={workShift}
         disabled={c.working}
-        className="rounded-xl font-bold"
+        className="rounded-xl font-bold transition active:scale-[0.98]"
         style={{
           minHeight: 'var(--tap-lg)',
           background: c.working ? 'var(--surface-3)' : WORK_ACCENT,
@@ -57,7 +57,7 @@ export function WorkCard() {
         {c.working ? 'Working…' : 'Work Shift'}
       </button>
 
-      <div className="flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--text-faint)' }}>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-faint)' }}>
         {c.isMaxLevel ? (
           <span>Top of the career ladder</span>
         ) : (

@@ -5,6 +5,7 @@ import { App } from './App'
 import { startLoop } from './loop/gameLoop'
 import { loadGame, startAutosave } from './save/saveManager'
 import { runOfflineCatchUp, startVisibilityCatchUp } from './loop/offline'
+import { useAccountStore } from './store/accountStore'
 
 // Restore any saved game, then credit time away before the first render / tick.
 loadGame()
@@ -23,6 +24,8 @@ if (rootEl) {
 startLoop()
 startAutosave()
 startVisibilityCatchUp()
+// Optional cloud account/sync (no-op in local-only mode when unconfigured).
+useAccountStore.getState().init()
 
 // Register the service worker for installability + offline play (prod only;
 // the dev server is intentionally left without a SW to avoid cache staleness).

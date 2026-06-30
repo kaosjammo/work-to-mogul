@@ -17,6 +17,9 @@ interface UiStore {
   celebrations: string[]
   pushCelebrations: (msgs: string[]) => void
   shiftCelebration: () => void
+  accountOpen: boolean
+  openAccount: () => void
+  closeAccount: () => void
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -29,4 +32,7 @@ export const useUiStore = create<UiStore>((set) => ({
   celebrations: [],
   pushCelebrations: (msgs) => set((s) => ({ celebrations: [...s.celebrations, ...msgs] })),
   shiftCelebration: () => set((s) => ({ celebrations: s.celebrations.slice(1) })),
+  accountOpen: false,
+  openAccount: () => set({ accountOpen: true }),
+  closeAccount: () => set({ accountOpen: false }),
 }))

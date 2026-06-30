@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Hydro Dam">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M17 47V18h30v29z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="3"/>
+  <path d="M23 24h18M23 33h18" stroke="#a3e635" stroke-width="3" stroke-linecap="round"/>
+  <path d="M12 50c5-5 10-5 15 0s10 5 15 0 9-5 14 0" fill="none" stroke="#2bb3e2" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 38v13" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+</svg>

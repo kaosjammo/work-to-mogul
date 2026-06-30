@@ -1,0 +1,170 @@
+# Tycoon Empire — Roadmap
+
+Living roadmap, updated at the start of each development loop. Mobile-first
+idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
+
+**Core flow:** Work shifts → wages → promotions → save capital → buy businesses
+→ choose industry paths → hire employees → automate → build an empire.
+
+---
+
+## Current implemented features
+
+**Core loop & economy**
+- Work/Career early game (6 levels, wages/promotions) as the manual income bridge — players start here, **not** a Lemonade Stand.
+- Geometric-cost businesses with Buy x1/x10/x100/Max; 27 businesses across 7 industries; per-business milestones (25→600 owned).
+- Industries visible from the start, gated only by cost-of-entry (no artificial unlock payments).
+- 10 Hz fixed-timestep engine outside React; throttled view publish; manual→automated income pivot.
+- Offline/away catch-up (cap 2h) with welcome-back banner.
+
+**Employees** (note: shipped beyond the "4 roles only" MVP rule — see Known issues)
+- 7 roles (Operator, Runner, Closer, Buyer + Gambler, Auditor, HR), 4 rarities, levels to 10, industry affinity.
+- Assignment to business slots; Auto-Assign Best; morale, risk events, crit, traits, named synergies.
+- L5 specialisations; employee fusion/promotion.
+
+**Meta**
+- Prestige/ascension → Empire Tokens; 10-talent tree; ascension milestones; contracts board; Golden Deals / Time-Warp; 14 achievements; 14 upgrades.
+
+**Platform**
+- Versioned localStorage save (`tycoon:save`) with tolerant load + migrate hook; autosave.
+- **Cloud save + accounts (NEW, env-gated):** Supabase Auth (email+password) + `game_saves` table (RLS, anon key only). Account modal (login/signup/logout), HUD sync-status pill (Local/Syncing/Synced/Sync failed), debounced cloud upload on autosave, and a non-destructive local-vs-cloud conflict chooser on login. Fully disabled (anonymous local play) when `VITE_SUPABASE_*` are unset.
+- **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
+- PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
+- Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`.
+- 146 tests / 26 files; oxlint clean; production build verified booting.
+
+## Current known issues / notes
+
+- **Employee complexity exceeds the stated MVP rule.** The loop directive says
+  "start with four roles only" and "do not add M4b complexity unless the core
+  loop is already stable." The core loop **is** stable and these systems already
+  shipped in prior loops — so this is documented as an intentional pre-existing
+  state, not something to expand further this loop. No rollback (would break
+  saves/tests); no further employee-depth additions while focusing on Goals 1–3.
+- **Cloud save needs real Supabase creds to fully test.** The code is built +
+  env-gated; the configured paths (login → reconcile → conflict chooser → sync)
+  are verified only by code review locally, since no `VITE_SUPABASE_*` are set
+  here. Provision Supabase (see `supabase-notes.md`) + set Vercel env vars to
+  exercise them on-device (steps in `deploy-notes.md`).
+- **Bundle size grew** ~322 kB → ~539 kB raw (~98 kB → ~153 kB gzip) from
+  bundling `@supabase/supabase-js`. Acceptable, but a deferred optimization is to
+  code-split it (dynamic import) so anonymous/unconfigured builds stay lean.
+- **Art gaps** — effectively none for gameplay content (full coverage); only the
+  P2 emoji-based depth-system glyphs remain (intentional). See audit below.
+- No separate `typecheck` script; `tsc -b` runs inside `npm run build`.
+
+## Missing Art / Placeholder Audit
+
+Full detail in [`art-missing.md`](art-missing.md); style/specs in
+[`art-plan.md`](art-plan.md) + the implemented ledger in
+[`docs/MISSING_ART.md`](docs/MISSING_ART.md). **No referenced-but-missing asset
+ids** (coverage test green).
+
+**Coverage is now complete for all gameplay content** (the P0/P1 gaps from
+iteration 1 were generated + registered):
+
+| Priority | Status |
+|---|---|
+| **P0** Business icons (27) + Industry icons (7) | ✅ all authored + registered |
+| **P1** Industry banners + patterns (7×) | ✅ authored **and now rendered** — banner shows as a slim industry header (`IndustryBanner`), pattern as a faint texture on the entry box |
+| **P1** Upgrade icons (14) | ✅ all authored |
+| **P1** Employee portraits (17) | ✅ all authored (`ART_EMPLOYEES`, via `employeeArt()`) |
+| **P2** Depth-system glyphs (talents, milestones, specs, contracts, golden, fusion badges, ✦ token) + the new ☁ account/sync pill | ⏳ intentionally emoji — optional polish |
+
+**Placeholders in active use:** effectively none for shipped content — the
+`fallback_*` SVGs remain only as safety nets for any future unmapped id.
+
+**Recommended next art batch:** none required for gameplay. Optional **P2 brand
+glyphs** only (Empire-Token ✦ mark, a cloud/sync icon for the account pill,
+talent/contract node frames).
+
+## Next highest-value task
+
+Goals 1 (cloud save) and 2 (art) are done; **Goal 3 — mobile-first UI polish**
+is in progress. Iteration 3 landed a first pass (nav active state, industry
+affordability cues, button press feedback). Remaining polish (iteration 4),
+no redesign:
+1. **Work/Career card** — tighten the wage / shift / promotion hierarchy further.
+2. **Business card** — layout pass around the new "▶ Run store" manual button.
+3. **Empty states** — Upgrades/Stats/Prestige first-time states.
+4. **Account pill** spacing/affordance refinement; Stats/Prestige headers.
+5. Consistent icon sizing + no-layout-shift audit (reserve image dims) across cards.
+
+Then **provision Supabase** + set Vercel env vars to test the configured
+login/sync paths on a phone (see `deploy-notes.md`). Optional: code-split
+`@supabase/supabase-js` to shrink the anonymous bundle.
+
+## Deferred ideas
+
+- Batches B–E of art (industry dressing, upgrade icons, employee portraits, brand glyphs).
+- Real SVG authoring for P0/P1 art (out of scope this loop — docs only / optional lightweight placeholders).
+- Daily/weekly time-gated contracts (need a wall-clock cadence design).
+- Loadout presets (low value vs employee-wipe on ascension).
+- Account features explicitly OUT of scope: profile pics, usernames, friends, leaderboards, payments, social.
+- Native packaging (Electron/Tauri/Capacitor/Steam) — explicitly not now.
+
+## Latest loop summary
+
+**Iteration 6 — art audit refresh (Goal 2):** confirmed all quality art is wired
++ rendering (icons, 17 portraits in roster *and* hire list, banners, patterns);
+documented the remaining unused early **placeholder** assets (`states/*`,
+prestige visuals, `ART_UI` glyphs) as intentional (emoji reads cleaner) and the
+obsolete `artManifest.example.ts` as removable. No code change (avoided churn);
+146 tests green. **Goals 1–3 substantially complete** — next high-value steps are
+user-side: commit/push the untracked art, and provision Supabase for the live
+sync test.
+
+**Direct request — implemented newly-created artwork:** audited the generated art
+vs what the UI actually shows. Icons (27 businesses, 7 industries, 14 upgrades)
+and 17 employee portraits were already registered + rendered; the **7 industry
+banners + 7 patterns were registered but never displayed**. Wired them in: a new
+`IndustryBanner` slim header on the business screen (banner art + gradient + name)
+and the industry pattern as a faint texture on the entry box. **Build ✓, lint ✓,
+146 tests ✓**; browser-verified the banner/pattern swap per industry incl. the new
+Space art, no console errors / no failed asset loads. (Untracked art files still
+need a commit+push to deploy on Vercel.)
+
+**Iteration 5 — Goal 3 UI polish (industry-entry affordance):** the not-owned
+industry banner now shows a green "✓ You can afford to start — buy {first
+business} below" when affordable (symmetric with the existing unaffordable
+cue), clarifying the early-game industry-entry moment. **Build ✓, lint ✓, 146
+tests ✓**; clean-boot verified. Goals 1–3 substantially complete — remaining
+work is optional micro-polish + the user-side Supabase provisioning for the live
+sync test.
+
+**Iteration 4 — Goal 3 UI polish (overflow safety):** TopHUD made overflow-safe
+(cash `min-w-0`+`truncate`, controls `shrink-0`) so cash + buy-modes + the new
+account pill never overflow; WorkCard promotion line wraps gracefully. Confirmed
+`Icon` already prevents layout shift and Upgrades already has an empty state.
+**Build ✓, lint ✓, 146 tests ✓**; browser-verified at 360×740 (0 header/doc
+overflow, pill on-screen, 44px tap). Goals 1–3 now substantially complete.
+
+**Iteration 3 — Goal 3 UI polish (first pass, no redesign):** NavBar active tab
+now has a tint + inset accent bar + bold label; IndustryTabs colors entry cost by
+affordability (green ✓ when affordable, faint when not) and dims locked-out
+industries; BuyButton gained a soft accent shadow + press-scale; Work-shift +
+industry chips gained press feedback. Also fixed a repo-hygiene issue (vitest was
+running a parallel worktree copy → excluded `**/.claude/**`, back to 146/26).
+**Build ✓, lint ✓, 146 tests ✓**; verified the nav/industry styling via computed
+styles before a self-inflicted preview service-worker glitch (CSS-only changes;
+app code unaffected). Art coverage unchanged (complete). Remaining Goal-3 polish
+queued for iteration 4. Full entry in `dev-progress.md`.
+
+**Iteration 2 — Goal 1 (Supabase login + cloud save) implemented:** added
+`@supabase/supabase-js`, `src/lib/supabase.ts` (env-gated client + `vite-env.d.ts`
+typing), `src/save/cloud.ts` (game_saves upsert/fetch), save-layer cloud bridge
+(`snapshotEnvelope`/`readLocalEnvelope`/`applyEnvelope`/`summarizeEnvelope` +
+after-save hook), `src/store/accountStore.ts` (auth session, sync status,
+non-destructive reconcile/conflict), and account UI (`AccountModal`,
+`AccountButton` HUD pill); wired into HUD/App/main. Also (parallel work) **all
+gameplay art was generated + registered** — coverage now complete; refreshed
+`roadmap`/`art-missing` accordingly. **Build ✓, lint ✓, 146 tests ✓;
+browser-verified anonymous play unaffected** (clean boot, "Local" pill,
+not-configured modal). Configured login/sync paths await real Supabase creds.
+Known issue: bundle ~153 kB gzip (Supabase) — code-split deferred. Next:
+**Goal 3 UI polish**. Full entry in `dev-progress.md`.
+
+**Iteration 1 — docs/foundation (zero runtime change):** baseline (build ✓,
+lint ✓, 146 tests ✓). Created roadmap/dev-progress/art-missing/supabase-notes/
+.env.example; updated .gitignore (env-ignore), art-plan (stale banner),
+deploy-notes (env vars). Goal 2 art audit + Goal 1 foundation specced.

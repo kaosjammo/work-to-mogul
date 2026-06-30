@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Logistics and Transport banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <path d="M0 292c160-70 310-44 460-94s332-76 564-8v194H0z" fill="#f59e0b" opacity=".16"/>
+  <path d="M120 242h310v70H120z" fill="#20242d" stroke="#f59e0b" stroke-width="12" opacity=".55"/>
+  <path d="M430 272h110l50 40H430z" fill="#20242d" stroke="#e7e9ee" stroke-width="10" opacity=".45"/>
+  <path d="M140 126h440M510 84l78 42-78 42" fill="none" stroke="#f5c518" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".32"/>
+</svg>

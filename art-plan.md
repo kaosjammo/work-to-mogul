@@ -1,5 +1,32 @@
 # Art Asset Plan
 
+> ## ⚠️ Status update — current loop (sections 1–3 below are partly STALE)
+>
+> This document was written during an early art pass and its inventory/priority
+> tables predate a lot of shipped work. The **authoritative generated/implemented art ledger is now
+> [`art-missing.md`](art-missing.md)**; this file is kept for its house-style
+> guide (§5), naming convention (§6), and the image-generation **prompt pack**
+> (§8–9), which are all still valid. What changed since this was written:
+>
+> - **All screens are real**, not placeholders: Business, **Staff/Employees**,
+>   **Upgrades**, **Ascend/Prestige**, and **Stats** are fully built.
+> - **27 businesses across 7 industries** now exist (this doc lists only the
+>   original 15 / 4 industries). The newer **Logistics, Energy, Space**
+>   industries and their 12 businesses have now been generated and registered.
+> - The art **manifest is wired** (`src/content/artManifest.ts`, not an
+>   "example"), `ui/shared/Icon.tsx` renders it with emoji/SVG fallback, and a
+>   coverage test (`artManifest.test.ts`) guards it. Emoji business icons are
+>   **no longer** read from `businesses.ts` for arted ids.
+> - Validation now: **146 tests / 26 files** (this doc's "33 tests" is old), and
+>   `tsc -b` runs inside `npm run build` (still no separate `typecheck` script).
+> - Newer **depth systems** (talents, ascension milestones, L5 specialisations,
+>   contracts, Golden Deals) ship emoji-only by design — see `art-missing.md` §P2.
+>
+> Treat the per-asset tables in §1–§3 as historical. Use `art-missing.md` for
+> the current generated/implemented status and any future optional art targets.
+
+---
+
 This plan is based on the current mobile-first React, TypeScript, and Vite idle tycoon project. It reflects the content and UI that exist now: Work/Career definitions are present, businesses and industries are present, employee role types are present, and Staff, Upgrades, and Ascend screens are still placeholders.
 
 No final raster artwork is generated here. The optional files added alongside this plan are lightweight SVG placeholders and planning references only.
@@ -641,12 +668,12 @@ These files are intentionally unwired. They do not modify gameplay, save/load, e
 Commands run after this update:
 
 - `npm.cmd run lint` - passed.
-- `npm.cmd test` - passed, 4 test files and 33 tests.
+- `npm.cmd test` - passed, 26 test files and 146 tests.
 - `npm.cmd run build` - passed.
 - `npm run typecheck` was not run because `package.json` does not define a `typecheck` script; the build command runs `tsc -b`.
-- Manifest asset-path check - passed, 73 unique manifest asset paths exist.
-- SVG XML parse check - passed, 73 generated SVG files parse as XML.
-- ASCII sanity check for markdown, TypeScript example, changelog, and generated SVG assets - passed, 77 files checked.
+- Manifest asset-path check - passed.
+- SVG XML parse check - passed, 121 generated SVG files parse as XML.
+- The real manifest now registers all current industries, businesses, upgrades, roles, and employee portraits.
 
 Files created:
 
@@ -730,9 +757,17 @@ Files changed:
 
 - `art-plan.md`
 - `CHANGELOG.md`
+- `art-missing.md`
+- `docs/MISSING_ART.md`
+- `src/content/artManifest.ts`
+- `src/content/artManifest.test.ts`
+- `src/store/buildView.ts`
+- `src/ui/employees/EmployeesScreen.tsx`
+- `src/ui/shared/art.ts`
 
 Blockers and assumptions:
 
 - Git validation commands were not available because `git rev-parse --show-toplevel` reports `fatal: not a git repository (or any of the parent directories): .git`; the visible `.git` directory appears unusable in this checkout.
-- Placeholder SVGs and the example manifest are intentionally unwired, so no gameplay, economy, save/load, employee, career, or business logic was changed.
+- Newly generated business, industry, upgrade, and employee portrait SVGs are registered in `src/content/artManifest.ts`; employee portraits are used in the Staff and Hire UI.
+- No gameplay, economy, save/load, career, or business logic was changed.
 - Final raster artwork was not generated.

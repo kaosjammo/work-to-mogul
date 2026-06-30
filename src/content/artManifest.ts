@@ -1,8 +1,8 @@
 // ============================================================
-//  Art registry — maps content ids to SVG asset paths under /public/assets.
-//  Only ids with authored art are listed; resolveArt() (ui/shared/art.ts)
-//  falls back to a category SVG or an emoji for everything else, so adding
-//  content without art degrades gracefully. A dev-time test asserts coverage.
+//  Art registry - maps content ids to SVG asset paths under /public/assets.
+//  Only ids with authored art are listed; ui/shared/art.ts falls back to a
+//  category SVG or emoji for everything else, so adding content without art
+//  degrades gracefully. A dev-time test asserts coverage.
 // ============================================================
 
 export const ART_FALLBACK = {
@@ -39,8 +39,6 @@ export const ART_MILESTONE = {
   costReduction: '/assets/icons/milestones/milestone_cost.svg',
 }
 
-// --- per-id registries (only the ids that have authored art) ---
-
 export const ART_INDUSTRIES: Record<string, { icon: string; banner?: string; pattern?: string }> = {
   food: {
     icon: '/assets/icons/industries/industry_food.svg',
@@ -62,7 +60,21 @@ export const ART_INDUSTRIES: Record<string, { icon: string; banner?: string; pat
     banner: '/assets/banners/industries/industry_finance.svg',
     pattern: '/assets/patterns/pattern_finance.svg',
   },
-  // logistics / energy / space: no art yet → fallback_industry.svg
+  logistics: {
+    icon: '/assets/icons/industries/industry_logistics.svg',
+    banner: '/assets/banners/industries/industry_logistics.svg',
+    pattern: '/assets/patterns/pattern_logistics.svg',
+  },
+  energy: {
+    icon: '/assets/icons/industries/industry_energy.svg',
+    banner: '/assets/banners/industries/industry_energy.svg',
+    pattern: '/assets/patterns/pattern_energy.svg',
+  },
+  space: {
+    icon: '/assets/icons/industries/industry_space.svg',
+    banner: '/assets/banners/industries/industry_space.svg',
+    pattern: '/assets/patterns/pattern_space.svg',
+  },
 }
 
 const BIZ = (id: string) => `/assets/icons/businesses/business_${id}.svg`
@@ -72,6 +84,9 @@ export const ART_BUSINESSES: Record<string, { icon: string }> = Object.fromEntri
     'corner_shop', 'barbershop', 'gym', 'department_store',
     'mobile_app', 'streaming', 'saas', 'ai_lab',
     'apartments', 'fund', 'skyscraper',
+    'courier', 'trucking', 'cargo_port', 'air_freight',
+    'solar_farm', 'wind_park', 'hydro_dam', 'fusion_plant',
+    'satellite', 'rocket_pad', 'asteroid_mine', 'mars_colony',
   ].map((id) => [id, { icon: BIZ(id) }]),
 )
 
@@ -86,6 +101,39 @@ export const ART_ROLES: Record<string, { icon: string }> = Object.fromEntries(
 export const ART_UPGRADES: Record<string, { icon: string }> = {
   lemonade_2x: { icon: '/assets/icons/upgrades/upgrade_lemonade_2x.svg' },
   food_industry_25: { icon: '/assets/icons/upgrades/upgrade_food_industry_25.svg' },
+  food_speed_2x: { icon: '/assets/icons/upgrades/upgrade_food_speed_2x.svg' },
+  retail_profit_2x: { icon: '/assets/icons/upgrades/upgrade_retail_profit_2x.svg' },
   global_speed_15: { icon: '/assets/icons/upgrades/upgrade_global_speed_15.svg' },
   tech_profit_2x: { icon: '/assets/icons/upgrades/upgrade_tech_profit_2x.svg' },
+  tech_speed_2x: { icon: '/assets/icons/upgrades/upgrade_tech_speed_2x.svg' },
+  global_profit_2x: { icon: '/assets/icons/upgrades/upgrade_global_profit_2x.svg' },
+  logistics_profit_2x: { icon: '/assets/icons/upgrades/upgrade_logistics_profit_2x.svg' },
+  finance_profit_2x: { icon: '/assets/icons/upgrades/upgrade_finance_profit_2x.svg' },
+  global_speed_2x: { icon: '/assets/icons/upgrades/upgrade_global_speed_2x.svg' },
+  energy_profit_2x: { icon: '/assets/icons/upgrades/upgrade_energy_profit_2x.svg' },
+  global_profit_3x: { icon: '/assets/icons/upgrades/upgrade_global_profit_3x.svg' },
+  space_profit_2x: { icon: '/assets/icons/upgrades/upgrade_space_profit_2x.svg' },
 }
+
+const EMPLOYEE = (id: string) => `/assets/portraits/employees/${id}.svg`
+export const ART_EMPLOYEES: Record<string, { portrait: string }> = Object.fromEntries(
+  [
+    'flash_ortega',
+    'mickey_gears',
+    'thrifty_tom',
+    'maxine_hustle',
+    'sunny_brooks',
+    'penny_frugal',
+    'marco_vance',
+    'lady_luck',
+    'nada_hawk',
+    'rosa_swift',
+    'watt_sterling',
+    'nova_star',
+    'nova_quick',
+    'dot_matrix',
+    'cargo_kate',
+    'cole_voltaic',
+    'astra_vance',
+  ].map((id) => [id, { portrait: EMPLOYEE(id) }]),
+)

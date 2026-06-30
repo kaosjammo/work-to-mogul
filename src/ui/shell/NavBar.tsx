@@ -37,11 +37,14 @@ export function NavBar() {
             style={{
               minHeight: 'var(--nav-h)',
               color: isActive ? 'var(--accent)' : 'var(--text-faint)',
+              // Clear active state: subtle tint + a top accent bar.
+              background: isActive ? 'rgba(245,197,24,0.08)' : 'transparent',
+              boxShadow: isActive ? 'inset 0 2px 0 var(--accent)' : 'none',
             }}
             aria-current={isActive ? 'page' : undefined}
           >
             <span className="text-lg leading-none">{tab.icon}</span>
-            <span className="text-[11px] font-medium">{tab.label}</span>
+            <span className={`text-[11px] ${isActive ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
           </button>
         )
       })}

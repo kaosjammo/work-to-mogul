@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Logistics and Transport">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M14 39h27V25H14z" fill="#2a2f3a" stroke="#f59e0b" stroke-width="3"/>
+  <path d="M41 32h8l5 7v7H41z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="3"/>
+  <circle cx="23" cy="48" r="5" fill="#181b22" stroke="#f5c518" stroke-width="3"/>
+  <circle cx="47" cy="48" r="5" fill="#181b22" stroke="#f5c518" stroke-width="3"/>
+  <path d="M17 18h24M35 13l7 5-7 5" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

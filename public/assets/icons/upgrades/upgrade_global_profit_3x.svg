@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Market Domination">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M18 46h30" stroke="#9aa1ad" stroke-width="4" stroke-linecap="round"/>
+  <path d="M22 41 31 28l7 6 10-17" fill="none" stroke="#2bd47a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 20h8M25 16v8M42 40h8M46 36v8" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32" cy="47" r="6" fill="#f5c518"/>
+</svg>

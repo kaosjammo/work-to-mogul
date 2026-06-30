@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Cargo Port">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M14 43h37l-5 8H20z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="19" y="32" width="10" height="8" fill="#f59e0b"/>
+  <rect x="31" y="32" width="10" height="8" fill="#f5c518"/>
+  <path d="M17 27h20V15h12" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M49 15v16M45 31h8" stroke="#e7e9ee" stroke-width="3" stroke-linecap="round"/>
+</svg>

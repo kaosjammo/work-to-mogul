@@ -27,6 +27,9 @@ interface Envelope {
   state: GameState
 }
 
+/** The versioned save envelope shape — shared by localStorage and cloud save. */
+export type SaveEnvelope = Envelope
+
 // Versioned migrations for BREAKING save changes (renamed/removed fields).
 // Tolerant deep-merge handles purely-additive fields, so this stays empty until
 // a real breaking change lands. Each entry upgrades from key-1 to key.
