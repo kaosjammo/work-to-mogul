@@ -173,6 +173,9 @@ export function EmployeesScreen() {
                   </div>
                   <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
                     {e.roleName} · {e.effectLabel}
+                    {e.nextEffectLabel && e.nextEffectLabel !== e.effectLabel && (
+                      <span style={{ color: 'var(--text-faint)' }}> → {e.nextEffectLabel} next lvl</span>
+                    )}
                     {e.affinityName ? ` · ${e.affinityName} ⭐` : ''}
                   </div>
                   <TraitChips names={e.traitNames} />

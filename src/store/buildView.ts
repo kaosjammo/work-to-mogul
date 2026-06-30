@@ -108,6 +108,7 @@ export interface EmployeeView {
   assignedToBusinessId: BusinessId | null
   assignedToName: string | null
   effectLabel: string
+  nextEffectLabel: string // effect at level+1 ('' if maxed) — previews the level-up gain
   traitNames: string[]
   levelUpCost: number
   atMaxLevel: boolean
@@ -464,6 +465,7 @@ export function buildView(state: GameState): ViewSnapshot {
       assignedToBusinessId: bizId,
       assignedToName: bizId ? (BUSINESSES[bizId]?.name ?? null) : null,
       effectLabel: employeeEffectLabel(e),
+      nextEffectLabel: e.level >= MAX_EMPLOYEE_LEVEL ? '' : employeeEffectLabel({ ...e, level: e.level + 1 }),
       traitNames: e.traits.map((t) => TRAIT_NAME[t] ?? t),
       levelUpCost: levelUpCost(e, lvlMult),
       atMaxLevel: e.level >= MAX_EMPLOYEE_LEVEL,
