@@ -45,7 +45,7 @@ import {
   talentLabel,
   talentProfitBonusPct,
 } from '../engine/talents'
-import { prestigePending } from '../engine/prestige'
+import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { timeWarpValue, GOLDEN_WARP_SECONDS } from '../engine/golden'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
@@ -257,6 +257,8 @@ export interface ViewSnapshot {
   prestige: PrestigeState
   prestigePending: number
   prestigeUnlocked: boolean
+  prestigeNextTokenAt: number // lifetime earnings at which pending tokens next increase
+  prestigeNextTokenProgress: number // 0..1 through the current sqrt band
   prestigeProfitBonusPct: number // permanent profit bonus from talents (whole %)
   talents: TalentView[]
   talentTokensAvailable: number
@@ -690,6 +692,8 @@ export function buildView(state: GameState): ViewSnapshot {
     prestige: state.prestige,
     prestigePending: pendingTokens,
     prestigeUnlocked,
+    prestigeNextTokenAt: nextTokenLifetime(state),
+    prestigeNextTokenProgress: nextTokenProgress(state),
     prestigeProfitBonusPct: talentProfitBonusPct(state),
     talents,
     talentTokensAvailable: tokensAvailable,

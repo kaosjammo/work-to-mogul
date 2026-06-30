@@ -55,6 +55,8 @@ export const usePrestige = () =>
       pending: s.prestigePending,
       unlocked: s.prestigeUnlocked,
       lifetime: s.lifetimeEarnings,
+      nextTokenAt: s.prestigeNextTokenAt,
+      nextTokenProgress: s.prestigeNextTokenProgress,
       profitBonusPct: s.prestigeProfitBonusPct,
     })),
   )

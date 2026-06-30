@@ -7,7 +7,7 @@ import { prestige, buyTalent, hardReset } from '../../store/actions'
 import { HoldToConfirmButton } from './HoldToConfirmButton'
 
 export function PrestigeScreen() {
-  const { prestige: p, pending, unlocked, lifetime, profitBonusPct } = usePrestige()
+  const { prestige: p, pending, unlocked, lifetime, nextTokenAt, nextTokenProgress, profitBonusPct } = usePrestige()
   const talents = useTalents()
   const milestones = usePrestigeMilestones()
   const achievements = useAchievements()
@@ -54,6 +54,18 @@ export function PrestigeScreen() {
                 Earn more to bank at least 1 token.
               </p>
             )}
+            {/* "Wait or ascend?" — how close the next token is. */}
+            <div className="mt-1 flex flex-col gap-1">
+              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ background: 'var(--accent)', width: `${Math.round(nextTokenProgress * 100)}%` }}
+                />
+              </div>
+              <p className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
+                Next ✦ at {money(nextTokenAt)} lifetime
+              </p>
+            </div>
           </div>
         ) : (
           <div className="flex w-full flex-col gap-2">

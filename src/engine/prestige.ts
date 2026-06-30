@@ -4,7 +4,7 @@
 //  milestones) and keeps only the permanent prestige multiplier.
 // ============================================================
 import type { GameState } from '../types/domain'
-import { prestigePointsFor } from './economy'
+import { prestigePointsFor, PRESTIGE_SCALE } from './economy'
 import { initialGameState } from '../store/initialState'
 import { startCash, tokenYieldMult } from './talents'
 import { checkPrestigeMilestones } from './prestigeMilestones'
@@ -13,6 +13,26 @@ import { checkPrestigeMilestones } from './prestigeMilestones'
 export function prestigePending(state: GameState): number {
   const base = prestigePointsFor(state.lifetimeEarnings)
   return Math.floor(base * tokenYieldMult(state))
+}
+
+/**
+ * Lifetime earnings at which `prestigePending` next increases — the start of the
+ * next sqrt "band". `prestigePending` is constant within a band (base is integer),
+ * so the next gain always lands at this boundary. Lets the UI answer the core
+ * prestige decision: "ascend now, or hold out for one more token?".
+ */
+export function nextTokenLifetime(state: GameState): number {
+  const base = prestigePointsFor(state.lifetimeEarnings)
+  return (base + 1) * (base + 1) * PRESTIGE_SCALE
+}
+
+/** Progress (0..1) through the current band toward the next token. */
+export function nextTokenProgress(state: GameState): number {
+  const base = prestigePointsFor(state.lifetimeEarnings)
+  const bandStart = base * base * PRESTIGE_SCALE
+  const bandEnd = (base + 1) * (base + 1) * PRESTIGE_SCALE
+  if (bandEnd <= bandStart) return 0
+  return Math.min(1, Math.max(0, (state.lifetimeEarnings - bandStart) / (bandEnd - bandStart)))
 }
 
 /** Perform a prestige reset if at least 1 point would be earned. */

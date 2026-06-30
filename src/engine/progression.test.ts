@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { initialGameState } from '../store/initialState'
 import { buyUpgrade } from './upgrades'
-import { prestigeReset } from './prestige'
+import { prestigeReset, nextTokenLifetime, nextTokenProgress } from './prestige'
 import { buyTalent } from './talents'
 import { economyMultipliers, prestigePointsFor, PRESTIGE_SCALE } from './economy'
 import { BUSINESSES } from '../content/businesses'
@@ -59,6 +59,23 @@ describe('prestige', () => {
     expect(s.businesses.lemonade.owned).toBe(0)
     expect(s.upgradesPurchased).toHaveLength(0)
     expect(s.lifetimeEarnings).toBe(0)
+  })
+
+  it('reports the lifetime needed for the next token + band progress', () => {
+    const s = initialGameState(0)
+    // Just past the 2-token boundary (sqrt(4)=2): next token (3) lands at 9×scale.
+    s.lifetimeEarnings = 4 * PRESTIGE_SCALE
+    expect(prestigePointsFor(s.lifetimeEarnings)).toBe(2)
+    expect(nextTokenLifetime(s)).toBe(9 * PRESTIGE_SCALE)
+    expect(nextTokenProgress(s)).toBeCloseTo(0) // at the band start
+
+    // Halfway through the 2→3 band (between 4× and 9× scale).
+    s.lifetimeEarnings = 6.5 * PRESTIGE_SCALE
+    expect(nextTokenProgress(s)).toBeCloseTo((6.5 - 4) / (9 - 4))
+
+    // From a standing start, the first token is one scale-unit of lifetime away.
+    s.lifetimeEarnings = 0
+    expect(nextTokenLifetime(s)).toBe(PRESTIGE_SCALE)
   })
 
   it('accumulates tokens across multiple ascensions and preserves talents', () => {
