@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { initialGameState } from '../store/initialState'
 import { checkPrestigeMilestones } from './prestigeMilestones'
 import { prestigeReset } from './prestige'
+import { PRESTIGE_SCALE } from './economy'
 
 describe('prestige milestones', () => {
   it('grants the token reward once when the reset threshold is reached', () => {
@@ -38,7 +39,7 @@ describe('prestige milestones', () => {
   it('prestigeReset reaches the 3-ascension milestone and banks the bonus', () => {
     const s = initialGameState(0)
     s.prestige.resets = 2 // next ascension is the 3rd
-    s.lifetimeEarnings = 1_000_000 // 1 base token
+    s.lifetimeEarnings = PRESTIGE_SCALE // 1 base token
     prestigeReset(s)
     expect(s.prestige.resets).toBe(3)
     expect(s.prestigeMilestonesClaimed).toContain('ascend_3')
@@ -49,10 +50,10 @@ describe('prestige milestones', () => {
   it('milestone claims survive subsequent ascensions (no double-grant)', () => {
     const s = initialGameState(0)
     s.prestige.resets = 2
-    s.lifetimeEarnings = 1_000_000
+    s.lifetimeEarnings = PRESTIGE_SCALE
     prestigeReset(s) // → resets 3, claims ascend_3
     const afterFirst = s.prestige.totalPoints
-    s.lifetimeEarnings = 1_000_000
+    s.lifetimeEarnings = PRESTIGE_SCALE
     prestigeReset(s) // → resets 4, ascend_3 already claimed
     expect(s.prestigeMilestonesClaimed.filter((id) => id === 'ascend_3')).toHaveLength(1)
     expect(s.prestige.totalPoints).toBe(afterFirst + 1) // only the base token, no re-reward

@@ -124,6 +124,7 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     s.career.shiftProgressMs = Math.max(0, num(lc.shiftProgressMs))
     s.career.shiftsThisLevel = Math.max(0, Math.floor(num(lc.shiftsThisLevel)))
     s.career.totalShifts = Math.max(0, Math.floor(num(lc.totalShifts)))
+    s.career.consultingMs = Math.max(0, num(lc.consultingMs))
   }
 
   // Prestige — totals + the talent tree (filter unknown ids; clamp ranks).

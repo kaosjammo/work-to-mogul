@@ -7,7 +7,7 @@ describe('save round-trip', () => {
     const s = initialGameState(0)
     s.cash = 1234
     s.lifetimeEarnings = 9999
-    s.career = { level: 2, shiftProgressMs: 0, shiftsThisLevel: 5, totalShifts: 40 }
+    s.career = { level: 2, shiftProgressMs: 0, shiftsThisLevel: 5, totalShifts: 40, consultingMs: 0 }
     s.businesses.lemonade.owned = 30
     s.businesses.lemonade.unlocked = true
 

@@ -5,6 +5,7 @@ import {
   maxAffordable,
   appliedMilestones,
   prestigePointsFor,
+  PRESTIGE_SCALE,
 } from './economy'
 import { resolveBusiness } from './resolveBusiness'
 import { BUSINESSES } from '../content/businesses'
@@ -16,7 +17,7 @@ const skyscraper = BUSINESSES.skyscraper // Finance-scale (baseCost 3.5e11)
 describe('cost formulas', () => {
   it('unitCost grows geometrically', () => {
     expect(unitCost(lemonade, 0)).toBeCloseTo(4)
-    expect(unitCost(lemonade, 1)).toBeCloseTo(4 * 1.07)
+    expect(unitCost(lemonade, 1)).toBeCloseTo(4 * lemonade.growthRate)
   })
 
   it('totalCost equals the sum of unit costs', () => {
@@ -95,9 +96,9 @@ describe('resolveBusiness folds × owned (rule #1)', () => {
 })
 
 describe('prestige', () => {
-  it('grants ~1 point at $1M lifetime and scales by sqrt', () => {
-    expect(prestigePointsFor(1e6)).toBe(1)
-    expect(prestigePointsFor(4e6)).toBe(2)
+  it('grants ~1 point at the prestige scale and scales by sqrt', () => {
+    expect(prestigePointsFor(PRESTIGE_SCALE)).toBe(1)
+    expect(prestigePointsFor(4 * PRESTIGE_SCALE)).toBe(2)
     expect(prestigePointsFor(0)).toBe(0)
   })
 })

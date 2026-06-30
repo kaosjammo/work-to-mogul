@@ -94,12 +94,15 @@ export const INDUSTRIES: Record<IndustryId, IndustryDef> = {
   },
 }
 
+// Ordered by ascending entry cost (price of each industry's first business) so the
+// UI's left-to-right order matches the order players can actually afford to open.
+// Logistics (Courier $80M) is reachable well before Finance (Apartments $5B).
 export const INDUSTRY_ORDER: IndustryId[] = [
   'food',
   'retail',
   'tech',
-  'finance',
   'logistics',
+  'finance',
   'energy',
   'space',
 ]
