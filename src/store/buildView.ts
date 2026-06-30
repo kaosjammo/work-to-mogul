@@ -279,6 +279,7 @@ export interface GameStats {
   automatedCount: number
   businessesUnlocked: number
   industriesEntered: number
+  industriesTotal: number
   employees: number
   careerLevel: number
 }
@@ -708,6 +709,7 @@ export function buildView(state: GameState): ViewSnapshot {
       automatedCount,
       businessesUnlocked,
       industriesEntered,
+      industriesTotal: INDUSTRY_ORDER.length,
       employees: Object.values(state.employees).length,
       careerLevel: state.career.level,
     },

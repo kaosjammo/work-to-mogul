@@ -152,7 +152,7 @@ export function StatsScreen() {
       <Section title="EMPIRE">
         <Row label="Businesses owned" value={String(s.stats.totalOwned)} />
         <Row label="Automated" value={`${s.stats.automatedCount}/${s.stats.businessesUnlocked}`} />
-        <Row label="Industries entered" value={`${s.stats.industriesEntered}/7`} />
+        <Row label="Industries entered" value={`${s.stats.industriesEntered}/${s.stats.industriesTotal}`} />
         <Row label="Employees hired" value={String(s.stats.employees)} />
       </Section>
 
