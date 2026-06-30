@@ -6,7 +6,7 @@
 //  silently overwrite — both-exist surfaces a "use this device / use cloud" choice.
 // ============================================================
 import { create } from 'zustand'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { supabase, isSupabaseConfigured, configError as supabaseConfigError, supabaseHost } from '../lib/supabase'
 import { fetchCloudSave, uploadCloudSave } from '../save/cloud'
 import {
   snapshotEnvelope,
@@ -34,6 +34,8 @@ interface Conflict {
 
 interface AccountStore {
   configured: boolean
+  configError: string | null // bad VITE_SUPABASE_URL etc. (clear message), or null
+  host: string | null // configured Supabase host (no key) for diagnosis
   ready: boolean
   user: AccountUser | null
   status: SyncStatus
@@ -91,6 +93,8 @@ function authErrorMessage(error: { message?: string }): string {
 
 export const useAccountStore = create<AccountStore>((set, get) => ({
   configured: isSupabaseConfigured,
+  configError: supabaseConfigError,
+  host: supabaseHost,
   ready: !isSupabaseConfigured, // unconfigured → immediately ready in local-only mode
   user: null,
   status: 'local',

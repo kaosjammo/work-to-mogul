@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPublishable, sanitizeAuthHeaders } from './supabase'
+import { isPublishable, sanitizeAuthHeaders, supabaseUrlError } from './supabase'
 
 const PUB = 'sb_publishable_AbC123xyz'
 const LEGACY_JWT = 'eyJhbGciOiJIUzI1NiIs.legacy.anon'
@@ -35,5 +35,20 @@ describe('publishable-key auth header handling', () => {
   it('no-ops with no headers or no key', () => {
     expect(sanitizeAuthHeaders(undefined, PUB)).toBeNull()
     expect(sanitizeAuthHeaders({ Authorization: 'Bearer whatever' }, undefined)).toBeNull()
+  })
+})
+
+describe('VITE_SUPABASE_URL validation', () => {
+  it('accepts a well-formed https Supabase URL', () => {
+    expect(supabaseUrlError('https://abcdefgh.supabase.co')).toBeNull()
+  })
+  it('flags a missing URL', () => {
+    expect(supabaseUrlError(undefined)).toMatch(/not set/i)
+  })
+  it('flags a URL with no protocol (forgot https://)', () => {
+    expect(supabaseUrlError('abc.supabase.co')).toMatch(/valid URL/i)
+  })
+  it('flags a non-https URL', () => {
+    expect(supabaseUrlError('http://abc.supabase.co')).toMatch(/https/i)
   })
 })

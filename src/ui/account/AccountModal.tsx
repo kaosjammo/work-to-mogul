@@ -10,6 +10,8 @@ export function AccountModal() {
   const close = useUiStore((s) => s.closeAccount)
 
   const configured = useAccountStore((s) => s.configured)
+  const configError = useAccountStore((s) => s.configError)
+  const host = useAccountStore((s) => s.host)
   const user = useAccountStore((s) => s.user)
   const status = useAccountStore((s) => s.status)
   const authBusy = useAccountStore((s) => s.authBusy)
@@ -61,12 +63,15 @@ export function AccountModal() {
               onChoose={(c) => resolveConflict(c)}
               busy={status === 'syncing'}
             />
+          ) : configError ? (
+            <ConfigProblem message={configError} onClose={close} />
           ) : !configured ? (
             <NotConfigured onClose={close} />
           ) : user ? (
             <SignedIn
               email={user.email}
               status={status}
+              host={host}
               onSync={syncNow}
               onSignOut={signOut}
               onClose={close}
@@ -75,6 +80,7 @@ export function AccountModal() {
             <SignedOut
               email={email}
               password={password}
+              host={host}
               setEmail={setEmail}
               setPassword={setPassword}
               busy={authBusy}
@@ -110,9 +116,26 @@ function NotConfigured({ onClose }: { onClose: () => void }) {
   )
 }
 
+function ConfigProblem({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <>
+      <Title>Cloud save isn’t configured</Title>
+      <p className="text-sm" style={{ color: 'var(--bad)' }}>
+        {message}
+      </p>
+      <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+        Your progress is still saved <span className="font-semibold">locally on this device</span>.
+        Fix the Supabase URL/key and reload to enable cloud sync.
+      </p>
+      <SecondaryButton onClick={onClose}>Got it</SecondaryButton>
+    </>
+  )
+}
+
 function SignedOut(props: {
   email: string
   password: string
+  host: string | null
   setEmail: (v: string) => void
   setPassword: (v: string) => void
   busy: boolean
@@ -128,6 +151,11 @@ function SignedOut(props: {
         Your local progress stays on this device. Sign in to back it up and play
         across devices.
       </p>
+      {props.host && (
+        <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>
+          Server: {props.host}
+        </p>
+      )}
       <Field label="Email" type="email" value={props.email} onChange={props.setEmail} autoComplete="email" />
       <Field
         label="Password"
@@ -159,6 +187,7 @@ function SignedOut(props: {
 function SignedIn(props: {
   email: string | null
   status: string
+  host: string | null
   onSync: () => void
   onSignOut: () => void
   onClose: () => void
@@ -187,6 +216,11 @@ function SignedIn(props: {
         <span className="text-xs" style={{ color: statusColor }}>
           ☁ {statusLabel}
         </span>
+        {props.host && (
+          <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>
+            {props.host}
+          </span>
+        )}
       </div>
       <PrimaryButton disabled={props.status === 'syncing'} onClick={props.onSync}>
         {props.status === 'syncing' ? 'Syncing…' : 'Sync now'}

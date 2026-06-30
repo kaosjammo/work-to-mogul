@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Debugging aid — Supabase config self-diagnosis ("Failed to fetch" still seen)
+
+**Context:** after the publishable-key fix, login still showed "Couldn't reach the
+sign-in server" on the live site. User's Supabase **Logs** screenshot: **Auth log
+type = 0** (the request never reaches GoTrue) while Postgres connections are fine,
+**plus** a Supabase platform incident banner ("investigating a technical issue").
+So it's either the Supabase incident (transient) or the request hitting the
+wrong/blocked URL — both produce a browser-level "Failed to fetch" + zero auth logs.
+
+**Added (self-diagnosis, all safe/small):**
+- `src/lib/supabase.ts`: `cleanEnv()` strips accidental surrounding quotes/whitespace
+  from both env vars + a trailing slash on the URL (the #1 paste mistake);
+  `supabaseUrlError()` (exported, tested) flags a missing / non-https / unparseable
+  URL; `configError` + `supabaseHost` exported. Client is created only when the URL
+  is valid. Startup `console` diagnostic logs **host + key KIND only** (never the key).
+- `src/store/accountStore.ts`: exposes `configError` + `host`.
+- `src/ui/account/AccountModal.tsx`: a **Config-problem** view (shows the exact URL
+  error) and the **target host** under the sign-in form / account view, so the user
+  can confirm which project the build targets.
+- `src/lib/supabase.test.ts`: +4 URL-validation cases.
+
+**Commands / results:** `npm run lint` ✓; `npm run test` ✓ **158/28**; `npm run build` ✓.
+
+**Conclusion for the user:** 0 auth logs ⇒ the request isn't reaching Supabase. Check
+(1) the Supabase status incident (retry after it clears), (2) `VITE_SUPABASE_URL` is
+exactly `https://<ref>.supabase.co` (no quotes/slash) — the modal now shows the host
+it's using, (3) project not paused. No code bug indicated by the logs.
+
+---
+
 ## Bug fix — Supabase new publishable-key format ("Failed to fetch" on login)
 
 **Problem:** with a new `sb_publishable_…` key, `@supabase/supabase-js` put the
