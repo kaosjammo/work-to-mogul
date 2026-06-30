@@ -47,6 +47,23 @@ describe('tolerant load', () => {
     expect((loaded.businesses as Record<string, unknown>).ghost_business).toBeUndefined()
   })
 
+  it('adds businesses/industries introduced after the save was written', () => {
+    // An "old" save that only knew about Lemonade: newer content (Quantum
+    // Frontier, Dyson Sphere, …) must appear with defaults, not be missing.
+    const loaded = tolerantLoad({
+      cash: 0,
+      businesses: {
+        lemonade: { owned: 12, unlocked: true, cycleProgressMs: 0, assigned: [null], morale: 60, risk: 0, riskEventMsLeft: 0 },
+      },
+    } as never)
+    expect(loaded.businesses.lemonade.owned).toBe(12) // preserved
+    for (const id of ['dyson', 'quantum_computer', 'multiverse']) {
+      expect(loaded.businesses[id], `${id} should be added`).toBeDefined()
+      expect(loaded.businesses[id].owned).toBe(0)
+    }
+    expect(loaded.industries.quantum?.unlocked).toBe(true)
+  })
+
   it('sanitizes invalid numbers', () => {
     const loaded = tolerantLoad({ cash: Infinity, lifetimeEarnings: NaN } as never)
     expect(Number.isFinite(loaded.cash)).toBe(true)
