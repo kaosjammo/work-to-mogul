@@ -7,8 +7,13 @@ import { ART_GENERATED } from '../../content/artManifest'
 // idle when the empire is dormant — giving the game a bit of personality.
 // Boolean selectors keep this to a re-render only when the pose actually flips.
 export function WealthStage() {
+  // Only on the Business "home" tab — a flourish there, clutter at the foot of
+  // the data-heavy Staff/Upgrades/Stats/Prestige lists.
+  const onBusinessTab = useGameStore((s) => s.activeTab === 'business')
   const earning = useGameStore((s) => s.totalPps > 0)
   const celebrating = useUiStore((s) => s.celebrations.length > 0)
+
+  if (!onBusinessTab) return null
 
   const mascot = celebrating
     ? ART_GENERATED.mascot.founderExcited
