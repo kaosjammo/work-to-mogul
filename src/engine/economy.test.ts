@@ -6,6 +6,8 @@ import {
   appliedMilestones,
   prestigePointsFor,
   PRESTIGE_SCALE,
+  lateGameDampen,
+  economyMultipliers,
 } from './economy'
 import { resolveBusiness } from './resolveBusiness'
 import { BUSINESSES } from '../content/businesses'
@@ -92,6 +94,29 @@ describe('resolveBusiness folds × owned (rule #1)', () => {
     s.businesses.lemonade.owned = 25
     const r = resolveBusiness(s, lemonade)
     expect(r.cycleMs).toBeCloseTo(lemonade.baseCycleMs / 2)
+  })
+})
+
+describe('late-game pacing dampener', () => {
+  it('leaves the early tiers untouched and compounds a slowdown on the higher ones', () => {
+    // Early industries (food/retail/tech) are never dampened — the early game is the
+    // sacred "first run" pacing the harness landmarks lock.
+    expect(lateGameDampen('food')).toBe(1)
+    expect(lateGameDampen('retail')).toBe(1)
+    expect(lateGameDampen('tech')).toBe(1)
+    // Mid-late tiers get an increasing (compounding, ≤1) profit cut.
+    expect(lateGameDampen('finance')).toBeLessThan(1)
+    expect(lateGameDampen('space')).toBeLessThan(lateGameDampen('finance'))
+    expect(lateGameDampen('space')).toBeGreaterThan(0) // never zeroes income
+  })
+
+  it('folds into a late-tier business profit but not an early one', () => {
+    const s = initialGameState(0)
+    const foodProfit = economyMultipliers(s, BUSINESSES.lemonade).profit // food → ×1 dampen
+    const lateProfit = economyMultipliers(s, BUSINESSES.skyscraper).profit // finance → dampened
+    // Skyscraper's profit multiplier carries the dampen factor; lemonade's does not.
+    expect(foodProfit).toBeCloseTo(1) // no milestones/talents/dampen on a fresh food business
+    expect(lateProfit).toBeCloseTo(lateGameDampen('finance'))
   })
 })
 

@@ -10,7 +10,7 @@ import type {
   IndustryId,
   Num,
 } from '../types/domain'
-import { INDUSTRIES } from '../content/industries'
+import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
@@ -103,6 +103,25 @@ export const SIGNATURE_PERKS: Record<string, { profit?: number; speed?: number }
   moonshot: { profit: 2 }, // Space / Quantum — high-variance payoff
 }
 
+// ----- Late-game pacing dampener -----
+// A RUNTIME profit multiplier (≤ 1) applied to the higher industry tiers, layered on
+// top of the economy exactly like milestones/industry bonuses. It deliberately does
+// NOT touch the base revenue/cost curve, so the income-efficiency monotonicity
+// invariant (balance.test) is untouched — advancing is still always an upgrade, the
+// late tiers just climb more slowly. This implements the "slow the mid/late game
+// significantly" directive in a tunable, measurable way (the harness sees it because
+// the bot reaches these tiers); INDUSTRY_ORDER is ascending entry-cost order, so the
+// index is the progression tier. Tunable: raise the rate / lower the start for more.
+const LATE_DAMPEN_START_TIER = 3 // Logistics onward (mid-late game) gets dampened
+const LATE_DAMPEN_PER_TIER = 0.15 // each tier past the start earns ×0.85 (compounding)
+
+export function lateGameDampen(industryId: IndustryId): number {
+  const tier = INDUSTRY_ORDER.indexOf(industryId)
+  const past = tier - LATE_DAMPEN_START_TIER
+  if (past <= 0) return 1
+  return Math.pow(1 - LATE_DAMPEN_PER_TIER, past)
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
 export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
@@ -168,8 +187,9 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // A claimed Golden Deal briefly multiplies all profit (read inline to avoid an
   // import cycle with engine/golden). Bounded + active-play only → harness-safe.
   const frenzy = (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
+  const lateDampen = lateGameDampen(def.industryId) // slows the higher tiers (≤ 1)
   return {
-    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state),
+    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen,
     speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state),
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }
