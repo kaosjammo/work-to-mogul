@@ -35,7 +35,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
 - PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
 - Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
-- **182 tests / 30 files**; oxlint clean; production build verified booting.
+- **185 tests / 30 files**; oxlint clean; production build verified booting.
 
 ## Current known issues / notes
 
@@ -123,8 +123,14 @@ stage only your own files before pushing.
 ## Latest loop summary
 
 **Goal-run — legibility, decision-support + meta/active depth.** On the standing /goal,
-high-value increments (each build + 182 Vitest + oxlint + browser-verified on a throwaway
+high-value increments (each build + 185 Vitest + oxlint + browser-verified on a throwaway
 dev server, then fetch/rebase/pushed):
+- **System-completeness audit (found real gaps, not padding):** (a) added the **Great Workplace**
+  synergy — HR was the only role absent from every synergy, so there was no combo reason to staff
+  a morale specialist; (b) fixed **two dead industry signature perks** — Retail's *Franchise* and
+  Finance's *Compound Interest* were defined but had no effect (only 5 of 7 perks were wired).
+  Refactored perks into a data table + added a `content.test` guard so a future dead perk fails
+  loudly. Both verified harness-byte-identical (deep-specialisation rewards, zero pacing impact).
 - **Golden Deal depth** — (a) every 5th deal is a deterministic MEGA jackpot worth 5× (75 min
   of idle income, 🌟 hotter gradient + stronger buzz); (b) claiming any deal now also kicks off
   a 20s **Profit Rush** that doubles all-business profit (HUD chip + countdown). No RNG (a spawn
