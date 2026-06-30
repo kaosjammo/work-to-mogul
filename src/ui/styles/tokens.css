@@ -1,0 +1,48 @@
+/* Design tokens — colors, spacing, per-industry accents, tap-target sizes.
+   These are plain CSS custom properties consumed by Tailwind arbitrary values
+   (e.g. bg-[var(--surface)]) and by hand-rolled components. */
+:root {
+  /* Core surfaces (dark-first; this is a game, dark looks best) */
+  --bg: #0f1115;
+  --surface: #181b22;
+  --surface-2: #20242d;
+  --surface-3: #2a2f3a;
+  --border: #2e333f;
+  --text: #e7e9ee;
+  --text-dim: #9aa1ad;
+  --text-faint: #6b7280;
+
+  /* Brand / money */
+  --accent: #f5c518; /* gold — money */
+  --accent-ink: #0f1115;
+  --good: #46d369;
+  --bad: #ef4444;
+  --warn: #f59e0b;
+
+  /* Per-industry accent colors (drive card theming via --industry) */
+  --industry-food: #e2502b;
+  --industry-retail: #2bb3e2;
+  --industry-tech: #8b5cf6;
+  --industry-finance: #2bd47a;
+  --industry-logistics: #f59e0b;
+  --industry-energy: #a3e635;
+  --industry-space: #d946ef;
+
+  /* Layout */
+  --tap: 44px; /* minimum tap target */
+  --tap-lg: 56px; /* primary buttons */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --gap: 12px;
+
+  /* Safe-area insets (resolve to 0 on devices without notches) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --hud-h: 64px;
+  --nav-h: 60px;
+
+  color-scheme: dark;
+}

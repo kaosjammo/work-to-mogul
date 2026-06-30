@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Income rate">
+  <circle cx="8" cy="16" r="4" fill="#f5c518"/>
+  <path d="M5 7h5l2 3 3-6 4 7" fill="none" stroke="#2bd47a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 13v6" stroke="#0f1115" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

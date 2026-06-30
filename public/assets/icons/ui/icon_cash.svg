@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Cash">
+  <circle cx="9" cy="9" r="5" fill="#f5c518"/>
+  <circle cx="14" cy="14" r="6" fill="#f5c518" opacity=".82"/>
+  <path d="M14 10v8M11.5 12.5c.5-.8 1.4-1.2 2.5-1.2 1.4 0 2.4.7 2.4 1.8 0 2.4-4.8 1-4.8 3.2 0 1 1 1.6 2.4 1.6 1.1 0 2-.4 2.6-1.1" fill="none" stroke="#0f1115" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

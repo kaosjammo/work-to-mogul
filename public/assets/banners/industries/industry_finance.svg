@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Finance and Property banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <path d="M0 310 150 230l110 35 170-155 160 60 210-130 224 110v234H0z" fill="#2bd47a" opacity=".12"/>
+  <path d="M120 320V130h110v190M270 320V82h140v238M455 320V170h100v150" fill="#20242d" stroke="#e7e9ee" stroke-width="10" opacity=".45"/>
+  <path d="M95 258c210 5 405-80 620-220" fill="none" stroke="#f5c518" stroke-width="14" stroke-linecap="round" opacity=".32"/>
+</svg>

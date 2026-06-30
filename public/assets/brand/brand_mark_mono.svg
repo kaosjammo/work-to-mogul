@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Tycoon Empire mark">
+  <rect width="128" height="128" rx="28" fill="#20242d"/>
+  <path d="M32 92h64M39 88V58l18 9V45l18 13V35h16v53z" fill="none" stroke="#f5c518" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M48 76h8M64 76h8M80 76h8" stroke="#f5c518" stroke-width="6" stroke-linecap="round"/>
+</svg>

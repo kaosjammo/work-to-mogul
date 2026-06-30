@@ -1,0 +1,110 @@
+/* Mobile-first global resets and layout primitives. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Prevent rubber-band / pull-to-refresh interfering with the game canvas. */
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* No text selection on tap-heavy game UI. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px; /* phone-shaped by default */
+  margin-inline: auto;
+  background: var(--bg);
+}
+
+/* Use horizontal space on larger screens (content laid out in grids). */
+@media (min-width: 1024px) {
+  #root {
+    max-width: 1080px;
+  }
+}
+
+/* The single scrolling region between the fixed HUD and nav. */
+.scroll-region {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Tabular figures so rapidly-changing numbers don't jitter width. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Progress-bar fill is GPU-composited via transform: scaleX(). */
+.progress-fill {
+  transform-origin: left center;
+  will-change: transform;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+/* Golden Deal pulse — draws the eye to the limited-time tap reward. */
+@keyframes golden-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 4px 18px rgba(245, 197, 24, 0.45);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.06);
+    box-shadow: 0 6px 26px rgba(245, 197, 24, 0.7);
+  }
+}
+.golden-pulse {
+  animation: golden-pulse 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

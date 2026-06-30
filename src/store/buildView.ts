@@ -1,0 +1,657 @@
+// ============================================================
+//  buildView — derive the UI-facing snapshot from canonical GameState.
+//  Pure: takes state as an argument. Called by the publisher (throttled)
+//  and immediately after discrete actions.
+// ============================================================
+import type {
+  BusinessId,
+  BuyMode,
+  GameState,
+  IndustryId,
+  PrestigeState,
+  Rarity,
+  RoleId,
+  TabId,
+  UpgradeId,
+} from '../types/domain'
+import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
+import { BUSINESSES } from '../content/businesses'
+import { UPGRADES, UPGRADE_ORDER } from '../content/upgrades'
+import { careerLevelDef, MAX_CAREER_LEVEL } from '../content/career'
+import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
+import { SYNERGY_LABEL } from '../content/synergies'
+import { ACHIEVEMENTS } from '../content/achievements'
+import { PRESTIGE_MILESTONES } from '../content/prestigeMilestones'
+import { ART_UPGRADES, ART_MILESTONE } from '../content/artManifest'
+import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
+import { TRAIT_NAME } from '../content/traits'
+import { TALENTS, TALENT_ORDER, type TalentTheme } from '../content/talents'
+import { SPECIALISATIONS, SPECS_BY_ROLE, REQUIRED_SPEC_LEVEL } from '../content/specialisations'
+import { resolveBusiness } from '../engine/resolveBusiness'
+import { computeEmployeeEffects } from '../engine/employees/composition'
+import { levelUpCost, hireCost, nextRarity } from '../engine/employees/roster'
+import {
+  availableTokens,
+  levelCostMult,
+  talentRank,
+  talentLabel,
+  talentProfitBonusPct,
+} from '../engine/talents'
+import { prestigePending } from '../engine/prestige'
+import { timeWarpValue, GOLDEN_WARP_SECONDS } from '../engine/golden'
+import { CONTRACT_BY_ID } from '../content/contracts'
+import { contractProgress, isContractComplete } from '../engine/contracts'
+import type { EffectChannel, EmployeeInstance } from '../types/domain'
+import {
+  nextMilestone,
+  resolveQuantity,
+  totalCost,
+  PRESTIGE_UNLOCK_LIFETIME,
+} from '../engine/economy'
+
+export interface BusinessView {
+  id: BusinessId
+  name: string
+  icon: string
+  industryId: IndustryId
+  owned: number
+  unlocked: boolean
+  isAutomated: boolean
+  unlockedSlots: number
+  assignedCount: number
+  pps: number
+  progressFraction: number
+  cycleMs: number
+  buyQty: number
+  buyCost: number
+  affordable: boolean
+  isBestBuy: boolean // highest reinvestment ROI right now (among owned, affordable)
+  nextMilestoneThreshold: number | null
+  nextMilestoneLabel: string | null
+  // Staff summary (M4a + M4b crit)
+  automated: boolean
+  staffProfitPct: number
+  staffSpeedPct: number
+  staffCostPct: number
+  staffCritChance: number // 0..100 (%)
+  staffCritMult: number
+  staffMoralePct: number // revenue % from morale above the neutral baseline
+  staffFocusPct: number // profit % from industry-themed staffing (0..15)
+  synergies: string[] // active synergy labels
+  riskEnabled: boolean
+  riskPct: number // 0..100 risk build-up
+  riskEventActive: boolean // a dampening event is currently running
+  slots: (string | null)[] // employee ids per unlocked slot
+}
+
+export interface EmployeeView {
+  id: string
+  name: string
+  role: RoleId
+  roleName: string
+  roleIcon: string
+  roleColor: string
+  roleBlurb: string
+  rarity: Rarity
+  level: number
+  affinity: IndustryId | null
+  affinityName: string | null
+  assignedToBusinessId: BusinessId | null
+  assignedToName: string | null
+  effectLabel: string
+  traitNames: string[]
+  levelUpCost: number
+  atMaxLevel: boolean
+  levelUpAffordable: boolean
+  // L5 specialisation
+  canSpecialise: boolean // level >= REQUIRED_SPEC_LEVEL
+  specialisationId: string | null
+  specialisationName: string | null
+  specOptions: SpecOptionView[] // role's picks (empty until canSpecialise)
+  // Fusion / promotion (Tier 5)
+  canFuse: boolean // a matching duplicate exists and rarity < epic
+  fuseWithId: string | null // the partner to consume
+  fuseToRarity: Rarity | null // resulting rarity, for the label
+}
+
+export interface SpecOptionView {
+  id: string
+  name: string
+  icon: string
+  blurb: string
+  chosen: boolean
+}
+
+export interface HireOptionView {
+  templateId: string
+  name: string
+  role: RoleId
+  roleName: string
+  roleIcon: string
+  roleColor: string
+  rarity: Rarity
+  affinity: IndustryId | null
+  affinityName: string | null
+  traitNames: string[]
+  cost: number
+  affordable: boolean
+}
+
+export interface IndustryView {
+  id: IndustryId
+  name: string
+  theme: string
+  // All industries are visible from the start; "entry" = cost of the first business.
+  entryCost: number
+  firstBusinessName: string
+  entryAffordable: boolean
+  ownsAny: boolean
+  totalOwned: number
+}
+
+export interface CareerView {
+  level: number
+  title: string
+  wage: number
+  shiftMs: number
+  working: boolean
+  shiftProgressFraction: number
+  shiftsThisLevel: number
+  shiftsToPromote: number | null
+  promotionFraction: number
+  isMaxLevel: boolean
+  nextTitle: string | null
+  nextWage: number | null
+}
+
+export interface UpgradeView {
+  id: UpgradeId
+  name: string
+  cost: number
+  purchased: boolean
+  affordable: boolean
+  scopeLabel: string
+  iconSrc: string
+}
+
+export interface TalentView {
+  id: string
+  name: string
+  blurb: string
+  theme: TalentTheme
+  icon: string
+  rank: number
+  maxRank: number
+  maxed: boolean
+  nextCost: number | null
+  affordable: boolean
+  currentLabel: string // cumulative effect at the current rank ('—' at rank 0)
+  nextLabel: string | null // effect after buying the next rank (null if maxed)
+}
+
+export interface RevealedTabs {
+  employees: boolean
+  upgrades: boolean
+  prestige: boolean
+  stats: boolean
+}
+
+export interface GoldenView {
+  offerActive: boolean
+  offerSecondsLeft: number
+  warpValue: number // cash a tap grants right now
+  warpMinutes: number // for the label ("15 min of income")
+}
+
+export interface ContractView {
+  id: string
+  name: string
+  description: string
+  icon: string
+  progress: number
+  target: number
+  fraction: number // 0..1
+  rewardTokens: number
+  complete: boolean
+}
+
+/** Reveal thresholds for the onboarding staged reveal (lifetime earnings). */
+export const REVEAL_UPGRADES_LIFETIME = 10_000
+
+export interface ViewSnapshot {
+  cash: number
+  lifetimeEarnings: number
+  totalPps: number
+  career: CareerView
+  revealedTabs: RevealedTabs
+  golden: GoldenView
+  contracts: ContractView[]
+  contractsClaimable: number
+  buyMode: BuyMode
+  activeTab: TabId
+  activeIndustryTab: IndustryId
+  prestige: PrestigeState
+  prestigePending: number
+  prestigeUnlocked: boolean
+  prestigeProfitBonusPct: number // permanent profit bonus from talents (whole %)
+  talents: TalentView[]
+  talentTokensAvailable: number
+  talentTokensSpent: number
+  onboardingStep: number
+  businesses: Record<BusinessId, BusinessView>
+  industries: IndustryView[]
+  employees: EmployeeView[]
+  hireOptions: HireOptionView[]
+  upgrades: UpgradeView[]
+  achievements: AchievementView[]
+  achievementsUnlockedCount: number
+  prestigeMilestones: PrestigeMilestoneView[]
+  stats: GameStats
+}
+
+export interface GameStats {
+  totalOwned: number
+  automatedCount: number
+  businessesUnlocked: number
+  industriesEntered: number
+  employees: number
+  careerLevel: number
+}
+
+export interface AchievementView {
+  id: string
+  name: string
+  description: string
+  icon: string
+  unlocked: boolean
+}
+
+export interface PrestigeMilestoneView {
+  id: string
+  name: string
+  description: string
+  icon: string
+  rewardTokens: number
+  resets: number
+  reached: boolean
+  progress: number // 0..1 toward the reset threshold
+}
+
+function industryName(id: IndustryId | null): string | null {
+  return id ? (INDUSTRIES[id]?.name ?? null) : null
+}
+
+/** Current primary-effect description for an employee (generic, no affinity). */
+function employeeEffectLabel(e: EmployeeInstance): string {
+  const role = ROLE_DEFS[e.role]
+  const ch: EffectChannel | undefined = role?.primaryChannels[0]
+  const base = (ch && role?.baseMagnitude[ch]) || 0
+  const mag = base * RARITY_MULT[e.rarity] * (1 + 0.15 * (e.level - 1))
+  const pct = Math.round(mag * 100)
+  switch (ch) {
+    case 'automation':
+      return 'Automates business'
+    case 'cycleSpeed':
+      return `+${pct}% speed`
+    case 'profitMult':
+      return `+${pct}% profit`
+    case 'costReduction':
+      return `−${pct}% buy cost`
+    case 'critChance':
+      return `+${pct}% crit chance`
+    case 'morale':
+      return 'Lifts team morale'
+    case 'riskReduction':
+      return 'Slows risk build-up'
+    default:
+      return role?.blurb ?? ''
+  }
+}
+
+function milestoneLabel(effect: { kind: string; factor: number }): string {
+  if (effect.kind === 'profitMult') return `×${effect.factor} profit`
+  if (effect.kind === 'speedMult') return `×${effect.factor} speed`
+  return `−cost`
+}
+
+function scopeLabel(id: UpgradeId): string {
+  const up = UPGRADES[id]
+  if (up.scope.kind === 'global') return 'All businesses'
+  if (up.scope.kind === 'industry') return INDUSTRIES[up.scope.industryId]?.name ?? 'Industry'
+  return BUSINESSES[up.scope.businessId]?.name ?? 'Business'
+}
+
+export function buildView(state: GameState): ViewSnapshot {
+  const businesses: Record<BusinessId, BusinessView> = {}
+  let totalPps = 0
+  let totalOwned = 0
+  let automatedCount = 0
+  let businessesUnlocked = 0
+  // Best reinvestment ROI: among owned, unlocked, affordable-next businesses,
+  // the one whose next unit adds the most $/s per dollar spent.
+  let bestBuyId: BusinessId | null = null
+  let bestBuyRatio = 0
+
+  // Map each assigned employee → the business it's working at.
+  const assignmentOf: Record<string, BusinessId> = {}
+  for (const bid in state.businesses) {
+    for (const eid of state.businesses[bid].assigned) {
+      if (eid) assignmentOf[eid] = bid
+    }
+  }
+
+  for (const id in state.businesses) {
+    const bs = state.businesses[id]
+    const def = BUSINESSES[id]
+    const r = resolveBusiness(state, def)
+    const emp = computeEmployeeEffects(state, def, bs)
+    const qty = resolveQuantity(state.buyMode, def, bs.owned, state.cash)
+    const cost = totalCost(def, bs.owned, Math.max(qty, 1)) * r.buyCostMult
+    const nm = nextMilestone(def, bs.owned)
+
+    if (r.isAutomated && bs.unlocked) totalPps += r.pps
+    totalOwned += bs.owned
+    if (bs.unlocked) businessesUnlocked++
+    if (r.isAutomated && bs.unlocked && bs.owned > 0) automatedCount++
+    // ROI of the next single unit (only meaningful for owned, affordable ones).
+    if (bs.unlocked && bs.owned > 0) {
+      const nextUnitCost = totalCost(def, bs.owned, 1) * r.buyCostMult
+      if (nextUnitCost > 0 && state.cash >= nextUnitCost) {
+        const ratio = r.pps / bs.owned / nextUnitCost
+        if (ratio > bestBuyRatio) {
+          bestBuyRatio = ratio
+          bestBuyId = id
+        }
+      }
+    }
+
+    businesses[id] = {
+      id,
+      name: def.name,
+      icon: def.icon,
+      industryId: def.industryId,
+      owned: bs.owned,
+      unlocked: bs.unlocked,
+      isAutomated: r.isAutomated,
+      unlockedSlots: r.unlockedSlots,
+      assignedCount: bs.assigned.filter(Boolean).length,
+      pps: r.pps,
+      progressFraction: r.cycleMs > 0 ? Math.min(1, bs.cycleProgressMs / r.cycleMs) : 0,
+      cycleMs: r.cycleMs,
+      buyQty: qty,
+      buyCost: cost,
+      affordable: qty > 0 && state.cash >= cost,
+      isBestBuy: false,
+      nextMilestoneThreshold: nm?.threshold ?? null,
+      nextMilestoneLabel: nm ? milestoneLabel(nm.effect) : null,
+      automated: emp.isAutomated,
+      staffProfitPct: Math.round(emp.profitAdd * 100),
+      staffSpeedPct: Math.round(emp.speedAdd * 100),
+      staffCostPct: Math.round((1 - emp.buyCostMult) * 100),
+      staffCritChance: Math.round(emp.critChance * 100),
+      staffCritMult: emp.critMult,
+      staffMoralePct: Math.round((emp.moraleScalar - 1) * 100),
+      staffFocusPct: Math.round((emp.focusBonus - 1) * 100),
+      synergies: r.activeSynergies.map((id) => SYNERGY_LABEL[id] ?? id),
+      riskEnabled: def.riskEnabled === true,
+      riskPct: Math.round(bs.risk),
+      riskEventActive: bs.riskEventMsLeft > 0,
+      slots: bs.assigned.slice(0, r.unlockedSlots),
+    }
+  }
+
+  // Fusion partners: group by archetype+rarity so each employee can find a
+  // matching duplicate to fuse with (promotes a rarity tier).
+  const fuseGroups: Record<string, string[]> = {}
+  for (const e of Object.values(state.employees)) {
+    const key = `${e.templateId}|${e.rarity}`
+    ;(fuseGroups[key] ??= []).push(e.id)
+  }
+
+  const lvlMult = levelCostMult(state) // Mentorship talent
+  const employees: EmployeeView[] = Object.values(state.employees).map((e) => {
+    const role = ROLE_DEFS[e.role]
+    const bizId = assignmentOf[e.id] ?? null
+    const canSpecialise = e.level >= REQUIRED_SPEC_LEVEL
+    const fuseTo = nextRarity(e.rarity)
+    const partnerId = fuseTo
+      ? (fuseGroups[`${e.templateId}|${e.rarity}`] ?? []).find((id) => id !== e.id) ?? null
+      : null
+    const specOptions: SpecOptionView[] = canSpecialise
+      ? (SPECS_BY_ROLE[e.role] ?? []).map((sp) => ({
+          id: sp.id,
+          name: sp.name,
+          icon: sp.icon,
+          blurb: sp.blurb,
+          chosen: e.specialisation === sp.id,
+        }))
+      : []
+    const specDef = e.specialisation ? SPECIALISATIONS[e.specialisation] : null
+    return {
+      id: e.id,
+      name: e.name,
+      role: e.role,
+      roleName: role?.name ?? e.role,
+      roleIcon: role?.icon ?? '',
+      roleColor: role?.color ?? 'var(--text)',
+      roleBlurb: role?.blurb ?? '',
+      rarity: e.rarity,
+      level: e.level,
+      affinity: e.affinity,
+      affinityName: industryName(e.affinity),
+      assignedToBusinessId: bizId,
+      assignedToName: bizId ? (BUSINESSES[bizId]?.name ?? null) : null,
+      effectLabel: employeeEffectLabel(e),
+      traitNames: e.traits.map((t) => TRAIT_NAME[t] ?? t),
+      levelUpCost: levelUpCost(e, lvlMult),
+      atMaxLevel: e.level >= MAX_EMPLOYEE_LEVEL,
+      levelUpAffordable: e.level < MAX_EMPLOYEE_LEVEL && state.cash >= levelUpCost(e, lvlMult),
+      canSpecialise,
+      specialisationId: e.specialisation,
+      specialisationName: specDef?.name ?? null,
+      specOptions,
+      canFuse: partnerId != null,
+      fuseWithId: partnerId,
+      fuseToRarity: partnerId ? fuseTo : null,
+    }
+  })
+
+  const hireOptions: HireOptionView[] = HIRE_ORDER.map((tid) => {
+    const t = EMPLOYEE_TEMPLATES[tid]
+    const role = ROLE_DEFS[t.role]
+    const cost = hireCost(state, tid) // includes the Headhunter talent discount
+    return {
+      templateId: tid,
+      name: t.name,
+      role: t.role,
+      roleName: role?.name ?? t.role,
+      roleIcon: role?.icon ?? '',
+      roleColor: role?.color ?? 'var(--text)',
+      rarity: t.rarity,
+      affinity: t.affinity,
+      affinityName: industryName(t.affinity),
+      traitNames: t.traits.map((tr) => TRAIT_NAME[tr] ?? tr),
+      cost,
+      affordable: state.cash >= cost,
+    }
+  })
+
+  if (bestBuyId) businesses[bestBuyId].isBestBuy = true
+
+  const industries: IndustryView[] = INDUSTRY_ORDER.map((iid) => {
+    const ind = INDUSTRIES[iid]
+    const firstDef = BUSINESSES[ind.businessIds[0]]
+    let totalOwned = 0
+    for (const bid of ind.businessIds) totalOwned += state.businesses[bid]?.owned ?? 0
+    const entryCost = firstDef.baseCost
+    return {
+      id: iid,
+      name: ind.name,
+      theme: ind.theme,
+      entryCost,
+      firstBusinessName: firstDef.name,
+      entryAffordable: state.cash >= entryCost,
+      ownsAny: totalOwned > 0,
+      totalOwned,
+    }
+  })
+
+  const industriesEntered = industries.filter((i) => i.totalOwned > 0).length
+
+  const upgrades: UpgradeView[] = UPGRADE_ORDER.map((uid) => {
+    const up = UPGRADES[uid]
+    const purchased = state.upgradesPurchased.includes(uid)
+    return {
+      id: uid,
+      name: up.name,
+      cost: up.cost,
+      purchased,
+      affordable: !purchased && state.cash >= up.cost,
+      scopeLabel: scopeLabel(uid),
+      iconSrc: ART_UPGRADES[uid]?.icon ?? ART_MILESTONE[up.effect.kind],
+    }
+  })
+
+  const pendingTokens = prestigePending(state)
+  const prestigeUnlocked = state.lifetimeEarnings >= PRESTIGE_UNLOCK_LIFETIME
+
+  // Prestige talent tree
+  const tokensAvailable = availableTokens(state)
+  const talents: TalentView[] = TALENT_ORDER.map((id) => {
+    const def = TALENTS[id]
+    const rank = talentRank(state, id)
+    const maxed = rank >= def.maxRank
+    const nextCost = maxed ? null : def.cost[rank]
+    return {
+      id,
+      name: def.name,
+      blurb: def.blurb,
+      theme: def.theme,
+      icon: def.icon,
+      rank,
+      maxRank: def.maxRank,
+      maxed,
+      nextCost,
+      affordable: nextCost != null && tokensAvailable >= nextCost,
+      currentLabel: talentLabel(def, rank),
+      nextLabel: maxed ? null : talentLabel(def, rank + 1),
+    }
+  })
+
+  const unlockedAch = new Set(state.achievementsUnlocked)
+  const achievements: AchievementView[] = ACHIEVEMENTS.map((a) => ({
+    id: a.id,
+    name: a.name,
+    description: a.description,
+    icon: a.icon,
+    unlocked: unlockedAch.has(a.id),
+  }))
+
+  const claimedPm = new Set(state.prestigeMilestonesClaimed)
+  const prestigeMilestones: PrestigeMilestoneView[] = PRESTIGE_MILESTONES.map((m) => ({
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    icon: m.icon,
+    rewardTokens: m.rewardTokens,
+    resets: m.resets,
+    reached: claimedPm.has(m.id) || state.prestige.resets >= m.resets,
+    progress: Math.min(1, state.prestige.resets / m.resets),
+  }))
+
+  // Onboarding staged reveal — derived from progress so it survives save/load.
+  // Veterans (have ascended) see everything immediately.
+  const veteran = state.prestige.resets > 0
+  const revealedTabs: RevealedTabs = {
+    employees: veteran || totalOwned >= 1,
+    upgrades: veteran || state.lifetimeEarnings >= REVEAL_UPGRADES_LIFETIME,
+    prestige: veteran || prestigeUnlocked,
+    stats: veteran || totalOwned >= 1,
+  }
+
+  const golden: GoldenView = {
+    offerActive: (state.golden?.offerMsLeft ?? 0) > 0,
+    offerSecondsLeft: Math.ceil((state.golden?.offerMsLeft ?? 0) / 1000),
+    warpValue: timeWarpValue(state),
+    warpMinutes: Math.round(GOLDEN_WARP_SECONDS / 60),
+  }
+
+  const contracts: ContractView[] = (state.contracts?.active ?? [])
+    .map((id) => CONTRACT_BY_ID[id])
+    .filter((def): def is NonNullable<typeof def> => def != null)
+    .map((def) => {
+      const progress = contractProgress(state, def)
+      return {
+        id: def.id,
+        name: def.name,
+        description: def.description,
+        icon: def.icon,
+        progress,
+        target: def.target,
+        fraction: Math.min(1, def.target > 0 ? progress / def.target : 0),
+        rewardTokens: def.rewardTokens,
+        complete: isContractComplete(state, def),
+      }
+    })
+  const contractsClaimable = contracts.filter((c) => c.complete).length
+
+  const c = state.career
+  const cdef = careerLevelDef(c.level)
+  const isMaxLevel = c.level >= MAX_CAREER_LEVEL
+  const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
+  const career: CareerView = {
+    level: c.level,
+    title: cdef.title,
+    wage: cdef.wage,
+    shiftMs: cdef.shiftMs,
+    working: c.shiftProgressMs > 0,
+    shiftProgressFraction: cdef.shiftMs > 0 ? Math.min(1, c.shiftProgressMs / cdef.shiftMs) : 0,
+    shiftsThisLevel: c.shiftsThisLevel,
+    shiftsToPromote: cdef.shiftsToPromote,
+    promotionFraction:
+      cdef.shiftsToPromote && cdef.shiftsToPromote > 0
+        ? Math.min(1, c.shiftsThisLevel / cdef.shiftsToPromote)
+        : 1,
+    isMaxLevel,
+    nextTitle: nextDef?.title ?? null,
+    nextWage: nextDef?.wage ?? null,
+  }
+
+  return {
+    cash: state.cash,
+    lifetimeEarnings: state.lifetimeEarnings,
+    totalPps,
+    career,
+    revealedTabs,
+    golden,
+    contracts,
+    contractsClaimable,
+    buyMode: state.buyMode,
+    activeTab: state.activeTab,
+    activeIndustryTab: state.activeIndustryTab,
+    prestige: state.prestige,
+    prestigePending: pendingTokens,
+    prestigeUnlocked,
+    prestigeProfitBonusPct: talentProfitBonusPct(state),
+    talents,
+    talentTokensAvailable: tokensAvailable,
+    talentTokensSpent: state.prestige.spentPoints ?? 0,
+    onboardingStep: state.onboardingStep,
+    businesses,
+    industries,
+    employees,
+    hireOptions,
+    upgrades,
+    achievements,
+    achievementsUnlockedCount: unlockedAch.size,
+    prestigeMilestones,
+    stats: {
+      totalOwned,
+      automatedCount,
+      businessesUnlocked,
+      industriesEntered,
+      employees: Object.values(state.employees).length,
+      careerLevel: state.career.level,
+    },
+  }
+}

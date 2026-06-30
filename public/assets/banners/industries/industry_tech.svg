@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Tech and Media banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <g stroke="#8b5cf6" stroke-width="8" opacity=".2">
+    <path d="M120 90h210l150 110h220l150 95"/>
+    <path d="M210 292h160l120-90M670 102h160"/>
+  </g>
+  <g fill="#f5c518" opacity=".28">
+    <circle cx="120" cy="90" r="22"/><circle cx="480" cy="200" r="22"/><circle cx="850" cy="295" r="22"/><circle cx="670" cy="102" r="20"/>
+  </g>
+  <rect x="410" y="78" width="130" height="230" rx="28" fill="#20242d" stroke="#8b5cf6" stroke-width="10" opacity=".55"/>
+</svg>

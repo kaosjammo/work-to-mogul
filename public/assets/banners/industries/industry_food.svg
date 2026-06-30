@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Food and Hospitality banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <path d="M0 300c150-80 300-60 450-120s350-80 574-10v214H0z" fill="#e2502b" opacity=".18"/>
+  <circle cx="800" cy="120" r="70" fill="#f5c518" opacity=".18"/>
+  <path d="M160 260h260" stroke="#f5c518" stroke-width="18" stroke-linecap="round" opacity=".35"/>
+  <path d="M210 246a90 90 0 0 1 180 0z" fill="#e2502b" opacity=".45"/>
+  <path d="M300 160v-42" stroke="#e7e9ee" stroke-width="14" stroke-linecap="round" opacity=".35"/>
+</svg>

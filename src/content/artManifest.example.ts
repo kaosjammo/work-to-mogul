@@ -1,0 +1,117 @@
+// Example only. This file is intentionally not imported by the app.
+// Promote to artManifest.ts when UI components are ready for optional assets.
+
+export const artManifest = {
+  fallback: {
+    businessIcon: '/assets/icons/ui/fallback_business.svg',
+    industryIcon: '/assets/icons/ui/fallback_industry.svg',
+    roleIcon: '/assets/icons/ui/fallback_role.svg',
+    unavailableIcon: '/assets/icons/ui/icon_unaffordable.svg',
+  },
+  brand: {
+    appIcon: '/assets/brand/app_icon.svg',
+    markMono: '/assets/brand/brand_mark_mono.svg',
+  },
+  ui: {
+    cash: '/assets/icons/ui/icon_cash.svg',
+    buy: '/assets/icons/ui/icon_buy.svg',
+    incomeRate: '/assets/icons/ui/icon_income_rate.svg',
+    locked: '/assets/icons/ui/icon_locked.svg',
+    staff: '/assets/icons/ui/icon_staff.svg',
+    upgrade: '/assets/icons/ui/icon_upgrade.svg',
+    milestone: '/assets/icons/ui/icon_milestone.svg',
+    ascend: '/assets/icons/ui/icon_ascend.svg',
+  },
+  work: {
+    shift: '/assets/icons/work/work_shift.svg',
+    promotion: '/assets/icons/work/work_promotion.svg',
+  },
+  industries: {
+    food: {
+      icon: '/assets/icons/industries/industry_food.svg',
+      banner: '/assets/banners/industries/industry_food.svg',
+      pattern: '/assets/patterns/pattern_food.svg',
+    },
+    retail: {
+      icon: '/assets/icons/industries/industry_retail.svg',
+      banner: '/assets/banners/industries/industry_retail.svg',
+      pattern: '/assets/patterns/pattern_retail.svg',
+    },
+    tech: {
+      icon: '/assets/icons/industries/industry_tech.svg',
+      banner: '/assets/banners/industries/industry_tech.svg',
+      pattern: '/assets/patterns/pattern_tech.svg',
+    },
+    finance: {
+      icon: '/assets/icons/industries/industry_finance.svg',
+      banner: '/assets/banners/industries/industry_finance.svg',
+      pattern: '/assets/patterns/pattern_finance.svg',
+    },
+  },
+  businesses: {
+    lemonade: { icon: '/assets/icons/businesses/business_lemonade.svg' },
+    food_truck: { icon: '/assets/icons/businesses/business_food_truck.svg' },
+    pizzeria: { icon: '/assets/icons/businesses/business_pizzeria.svg' },
+    sushi_bar: { icon: '/assets/icons/businesses/business_sushi_bar.svg' },
+    corner_shop: { icon: '/assets/icons/businesses/business_corner_shop.svg' },
+    barbershop: { icon: '/assets/icons/businesses/business_barbershop.svg' },
+    gym: { icon: '/assets/icons/businesses/business_gym.svg' },
+    department_store: { icon: '/assets/icons/businesses/business_department_store.svg' },
+    mobile_app: { icon: '/assets/icons/businesses/business_mobile_app.svg' },
+    streaming: { icon: '/assets/icons/businesses/business_streaming.svg' },
+    saas: { icon: '/assets/icons/businesses/business_saas.svg' },
+    ai_lab: { icon: '/assets/icons/businesses/business_ai_lab.svg' },
+    apartments: { icon: '/assets/icons/businesses/business_apartments.svg' },
+    fund: { icon: '/assets/icons/businesses/business_fund.svg' },
+    skyscraper: { icon: '/assets/icons/businesses/business_skyscraper.svg' },
+  },
+  roles: {
+    operator: { icon: '/assets/icons/roles/role_operator.svg' },
+    runner: { icon: '/assets/icons/roles/role_runner.svg' },
+    closer: { icon: '/assets/icons/roles/role_closer.svg' },
+    buyer: { icon: '/assets/icons/roles/role_buyer.svg' },
+    gambler: { icon: '/assets/icons/roles/role_gambler.svg' },
+    auditor: { icon: '/assets/icons/roles/role_auditor.svg' },
+    hr: { icon: '/assets/icons/roles/role_hr.svg' },
+  },
+  employees: {
+    fallback: { portrait: '/assets/portraits/employees/employee_fallback.svg' },
+  },
+  upgrades: {
+    lemonade_2x: { icon: '/assets/icons/upgrades/upgrade_lemonade_2x.svg' },
+    food_industry_25: { icon: '/assets/icons/upgrades/upgrade_food_industry_25.svg' },
+    global_speed_15: { icon: '/assets/icons/upgrades/upgrade_global_speed_15.svg' },
+    tech_profit_2x: { icon: '/assets/icons/upgrades/upgrade_tech_profit_2x.svg' },
+  },
+  prestige: {
+    ascend: '/assets/icons/ui/icon_ascend.svg',
+    point: '/assets/icons/prestige/prestige_point.svg',
+    resetBadge: '/assets/icons/prestige/prestige_reset_badge.svg',
+    visual: '/assets/visuals/prestige/prestige_empire_reset.svg',
+  },
+  milestones: {
+    profit: '/assets/icons/milestones/milestone_profit.svg',
+    speed: '/assets/icons/milestones/milestone_speed.svg',
+    cost: '/assets/icons/milestones/milestone_cost.svg',
+  },
+  states: {
+    locked: '/assets/states/state_locked.svg',
+    unaffordable: '/assets/states/state_unaffordable.svg',
+    emptyStaff: '/assets/states/state_empty_staff.svg',
+    emptyUpgrades: '/assets/states/state_empty_upgrades.svg',
+    emptyPrestige: '/assets/states/state_empty_prestige.svg',
+  },
+  patterns: {
+    coinGrid: '/assets/patterns/pattern_coin_grid.svg',
+    chartLines: '/assets/patterns/pattern_chart_lines.svg',
+    officeGrid: '/assets/patterns/pattern_office_grid.svg',
+    subtleDots: '/assets/patterns/pattern_subtle_dots.svg',
+    cityBlocks: '/assets/patterns/pattern_city_blocks.svg',
+    diagonalStripes: '/assets/patterns/pattern_diagonal_stripes.svg',
+    ledgerLines: '/assets/patterns/pattern_ledger_lines.svg',
+    food: '/assets/patterns/pattern_food.svg',
+    retail: '/assets/patterns/pattern_retail.svg',
+    tech: '/assets/patterns/pattern_tech.svg',
+    finance: '/assets/patterns/pattern_finance.svg',
+  },
+} as const

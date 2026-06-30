@@ -1,0 +1,72 @@
+// ============================================================
+//  Zustand view store — a throttled snapshot of canonical engine state.
+//  Components subscribe to narrow slices; the publisher writes the snapshot.
+// ============================================================
+import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import type { ViewSnapshot } from './buildView'
+import { buildView } from './buildView'
+import { getEngineState } from '../engine/engineState'
+
+interface GameStore extends ViewSnapshot {
+  _publish: (snapshot: ViewSnapshot) => void
+}
+
+export const useGameStore = create<GameStore>((set) => ({
+  ...buildView(getEngineState()),
+  _publish: (snapshot) => set(snapshot),
+}))
+
+// Convenience hooks for common slices.
+export const useCash = () => useGameStore((s) => s.cash)
+export const useTotalPps = () => useGameStore((s) => s.totalPps)
+export const useBusinessView = (id: string) => useGameStore((s) => s.businesses[id])
+export const useActiveTab = () => useGameStore((s) => s.activeTab)
+export const useRevealedTabs = () => useGameStore(useShallow((s) => s.revealedTabs))
+export const useBuyMode = () => useGameStore((s) => s.buyMode)
+export const useActiveIndustry = () => useGameStore((s) => s.activeIndustryTab)
+export const useIndustries = () => useGameStore(useShallow((s) => s.industries))
+export const useCareer = () => useGameStore((s) => s.career)
+export const useEmployees = () => useGameStore(useShallow((s) => s.employees))
+export const useHireOptions = () => useGameStore(useShallow((s) => s.hireOptions))
+export const useUpgrades = () => useGameStore(useShallow((s) => s.upgrades))
+export const useStats = () =>
+  useGameStore(
+    useShallow((s) => ({
+      cash: s.cash,
+      lifetime: s.lifetimeEarnings,
+      totalPps: s.totalPps,
+      stats: s.stats,
+      prestige: s.prestige,
+      prestigeProfitBonusPct: s.prestigeProfitBonusPct,
+      achievements: s.achievementsUnlockedCount,
+      achievementsTotal: s.achievements.length,
+    })),
+  )
+export const useAchievements = () =>
+  useGameStore(
+    useShallow((s) => ({ list: s.achievements, unlocked: s.achievementsUnlockedCount })),
+  )
+export const usePrestige = () =>
+  useGameStore(
+    useShallow((s) => ({
+      prestige: s.prestige,
+      pending: s.prestigePending,
+      unlocked: s.prestigeUnlocked,
+      lifetime: s.lifetimeEarnings,
+      profitBonusPct: s.prestigeProfitBonusPct,
+    })),
+  )
+export const useTalents = () =>
+  useGameStore(
+    useShallow((s) => ({
+      list: s.talents,
+      available: s.talentTokensAvailable,
+      spent: s.talentTokensSpent,
+      total: s.prestige.totalPoints,
+    })),
+  )
+export const usePrestigeMilestones = () => useGameStore(useShallow((s) => s.prestigeMilestones))
+export const useGolden = () => useGameStore(useShallow((s) => s.golden))
+export const useContracts = () =>
+  useGameStore(useShallow((s) => ({ list: s.contracts, claimable: s.contractsClaimable })))

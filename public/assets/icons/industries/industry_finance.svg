@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Finance and Property">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M18 52V22h13v30M33 52V13h15v39" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M22 30h5M22 38h5M37 22h6M37 30h6M37 38h6" stroke="#2bd47a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M16 52h36" stroke="#9aa1ad" stroke-width="3" stroke-linecap="round"/>
+  <path d="M19 18c9 1 18-3 27-10" fill="none" stroke="#f5c518" stroke-width="3" stroke-linecap="round"/>
+</svg>

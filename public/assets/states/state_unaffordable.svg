@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120" role="img" aria-label="Unaffordable state">
+  <rect width="160" height="120" rx="18" fill="#181b22"/>
+  <circle cx="76" cy="60" r="28" fill="#2a2f3a" stroke="#9aa1ad" stroke-width="4"/>
+  <path d="M76 42v36M64 50c4-5 20-5 24 0M64 70c4 5 20 5 24 0" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 86 110 34" stroke="#ef4444" stroke-width="7" stroke-linecap="round"/>
+</svg>

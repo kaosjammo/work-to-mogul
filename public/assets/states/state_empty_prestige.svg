@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120" role="img" aria-label="Empty prestige">
+  <rect width="160" height="120" rx="18" fill="#181b22"/>
+  <path d="M80 23 53 51h16v33h22V51h16z" fill="#f5c518"/>
+  <path d="M45 94h70" stroke="#e7e9ee" stroke-width="5" stroke-linecap="round"/>
+  <path d="M45 37a41 41 0 0 1 70 46" fill="none" stroke="#8b5cf6" stroke-width="5" stroke-linecap="round"/>
+</svg>

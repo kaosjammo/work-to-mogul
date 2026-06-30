@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="160" viewBox="0 0 256 160" role="img" aria-label="Prestige empire reset">
+  <rect width="256" height="160" rx="24" fill="#181b22"/>
+  <path d="M46 128h164" stroke="#2e333f" stroke-width="8" stroke-linecap="round"/>
+  <path d="M70 124V62l36 20V44l40 28V30h34v94z" fill="#20242d" stroke="#e7e9ee" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M128 20 96 52h20v44h24V52h20z" fill="#f5c518"/>
+  <path d="M52 54a82 82 0 0 1 150 56" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+</svg>

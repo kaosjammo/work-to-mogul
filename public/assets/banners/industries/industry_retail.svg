@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="384" viewBox="0 0 1024 384" role="img" aria-label="Retail and Services banner">
+  <rect width="1024" height="384" fill="#181b22"/>
+  <path d="M0 104h1024v280H0z" fill="#2bb3e2" opacity=".08"/>
+  <path d="M120 160h260l-32-72H152z" fill="#2bb3e2" opacity=".35"/>
+  <path d="M150 160v160h200V160" fill="#20242d" stroke="#e7e9ee" stroke-width="10" opacity=".45"/>
+  <path d="M520 140h290l-38 180H558z" fill="#2bb3e2" opacity=".16"/>
+  <path d="M590 140c18-42 88-42 106 0" fill="none" stroke="#f5c518" stroke-width="14" stroke-linecap="round" opacity=".35"/>
+</svg>

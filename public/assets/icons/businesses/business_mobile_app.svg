@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Mobile App">
+  <rect width="64" height="64" rx="14" fill="#20242d"/><rect x="22" y="12" width="20" height="40" rx="5" fill="#2a2f3a" stroke="#8b5cf6" stroke-width="3"/><path d="M28 21h3M35 21h3M28 29h3M35 29h3M28 37h10" stroke="#f5c518" stroke-width="3" stroke-linecap="round"/><path d="M30 46h4" stroke="#e7e9ee" stroke-width="2" stroke-linecap="round"/>
+</svg>

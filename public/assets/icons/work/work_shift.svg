@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Work shift">
+  <rect width="64" height="64" rx="14" fill="#20242d"/>
+  <path d="M21 25v-5c0-3 2-5 5-5h12c3 0 5 2 5 5v5" fill="none" stroke="#6aa9ff" stroke-width="3"/>
+  <rect x="14" y="25" width="36" height="25" rx="5" fill="#2a2f3a" stroke="#9aa1ad" stroke-width="2"/>
+  <path d="M14 34h36" stroke="#6aa9ff" stroke-width="3"/>
+  <circle cx="46" cy="45" r="7" fill="#f5c518"/>
+  <path d="M46 41v4l3 2" stroke="#0f1115" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Food Truck">
+  <rect width="64" height="64" rx="14" fill="#20242d"/><path d="M12 27h30v18H12z" fill="#e2502b"/><path d="M42 33h7l5 6v6H42z" fill="#2a2f3a" stroke="#e7e9ee" stroke-width="2"/><path d="M17 32h13" stroke="#f5c518" stroke-width="4" stroke-linecap="round"/><circle cx="22" cy="47" r="5" fill="#181b22" stroke="#f5c518" stroke-width="2"/><circle cx="47" cy="47" r="5" fill="#181b22" stroke="#f5c518" stroke-width="2"/>
+</svg>
