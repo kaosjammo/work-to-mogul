@@ -58,6 +58,15 @@ export const SYNERGY_DEFS: SynergyDef[] = [
     },
   },
   {
+    id: 'quantum_leap',
+    label: 'Quantum Leap',
+    blurb: '2+ Gamblers — massive jackpots',
+    test: (c) => has(c, 'gambler', 2),
+    apply: (m) => {
+      m.critMultAdd += 3
+    },
+  },
+  {
     id: 'dream_team',
     label: 'Dream Team',
     blurb: '4+ different roles — big profit boost',
