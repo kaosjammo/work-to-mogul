@@ -6,6 +6,7 @@ import { WelcomeBackBanner } from './ui/shared/WelcomeBackBanner'
 import { MilestoneCelebration } from './ui/shared/MilestoneCelebration'
 import { FloatingGoldenDeal } from './ui/shared/FloatingGoldenDeal'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
+import { WealthStage } from './ui/shared/WealthStage'
 import { AccountModal } from './ui/account/AccountModal'
 import { ART_GENERATED } from './content/artManifest'
 
@@ -21,12 +22,7 @@ export function App() {
       <TopHUD />
       <main className="scroll-region px-3 pt-3 pb-6">
         <TabRouter />
-        <div className="wealth-stage" aria-hidden="true">
-          <img className="wealth-stage__burst" src={ART_GENERATED.props.profitBurst} alt="" />
-          <img className="wealth-stage__bag" src={ART_GENERATED.props.moneyBag} alt="" />
-          <img className="wealth-stage__stack" src={ART_GENERATED.props.cashStack} alt="" />
-          <img className="wealth-stage__mascot" src={ART_GENERATED.mascot.founderExcited} alt="" />
-        </div>
+        <WealthStage />
       </main>
       <NavBar />
       <FloatingProfitLayer />
