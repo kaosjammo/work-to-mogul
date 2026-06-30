@@ -86,17 +86,25 @@ talent/contract node frames).
 
 ## Next highest-value task
 
-Goals 1–3 (cloud save, art, mobile polish) are done. Now under the standing /goal
-("deepest, most satisfying mobile idle mogul") — alternate **satisfying** (juice)
-and **depth** (content/meta) increments, one validated commit at a time.
+Goals 1–3 (cloud save, art, mobile polish) are done, and the standing /goal's
+**legibility, meta-depth, active-play, and progression-feel** layers are now
+comprehensively shipped (see the latest loop summary). Verified sound this pass:
+both balance axes (cost-scaling monotonicity via `balance.test.ts`; the ~676-token
+talent sink vs token supply) and mobile layout (0 doc-overflow at 375px on every
+content-heavy tab). Cheap + safe increments are genuinely exhausted — the small,
+low-risk wins have all landed, so further marginal UI churn would be padding.
 
-Cheap + safe depth is largely exhausted: the data-driven content systems
-(upgrades/contracts/talents/achievements/milestones) are all expanded and don't
-touch the harness/balance tests. Further content that DOES affect pacing
-(businesses, industries, employees, milestones, synergies) must keep
-`balance.test.ts` (efficiency monotonicity) and `harness.test.ts` green — size
-carefully. Remaining satisfaction headroom: cash-HUD number animation, business-card
-juice, celebration polish.
+**Remaining work is larger, deliberate pieces — pick a direction before building**
+(each is hard to reverse and carries bloat/balance weight, so they want an explicit
+call rather than autonomous invention):
+
+| Direction | Value | Risk / cost |
+|---|---|---|
+| **9th industry / content tier** | More end-game depth | Low value at the margin — the 8th (Quantum) already exceeds a 10h run; must append at the cost-top to keep `balance.test` monotonic. |
+| **Prestige-2 / second meta layer** | High long-horizon depth | Large design + balance surface; touches prestige reset, a new currency, UI. |
+| **New employee role / strategic axis** | Deepens the signature mechanic | Revives cut scope (mentor/synergist); cross-employee effects are balance-sensitive; new composition + tests. |
+| **Seasonal / time-gated events** | Recurring re-engagement | Needs a wall-clock cadence design (the deferred daily/weekly contracts blocker). |
+| **Economy rescale** | Coherence | Re-price upgrades/employees/contracts onto the post-overhaul scale; currently *acceptable, not broken* — risky churn for low payoff. |
 
 Operational: **provision Supabase** + set Vercel env vars to test login/sync on a
 phone (`deploy-notes.md`); optional **code-split `@supabase/supabase-js`** to shrink
