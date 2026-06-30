@@ -63,11 +63,11 @@ export function workShift(): void {
   publishNow()
 }
 
-/** Collect the accrued Senior Consultant bonus (optional late-game top-up). */
+/** Collect the accrued Board Advisor bonus (optional late-game top-up). */
 export function consult(): void {
   const earned = claimConsulting(getEngineState())
   if (earned > 0) {
-    useUiStore.getState().pushCelebrations([`💼 Consulting fee +${money(earned)}`])
+    useUiStore.getState().pushCelebrations([`💼 Advisory fee +${money(earned)}`])
     publishNow()
   }
 }

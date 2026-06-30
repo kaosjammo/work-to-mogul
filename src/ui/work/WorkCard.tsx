@@ -10,8 +10,8 @@ const WORK_ACCENT = '#6aa9ff'
 export function WorkCard() {
   const c = useCareer()
 
-  // Senior Consultant — the retired end-state. A compact strip with an optional
-  // over-time bonus you collect when you like (never required).
+  // Board Advisor — the retired end-state. A compact strip with an optional
+  // over-time advisory bonus you collect when you like (never required).
   if (c.retired) {
     const canCollect = c.consultingValue > 0
     return (
@@ -23,20 +23,20 @@ export function WorkCard() {
           className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
           style={{ background: 'var(--surface-2)' }}
         >
-          <Icon art={{ src: ART_WORK.shift }} size={34} alt="Senior Consultant" />
+          <Icon art={{ src: ART_WORK.shift }} size={34} alt="Board Advisor" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-semibold">Senior Consultant</span>
+            <span className="truncate text-sm font-semibold">Board Advisor</span>
             <span className="shrink-0 text-xs" style={{ color: 'var(--text-faint)' }}>
-              {c.consultingFull ? 'fees maxed' : 'fees building…'}
+              {c.consultingFull ? 'ready to collect' : 'fees building…'}
             </span>
           </div>
           <div className="mt-1.5">
             <ProgressBar fraction={c.consultingFraction} color={WORK_ACCENT} />
           </div>
           <div className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>
-            Consulting fees accrue over time — a bonus when you're bored.
+            Advisory fees build up while your empire runs — collect them anytime.
           </div>
         </div>
         <button
