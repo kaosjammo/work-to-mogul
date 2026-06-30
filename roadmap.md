@@ -38,32 +38,25 @@ Tokens → run again, faster.
 
 ## Retention diagnosis (what's actually limiting D1/D7)
 
-The game has a **rich first run and a thin second run.** Everything that makes a
-mogul idle game sticky long-term lives in the *prestige loop*, and that loop is the
-weakest, least-validated part of the game:
+The prestige loop and employee depth — the two big gaps from earlier passes — are now
+**addressed**. What's left limiting long-term stickiness is **horizontal sameness**:
 
-1. **The prestige loop was balance-blind — now measured, and it's too flat.**
-   `harness.ts`'s new `simulateProgression()` (`673dbdc`) drives 6 ascensions and
-   asserts the meta-economy. It confirmed the fifth-root cut stopped the 1.48B blowup
-   (run #1 banks 1 token) — **but the same curve shows ascending stopped feeling
-   powerful**: run lifetime plateaus from ascension #3 (~$7Qi, only +8% over three more
-   runs) while yield sticks at ~5 tokens/run. The core idle promise — "ascend → the
-   next run is dramatically faster" — isn't being delivered. *Measuring it turned the
-   open question into a concrete tuning target (see Next task).*
-2. **Prestige offers no *decisions*, only accumulation.** Empire Tokens buy a flat,
-   buy-everything-eventually talent shop. There's no "this run I'll be a fast-money
-   speculator vs. a slow industrial juggernaut" choice — so a second run *feels
-   identical* to the first, just faster. Idle players churn when ascension #2 has no
-   new flavour. Roadmap item #2 (**founder perk choices**) adds that decision — but
-   note perks on a *flat* slope still feel weak, so the slope re-tune comes first.
-3. **Sink/supply mismatch confirmed live.** The deep Mastery sink needs ~50 tokens for
-   rank 1, but the bot banks only **26 across 6 ascensions** — it's **dead content** at
-   realistic yields. The base tree also crawls (41% filled after 6 ascensions, ~+3%
-   each). The cut over-shot; the fix is a power-curve re-tune, not more content.
+1. ✅ **Prestige loop — fixed.** Now both *rewarding* (the slope re-tune: run output
+   climbs run-over-run, Mastery sink reachable, `748d3c1`) and *varied* (founder perks:
+   a real per-run trade-off decision, `79ecc94`), all guarded by the multi-ascension
+   harness. The "thin second run" is no longer thin. Stay vigilant via `progressionLoop`.
+2. ✅ **Employees — now a decision.** The L10 second-spec "which two?" build with an
+   opportunity cost (`3b2daf4`) turns "hire & forget" into an ongoing choice.
+3. ⬅ **Industries are still "same-but-numbers" — the new top gap.** All 8 share just two
+   reskinned multipliers (speed ×2 / profit ×1.5 — see Next task). The mid-late game is
+   a long stretch through industries that *look* distinct (rush hour, compound interest,
+   moonshot) but *play* identically. That flatness is what now caps replayability — a
+   prestige run feels the same not because the meta is shallow (it isn't anymore) but
+   because the *businesses you climb through* don't differ in how they play.
 
-Diagnosis in one line: **the loop is now measurable and it failed the eye-test — the
-slope is too flat. Re-tune the power curve (next), then add the founder-perk decision
-(Task 2). Everything else is secondary until those land.**
+Diagnosis in one line: **the vertical depth (prestige, employees) is now solid; the
+horizontal flatness (8 interchangeable industries) is the next retention ceiling —
+give 2–3 industries a felt, name-matching mechanic before adding any more content.**
 
 ---
 
@@ -72,9 +65,9 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 | # | Task | Why it matters for retention | Status |
 |---|---|---|---|
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
-| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ SHIPPED** (`79ecc94`, 197 tests) — perks live; ⚠️ harness-wiring + slope re-tune still open |
-| **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | **🔨 IN PROGRESS** (uncommitted) — L10 second-spec "which two?" build; XP axis still open (3b) |
-| 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
+| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
+| **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
+| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **NEXT — build now** (criteria below) |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
@@ -118,35 +111,58 @@ sealed.
 
 ---
 
-## Task 3 (🔨 in progress, uncommitted): Employee depth v2
+## Task 3 ✅ DONE — Employee depth v2 (spec-fork slice) (`3b2daf4` + `963f586`)
 
-Goal: make the signature mechanic an **ongoing decision**, not "hire → Auto-Assign →
-forget." **Design review of the uncommitted work — good direction:** the dev took the
-*specialisation-fork* slice — a **second spec slot at level 10** (`specialisation2`), so an
-employee picks 1 of its role's 3 specs at L5 and a *second, different* one at L10. The
-**leftover spec is the real opportunity cost** → a genuine "which two?" build decision that
-makes levels 6–10 a goal, not a magnitude grind, and lets two same-role employees diverge.
-Plus per-role **Mastery capstones** (level-10, stronger amplify — Kingpin +0.5 profit,
-Whale +crit, etc.). UI is going into `EmployeesScreen.tsx`; existing employee/spec tests
-stay green (25/25).
+The dev shipped the *specialisation-fork* slice and met every acceptance criterion: a
+**second spec slot at level 10** (`specialisation2`) so an employee holds two of its role's
+three specs — a genuine "which two?" build decision whose **leftover spec is the real
+opportunity cost**, making levels 6–10 a goal and letting same-role employees diverge. Plus
+per-role **Mastery capstones**. Shipped *with* `specialisations.test.ts` (+52, the slot-2
+guard), `serialize.ts` save migration, and the `EmployeesScreen.tsx` two-slot picker. Full
+suite green at **206**. The roster label now reflects an employee's full build (`963f586`).
 
-**Status of the acceptance criteria**
-- [x] A divergent, opportunity-cost **choice** (the L10 second-slot "which two?"), reusing the spec data pattern — *not* an auto-unlock. Strong.
-- [ ] **Add a guard test** — there's no new test yet for the slot-2 logic: the L10 gate, the "two slots must hold *different* specs" rule, role-match, and the Mastery-capstone effects being wired. Add it before commit (we've shipped dead-effect bugs before).
-- [ ] **Save migration:** confirm old saves default `specialisation2` to null and don't crash; add a regression assertion (the field is optional, so this should be cheap).
-- [ ] **Harness / balance check:** two specs + a capstone roughly doubles an employee's effect ceiling. Run the full suite + `progressionLoop` on commit; if the bot reaches L10 staff, re-baseline. Watch that two-spec employees don't trivialise late-game pps.
-- [ ] **Mobile:** the two-slot picker reads clearly at 375px / 44px and the leftover-spec cost is legible (so the trade-off is felt, not hidden).
-
-**Not in this slice — active-duty XP.** The dev chose the spec-fork axis over use-based
-XP, so the "stay attached to *this* employee by playing with it" hook (use-levels distinct
-from cash-bought levels, a "Lv-up!" moment) is still open. That's the natural **Task 3b**
-— decide next pass whether to follow it or move to Task 4 (industry identity).
-
-Scope guard holding: this is one coherent slice (spec builds), not a full RPG. Good.
+**Remaining (deferred, not blocking):** active-duty XP — use-based levels distinct from
+cash-bought levels (the "stay attached to *this* employee" hook). **Demoted to optional
+(Task 3b in backlog):** employees already carry three progression axes (cash-levels +
+2 specs + capstone); a 4th risks bloat for a system that already exceeds the original MVP
+rule. Only add it if a *cheap* attachment hook is wanted — differentiating the industries
+(below) is the higher-value retention lever now.
 
 ---
 
-## Task 2 (✅ shipped `79ecc94` — follow-ups open): Prestige v1 — founder perk choices
+## Next highest-value task → Task 4: Industry identity & unique mechanics
+
+**Concrete finding this pass — the 8 industries are not meaningfully differentiated.**
+Their flavourful "signature perks" are really just **two multipliers reskinned**
+(`SIGNATURE_PERKS` in `economy.ts`):
+
+| perk | effect | industries |
+|---|---|---|
+| `rush_hour`, `just_in_time` | **speed ×2** | Food, Logistics (identical) |
+| `franchise`, `compound_interest`, `grid_surge` | **profit ×1.5** | Retail, Finance, Energy (identical) |
+| `network_effect` | profit ×1.25 | Tech |
+| `moonshot` | profit ×2 | **Space *and* Quantum (shared — Quantum has no identity of its own)** |
+
+So Finance doesn't *compound*, Space/Quantum aren't *volatile*, "rush hour" isn't a
+*window* — they're flat passive bonuses with evocative names. This is the top remaining
+"same-but-numbers" flatness (the loop directive's bar: *don't expand content unless
+existing systems feel meaningfully different* — these don't). Replacing two of these with a
+**felt mechanic** is higher replayability value than any new content.
+
+**Acceptance criteria (vertical slice — pick 2–3 industries, prove the pattern)**
+- [ ] Give a first industry a **mechanic that matches its name**, e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer that industry runs uninterrupted, or auto-reinvests a %), so the playstyle label is *true*, not decorative.
+- [ ] A second, **mechanically different** one, e.g. Food/`rush_hour`: a recurring short speed-surge **window** on a *deterministic* cadence (reuse the Golden-Deal spawn-counter, **not** RNG, so the harness/balance tests stay stable) — an active-play reason to tap in.
+- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity.
+- [ ] **Harness + balance safe:** keep `balance.test.ts`'s income-efficiency monotonicity and re-run `harness.test.ts` + `progressionLoop`; re-baseline bounds in the same commit if pps shifts. Deterministic mechanics only (no RNG in the income fold).
+- [ ] **Data-driven + tested:** mechanics described in content, a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
+- [ ] **Mobile-legible:** each industry's signature is shown on its banner/entry in one line, and any window/active mechanic has a clear on-screen cue + countdown at 375px.
+
+Scope guard: 2–3 industries as a slice, not all 8 at once. Prove the "felt mechanic"
+pattern; the rest follow once it reads well and stays harness-safe.
+
+---
+
+## Task 2 ✅ DONE (`79ecc94`, harness-wiring `8e91e5d`): Prestige v1 — founder perk choices
 
 On ascend the player picks 1 of N founder perks that re-flavour the whole run (not just
 +stats). **Design review of the shipped work (197 tests green) — it's good:**
@@ -173,10 +189,10 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 
 ---
 
-## Backlog (post Task 1–3)
+## Backlog (post Task 4)
 
-- **Stronger industry identity:** give each of the 8 industries one *mechanical* signature (not just a number) — e.g. Finance compounds, Food has rush-hour windows. Reuse the existing signature-perk data table.
-- **Business event cards:** lightweight opportunity/crisis cards with a 2-option choice during idle stretches; deterministic spawn (reuse the Golden Deal spawn-counter pattern, not RNG, to stay harness-safe).
+- **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty (assigned + producing), nudging toward a "Lv-up!" moment without spending. **Watch for bloat** — employees already carry cash-levels + 2 specs + capstone; only add if it stays a *light* touch (e.g. XP feeds the existing level, not a parallel track).
+- **Business event cards (Task 5):** lightweight opportunity/crisis cards with a 2-option choice during idle stretches; deterministic spawn (reuse the Golden Deal spawn-counter pattern, not RNG, to stay harness-safe).
 - **Daily/weekly time-gated contracts:** needs a wall-clock cadence design (the long-standing blocker).
 - **Mobile/feel polish:** optional P2 brand glyphs (✦ Empire-Token mark, sync icon), sound layer behind the existing FX toggle, ascension celebration moment.
 - **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
@@ -184,7 +200,7 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 ## Deferred ideas
 
 - 9th industry / raw content tier — **explicitly not now**; differentiate the 8 existing first.
-- Prestige-2 / second meta currency — premature until the *first* prestige loop is measured (Task 1) and given decisions (Task 2).
+- Prestige-2 / second meta currency — no longer blocked (the first loop is now measured + decision-rich), but still lower-value than differentiating the industries; revisit only if players exhaust the talent tree + Mastery sink.
 - Economy rescale (re-pricing upgrades/employees onto the post-overhaul scale) — acceptable, not broken; risky churn for low payoff.
 - Loadout presets (low value vs employee-wipe on ascension).
 - Out of scope per /goal: dating/life-sim, major rewrites, new stack, secrets, backend changes, native packaging, social/leaderboards/payments.
@@ -193,10 +209,9 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 
 ## Risks, balancing & UX notes for the main dev
 
-- **The token re-tune is proven non-exploding, but over-corrected.** `673dbdc`'s sim confirms `c038473` killed the blowup (run #1 = 1 token, no ascension > 20× the prior). The new risk is the *opposite*: the slope is too flat (run output plateaus by ascension #3). The Next-task re-tune must lift the slope **without** crossing back over the blowup line — the sub-exponential-yield assertion in `progressionLoop.test.ts` is the trip-wire; keep it green while raising the target band.
-- **Late-game dampening landed (`17e9bdb`), harness held.** A parallel session cut the high-owned milestone + industry-tier multipliers (`defaultMilestones.ts` 500→2000-owned tiers to ×1.5 / smaller ×2, plus `economy.ts`) to slow the late first run. Verified this pass: it did **not** touch `harness.test.ts` and the harness is still green (6/6) — the landmarks stayed in-band, so no re-baseline was needed. General guard for the *next* such change: any balance edit that moves late-run income must re-run the harness and re-baseline `harness.test.ts` bounds **in the same commit** if landmarks shift. (Quantum/space art registration is now complete and covered by `artManifest.test.ts` — doesn't affect balance.) This reinforces Task 1: first-run pacing is guarded; the *prestige* loop still isn't.
-- **Sink/supply mismatch confirmed (not hypothetical).** The sim banks **26 cumulative tokens over 6 ascensions** vs ~50 for a single Mastery rank — the deep Mastery talents (`industrialist`/`grandmaster`/`overclock`, rank-50, growth 1.55) are **unreachable dead content** at current yields. Resolve it as part of the slope re-tune: either the yield bump lifts cumulative tokens into Mastery range, or lower `costBase`/`costGrowth`, or explicitly re-label it a whale-only infinity sink in a comment. Don't leave it ambiguous.
-- **Harness fidelity caveat:** the current bot never claims Golden Deals or spends tokens, so its pacing intentionally ignores those. Task 1's bot adds token-spend; keep Golden-Deal claiming out (or deterministic) so `balance.test.ts`'s first-run invariants don't shift.
-- **Save safety:** Tasks 2–3 touch the save shape. Every new field needs a default-on-load migration + a regression test (we already have a save-compat guard pattern — extend it).
+- **Prestige economy is now converged — keep it that way.** The full arc sqrt → `0.2` → `0.26` is done and guarded by `progressionLoop.test.ts` (no ascension > 20× the prior; tree a journey; Mastery sink reachable). Any future change touching token yield, talent strength, or employee power must re-run that sim and stay inside the band — it's the trip-wire on both ends (blowup *and* flat).
+- **Task 4 industry mechanics must be deterministic + monotonic.** Felt mechanics (rush-hour windows, compounding) change pps, so: (a) **no RNG** in the income fold — use a spawn-counter cadence like Golden Deals so `harness`/`balance` tests stay stable; (b) preserve `balance.test.ts`'s income-efficiency monotonicity (a pricier business stays a better $/s-per-$); (c) re-run `harness.test.ts` + `progressionLoop` and re-baseline bounds in the same commit if pps shifts.
+- **Two-spec employee power ceiling (`3b2daf4`).** Two specs + a Mastery capstone ≈ doubles an employee's effect ceiling. The harness bot likely doesn't reach L10 staff, so the sim didn't move — but watch that hand-optimised late rosters don't trivialise pps; if a balance complaint surfaces, it's the first place to look.
+- **Save safety:** every new field (Task 4 industry state, any 3b XP) needs a default-on-load migration + a regression test — the spec-fork slice did this right (`serialize.ts` + `specialisations.test.ts`); follow that pattern.
 - **Parallel-session hygiene:** another Claude session commits to `main`. Fetch/rebase before pushing; stage only files you changed. Docs-only commits (this reviewer loop) should never collide with engine commits.
 - **Mobile-first:** any new ascension/perk UI must work at 375px width with 44px tap targets and no doc overflow — the bars we just fixed (Golden Deal, fixed overlays) are easy to regress.
