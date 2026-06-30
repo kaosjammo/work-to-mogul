@@ -35,7 +35,7 @@ idle/incremental tycoon game (React + TypeScript + Vite), live on Vercel.
 - **Art coverage now complete:** all 27 business icons, 7 industries (icon+banner+pattern), 14 upgrade icons, 7 role icons, and 17 employee portraits authored + registered (`artManifest.ts`); coverage test green.
 - PWA: manifest + hand-rolled service worker (network-first nav, SWR art, cache-first hashed).
 - Deployed static on Vercel (`npm run build` → `dist`), minimal `vercel.json` (sw.js no-cache). See `deploy-notes.md`. **Committed + pushed to `origin/main`** (`kaosjammo/work-to-mogul`) — auto-deploys.
-- **179 tests / 30 files**; oxlint clean; production build verified booting.
+- **181 tests / 30 files**; oxlint clean; production build verified booting.
 
 ## Current known issues / notes
 
@@ -114,15 +114,19 @@ stage only your own files before pushing.
 
 ## Latest loop summary
 
-**Goal-run — legibility, decision-support + meta depth.** On the standing /goal, high-value
-increments (each build + 179 Vitest + oxlint + browser-verified on a throwaway dev
-server, then fetch/rebase/pushed):
-- **Achievements now reward Empire Tokens** — each grants difficulty-tiered tokens (1–5,
-  ~85 total over the arc), spendable on talents (in the spirit of contracts + ascension
-  milestones). The Ascend list shows each locked goal's ✦ bounty; the unlock toast shows
-  `+N ✦`. A v1→v2 save migration back-grants rewards for already-unlocked achievements
-  (once, no double-grant). Harness-safe: the bot unlocks but never spends tokens, so pacing
-  is unchanged.
+**Goal-run — legibility, decision-support + meta/active depth.** On the standing /goal,
+high-value increments (each build + 181 Vitest + oxlint + browser-verified on a throwaway
+dev server, then fetch/rebase/pushed):
+- **MEGA Golden Deals** — every 5th deal is now a deterministic jackpot worth 5× (75 min of
+  idle income) with a hotter gradient, 🌟 icon, "MEGA" label + stronger buzz. No RNG (a spawn
+  counter), so engine + harness stay reproducible; harness-safe (the bot never claims deals).
+- **Achievements now reward Empire Tokens + show progress** — each grants difficulty-tiered
+  tokens (1–5, ~85 total over the arc), spendable on talents (in the spirit of contracts +
+  ascension milestones). The Ascend list shows each locked goal's ✦ bounty *and a progress
+  bar* for countable goals (units/staff/industries/lifetime/ascensions/talents/upgrades);
+  the unlock toast shows `+N ✦`. A v1→v2 save migration back-grants rewards for
+  already-unlocked achievements (once, no double-grant). Harness-safe: the bot unlocks but
+  never spends tokens, so pacing is unchanged.
 - **"Saving toward" legibility, completed across all three surfaces** — (1) ⏳ "time to
   afford" countdown on every unaffordable business; (2) `Next ✦ at $X lifetime` progress on
   the Ascend screen (the "ascend now or wait?" decision); (3) the new-industry entry banner
