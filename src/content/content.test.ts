@@ -6,6 +6,7 @@ import { UPGRADES, UPGRADE_ORDER } from './upgrades'
 import { purchase } from '../engine/buy'
 import { initialGameState } from '../store/initialState'
 import { SIGNATURE_PERKS } from '../engine/economy'
+import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from './employeeTemplates'
 
 describe('content integrity', () => {
   it('passes referential validation with all industries', () => {
@@ -29,6 +30,20 @@ describe('content integrity', () => {
       // A perk must actually change profit or speed, else it's a no-op identity.
       expect((perk.profit ?? 1) > 1 || (perk.speed ?? 1) > 1).toBe(true)
     }
+  })
+
+  it('every employee template is hireable (HIRE_ORDER ⇔ templates, no orphans)', () => {
+    const templateIds = Object.keys(EMPLOYEE_TEMPLATES)
+    const ordered = new Set(HIRE_ORDER)
+    // No template defined but missing from the hire pool (would be unhireable).
+    for (const id of templateIds) {
+      expect(ordered.has(id), `${id} is defined but missing from HIRE_ORDER (unhireable)`).toBe(true)
+    }
+    // No HIRE_ORDER entry pointing at a non-existent template.
+    for (const id of HIRE_ORDER) {
+      expect(EMPLOYEE_TEMPLATES[id], `HIRE_ORDER lists unknown template "${id}"`).toBeDefined()
+    }
+    expect(HIRE_ORDER.length).toBe(templateIds.length)
   })
 })
 
