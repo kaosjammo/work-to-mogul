@@ -76,7 +76,7 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 | **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | Backlog |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
-| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
+| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns. **Incl. mobile button-size pass:** buttons are oversized on phones and eat real estate — tighten on small viewports **without** regressing desktop | Backlog (incremental) |
 
 Do **not** add a 9th industry / raw content tier — the existing systems aren't yet
 *differentiated* enough to justify more of them (see Deferred).
@@ -160,6 +160,7 @@ a unlock). Acceptance criteria to be written when Task 2 is close.
 - **Business event cards:** lightweight opportunity/crisis cards with a 2-option choice during idle stretches; deterministic spawn (reuse the Golden Deal spawn-counter pattern, not RNG, to stay harness-safe).
 - **Daily/weekly time-gated contracts:** needs a wall-clock cadence design (the long-standing blocker).
 - **Mobile/feel polish:** optional P2 brand glyphs (✦ Empire-Token mark, sync icon), sound layer behind the existing FX toggle, ascension celebration moment.
+- **Mobile button-size optimisation:** buttons are currently oversized on phones (large padding/min-height/font) and take up significant real estate, pushing content below the fold. Trim padding/min-height/type-scale on small viewports so more game state fits on-screen. **Constraint:** keep ≥44px tap targets and apply via mobile-only breakpoints/media queries so desktop sizing is unchanged — this is a small-screen-only tightening, not a global shrink.
 - **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
 
 ## Deferred ideas
