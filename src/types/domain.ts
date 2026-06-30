@@ -204,6 +204,7 @@ export interface GoldenState {
   cooldownMs: number // time until the next deal spawns
   offerMega: boolean // the current offer is a MEGA jackpot (worth several normal deals)
   spawnCount: number // deals spawned this session — every Nth is a MEGA (deterministic)
+  frenzyMsLeft: number // > 0 while a claimed deal's temporary "Profit Rush" (×profit) is active
 }
 
 /** Contracts board — the currently-offered missions + pool pointer. */

@@ -231,6 +231,8 @@ export interface GoldenView {
   warpValue: number // cash a tap grants right now (MEGA-adjusted)
   warpMinutes: number // for the label ("15 min of income")
   mega: boolean // the current offer is a MEGA jackpot
+  frenzyActive: boolean // a claimed deal's temporary Profit Rush is running
+  frenzySecondsLeft: number
 }
 
 export interface ContractView {
@@ -647,12 +649,15 @@ export function buildView(
   }
 
   const goldenMega = state.golden?.offerMega ?? false
+  const frenzyMs = state.golden?.frenzyMsLeft ?? 0
   const golden: GoldenView = {
     offerActive: (state.golden?.offerMsLeft ?? 0) > 0,
     offerSecondsLeft: Math.ceil((state.golden?.offerMsLeft ?? 0) / 1000),
     warpValue: goldenOfferValue(state),
     warpMinutes: Math.round((GOLDEN_WARP_SECONDS * (goldenMega ? GOLDEN_MEGA_MULT : 1)) / 60),
     mega: goldenMega,
+    frenzyActive: frenzyMs > 0,
+    frenzySecondsLeft: Math.ceil(frenzyMs / 1000),
   }
 
   const contracts: ContractView[] = (state.contracts?.active ?? [])

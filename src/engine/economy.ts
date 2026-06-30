@@ -128,14 +128,20 @@ export const PRESTIGE_UNLOCK_LIFETIME = PRESTIGE_SCALE
 
 // ----- Combined economy multipliers (milestone × industry × prestige × upgrades) -----
 
+/** Temporary all-business profit multiplier from a claimed Golden Deal's "Profit Rush". */
+export const PROFIT_FRENZY_MULT = 2
+
 export function economyMultipliers(state: GameState, def: BusinessDef): EconomyMultipliers {
   const owned = state.businesses[def.id]?.owned ?? 0
   const ms = appliedMilestones(def, owned)
   const ind = industryMultipliers(state, def.industryId)
   const up = upgradeMultipliers(state, def)
   const tal = talentEconomy(state) // prestige talent tree (replaces flat +2%/token)
+  // A claimed Golden Deal briefly multiplies all profit (read inline to avoid an
+  // import cycle with engine/golden). Bounded + active-play only → harness-safe.
+  const frenzy = (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
   return {
-    profit: ms.profit * ind.profit * tal.profit * up.profit,
+    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy,
     speed: ms.speed * ind.speed * tal.speed * up.speed,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }

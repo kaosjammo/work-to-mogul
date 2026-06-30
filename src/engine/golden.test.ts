@@ -6,13 +6,17 @@ import {
   claimGoldenDeal,
   timeWarpValue,
   goldenOfferValue,
+  profitFrenzyActive,
   GOLDEN_SPAWN_INTERVAL_MS,
   GOLDEN_OFFER_WINDOW_MS,
   GOLDEN_WARP_SECONDS,
   GOLDEN_MEGA_EVERY,
   GOLDEN_MEGA_MULT,
+  GOLDEN_FRENZY_MS,
 } from './golden'
 import { automatedIncomePerSec } from './catchUp'
+import { economyMultipliers, PROFIT_FRENZY_MULT } from './economy'
+import { BUSINESSES } from '../content/businesses'
 
 function automate(s: GameState): void {
   s.businesses.lemonade.owned = 20
@@ -59,6 +63,22 @@ describe('golden deals', () => {
     const s = initialGameState(0)
     automate(s)
     expect(claimGoldenDeal(s)).toBe(0)
+  })
+
+  it('claiming starts a Profit Rush that doubles profit, then expires', () => {
+    const s = initialGameState(0)
+    automate(s)
+    const baseProfit = economyMultipliers(s, BUSINESSES.lemonade).profit
+    tickGolden(s, GOLDEN_SPAWN_INTERVAL_MS) // spawn
+    claimGoldenDeal(s) // bank + start the rush
+    expect(profitFrenzyActive(s)).toBe(true)
+    expect(s.golden.frenzyMsLeft).toBe(GOLDEN_FRENZY_MS)
+    expect(economyMultipliers(s, BUSINESSES.lemonade).profit).toBeCloseTo(baseProfit * PROFIT_FRENZY_MULT)
+
+    // It counts down independently and ends, restoring normal profit.
+    tickGolden(s, GOLDEN_FRENZY_MS)
+    expect(profitFrenzyActive(s)).toBe(false)
+    expect(economyMultipliers(s, BUSINESSES.lemonade).profit).toBeCloseTo(baseProfit)
   })
 
   it('makes every Nth deal a MEGA jackpot worth more', () => {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { BuyMode } from '../../types/domain'
 import { money, formatRate } from '../../engine/num'
-import { useCash, useTotalPps, useBuyMode } from '../../store/gameStore'
+import { useCash, useTotalPps, useBuyMode, useGolden } from '../../store/gameStore'
 import { setBuyMode } from '../../store/actions'
 import { haptic } from '../../lib/haptics'
 import { AccountButton } from '../account/AccountButton'
@@ -17,6 +17,7 @@ export function TopHUD() {
   const cash = useCash()
   const pps = useTotalPps()
   const buyMode = useBuyMode()
+  const golden = useGolden()
 
   // Pop + buzz the cash only when it crosses into a new magnitude (a rare,
   // satisfying "you hit millions!" beat — never on ordinary idle ticks).
@@ -56,6 +57,11 @@ export function TopHUD() {
           </span>
           <span className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
             {pps > 0 ? `${formatRate(pps)} idle` : 'tap to earn'}
+            {golden.frenzyActive && (
+              <span className="ml-1 font-bold" style={{ color: '#ff7a18' }}>
+                · 🔥 2× ({golden.frenzySecondsLeft}s)
+              </span>
+            )}
           </span>
         </div>
         <AccountButton />

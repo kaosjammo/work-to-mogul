@@ -45,7 +45,7 @@ export function FloatingGoldenDeal() {
           {g.mega ? 'MEGA Time Warp' : 'Time Warp'} · +{money(g.warpValue)}
         </span>
         <span className="text-[10px] font-semibold opacity-80">
-          {g.warpMinutes} min of income · tap! ({g.offerSecondsLeft}s)
+          {g.warpMinutes} min of income + 🔥 2× · tap! ({g.offerSecondsLeft}s)
         </span>
       </span>
     </button>

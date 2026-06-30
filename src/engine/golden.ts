@@ -13,9 +13,15 @@ export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
 export const GOLDEN_WARP_SECONDS = 900 // reward = 15 min of idle income
 export const GOLDEN_MEGA_EVERY = 5 // every Nth deal is a MEGA jackpot (deterministic)
 export const GOLDEN_MEGA_MULT = 5 // a MEGA is worth this many normal Time Warps
+export const GOLDEN_FRENZY_MS = 20_000 // a claimed deal also grants a 20s "Profit Rush"
 
 export function initialGoldenState(): GoldenState {
-  return { offerMsLeft: 0, cooldownMs: GOLDEN_SPAWN_INTERVAL_MS, offerMega: false, spawnCount: 0 }
+  return { offerMsLeft: 0, cooldownMs: GOLDEN_SPAWN_INTERVAL_MS, offerMega: false, spawnCount: 0, frenzyMsLeft: 0 }
+}
+
+/** Whether a claimed deal's temporary Profit Rush is currently active. */
+export function profitFrenzyActive(state: GameState): boolean {
+  return (state.golden?.frenzyMsLeft ?? 0) > 0
 }
 
 /** Cash a *normal* Time Warp would grant right now (idle income × warp window). */
@@ -36,6 +42,8 @@ export function goldenOfferValue(state: GameState): number {
 export function tickGolden(state: GameState, dtMs: number): void {
   const g = state.golden
   if (!g) return
+  // The Profit Rush counts down on its own clock, independent of offers/income.
+  if (g.frenzyMsLeft > 0) g.frenzyMsLeft = Math.max(0, g.frenzyMsLeft - dtMs)
   if (g.offerMsLeft > 0) {
     g.offerMsLeft = Math.max(0, g.offerMsLeft - dtMs) // expires unclaimed if it hits 0
     return
@@ -51,8 +59,9 @@ export function tickGolden(state: GameState, dtMs: number): void {
 }
 
 /**
- * Claim the active golden deal (a Time Warp). Credits the cash, clears the
- * offer, resets the cooldown. Returns the cash earned (0 if no active offer).
+ * Claim the active golden deal: bank the Time Warp cash AND kick off a short
+ * "Profit Rush" (all-business profit multiplier). Clears the offer, resets the
+ * cooldown. Returns the cash earned (0 if no active offer).
  */
 export function claimGoldenDeal(state: GameState): number {
   const g = state.golden
@@ -61,6 +70,7 @@ export function claimGoldenDeal(state: GameState): number {
   g.offerMsLeft = 0
   g.offerMega = false
   g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
+  g.frenzyMsLeft = GOLDEN_FRENZY_MS // start the Profit Rush
   if (earned > 0 && Number.isFinite(earned)) {
     state.cash += earned
     state.lifetimeEarnings += earned
