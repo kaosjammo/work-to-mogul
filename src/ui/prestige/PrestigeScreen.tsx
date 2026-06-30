@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react'
 import { money, format } from '../../engine/num'
 import { PRESTIGE_UNLOCK_LIFETIME } from '../../engine/economy'
 import { TALENT_THEMES } from '../../content/talents'
@@ -162,10 +163,7 @@ export function PrestigeScreen() {
       </section>
 
       {/* ---- Prestige milestones (ascension-count token rewards) ---- */}
-      <section>
-        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          ASCENSION MILESTONES · {milestonesReached}/{milestones.length}
-        </h2>
+      <CollapsibleSection title="ASCENSION MILESTONES" badge={`${milestonesReached}/${milestones.length}`}>
         <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           {milestones.map((m) => (
             <div
@@ -201,12 +199,9 @@ export function PrestigeScreen() {
             </div>
           ))}
         </div>
-      </section>
+      </CollapsibleSection>
 
-      <section>
-        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          ACHIEVEMENTS · {achievements.unlocked}/{achievements.list.length}
-        </h2>
+      <CollapsibleSection title="ACHIEVEMENTS" badge={`${achievements.unlocked}/${achievements.list.length}`}>
         <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           {achievements.list.map((a) => (
             <div
@@ -255,7 +250,7 @@ export function PrestigeScreen() {
             </div>
           ))}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <section className="mt-2">
         <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
@@ -273,6 +268,44 @@ export function PrestigeScreen() {
         />
       </section>
     </div>
+  )
+}
+
+// A tappable section that hides its body by default — the prestige screen stacks a
+// lot of long, informational lists (10 milestones + 30 achievements), so collapsing
+// them keeps the screen scannable on a phone. The count badge stays visible while
+// collapsed, so progress is legible without expanding.
+function CollapsibleSection({
+  title,
+  badge,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  badge?: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="mb-2 flex w-full items-center justify-between gap-2"
+        style={{ minHeight: 'var(--tap)' }}
+      >
+        <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+          {title}
+          {badge ? <span style={{ color: 'var(--text-faint)' }}> · {badge}</span> : null}
+        </h2>
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-faint)' }}>
+          {open ? '▾ Hide' : '▸ Show'}
+        </span>
+      </button>
+      {open && children}
+    </section>
   )
 }
 
