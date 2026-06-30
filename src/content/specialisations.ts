@@ -15,11 +15,19 @@ export interface SpecialisationDef {
   icon: string
   blurb: string // plain-language outcome for the UI
   channelDeltas: Partial<Record<EffectChannel, number>>
+  mastery?: boolean // a level-10 capstone (a stronger amplify than the base two)
 }
 
 export const REQUIRED_SPEC_LEVEL = 5
+// A SECOND specialisation slot unlocks at the level cap. Reaching it lets an
+// employee hold two of its role's three specs — a genuine "which two?" build
+// decision that makes levels 6–10 a goal, not just a magnitude grind.
+export const MASTERY_SPEC_LEVEL = 10
 
-// Two picks per role: [A] amplify the primary, [B] branch a secondary.
+// Three picks per role: [A] amplify the primary, [B] branch a secondary, and a
+// [M] Mastery capstone (a stronger amplify, flagged `mastery`). A level-5 employee
+// picks one; at level 10 it picks a second (different) one — so the leftover spec
+// is the real cost of the build.
 export const SPECIALISATIONS: Record<string, SpecialisationDef> = {
   // operator (automation is binary — both picks branch a secondary)
   night_owl: { id: 'night_owl', role: 'operator', name: 'Night Owl', icon: '🌙', blurb: 'Also speeds up cycles', channelDeltas: { cycleSpeed: 0.2 } },
@@ -48,6 +56,15 @@ export const SPECIALISATIONS: Record<string, SpecialisationDef> = {
   // hr (primary: morale)
   culture_champion: { id: 'culture_champion', role: 'hr', name: 'Culture Champion', icon: '🎉', blurb: 'Even higher morale', channelDeltas: { morale: 8 } },
   talent_scout: { id: 'talent_scout', role: 'hr', name: 'Talent Scout', icon: '🧲', blurb: 'Adds a speed boost', channelDeltas: { cycleSpeed: 0.12 } },
+
+  // ---------- Mastery capstones (level 10) — one per role, a stronger amplify ----------
+  lights_out: { id: 'lights_out', role: 'operator', name: 'Lights-Out', icon: '🤖', blurb: 'Big cycle-speed surge', channelDeltas: { cycleSpeed: 0.35 }, mastery: true },
+  slipstream: { id: 'slipstream', role: 'runner', name: 'Slipstream', icon: '🏎️', blurb: 'Huge cycle-speed surge', channelDeltas: { cycleSpeed: 0.35 }, mastery: true },
+  kingpin: { id: 'kingpin', role: 'closer', name: 'Kingpin', icon: '👑', blurb: 'Huge profit surge', channelDeltas: { profitMult: 0.5 }, mastery: true },
+  monopolist: { id: 'monopolist', role: 'buyer', name: 'Monopolist', icon: '🏛️', blurb: 'Deep expansion discount', channelDeltas: { costReduction: 0.4 }, mastery: true },
+  whale: { id: 'whale', role: 'gambler', name: 'Whale', icon: '🐋', blurb: 'More + bigger jackpots', channelDeltas: { critChance: 0.05, critMult: 1.5 }, mastery: true },
+  watchdog: { id: 'watchdog', role: 'auditor', name: 'Watchdog', icon: '🐕', blurb: 'Slashes risk, adds profit', channelDeltas: { riskReduction: 0.3, profitMult: 0.1 }, mastery: true },
+  luminary: { id: 'luminary', role: 'hr', name: 'Luminary', icon: '✨', blurb: 'Top morale + a speed boost', channelDeltas: { morale: 12, cycleSpeed: 0.08 }, mastery: true },
 }
 
 export const SPECS_BY_ROLE: Record<RoleId, SpecialisationDef[]> = (() => {

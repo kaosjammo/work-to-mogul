@@ -78,6 +78,10 @@ function sanitizeEmployee(id: string, raw: Partial<EmployeeInstance>): EmployeeI
   // Keep a specialisation only if it's a known id whose role matches this employee.
   const spec = typeof raw.specialisation === 'string' ? SPECIALISATIONS[raw.specialisation] : undefined
   const specialisation = spec && spec.role === role ? raw.specialisation! : null
+  // The Mastery (slot-2) spec must also match the role AND differ from slot 1.
+  const spec2 = typeof raw.specialisation2 === 'string' ? SPECIALISATIONS[raw.specialisation2] : undefined
+  const specialisation2 =
+    spec2 && spec2.role === role && raw.specialisation2 !== specialisation ? raw.specialisation2! : null
   return {
     id,
     templateId: typeof raw.templateId === 'string' ? raw.templateId : id,
@@ -88,6 +92,7 @@ function sanitizeEmployee(id: string, raw: Partial<EmployeeInstance>): EmployeeI
     affinity,
     traits,
     specialisation,
+    specialisation2,
   }
 }
 

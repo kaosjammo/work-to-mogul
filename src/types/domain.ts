@@ -162,6 +162,7 @@ export interface EmployeeInstance {
   affinity: IndustryId | null
   traits: TraitId[]
   specialisation: SpecId | null // unlocked at level 5 (M4b)
+  specialisation2?: SpecId | null // second slot, unlocked at the level cap (Mastery)
   // assignment authority lives on the business, NOT here.
   salaryPerSec?: number // reserved, unused (0) in slice
 }

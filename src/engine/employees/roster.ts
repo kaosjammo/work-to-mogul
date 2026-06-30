@@ -8,7 +8,7 @@ import { MAX_EMPLOYEE_LEVEL } from '../../content/roles'
 import { BUSINESSES } from '../../content/businesses'
 import { reconcileSlots, unlockedSlotCount } from './composition'
 import { hireStartLevel, hireCostMult, levelCostMult } from '../talents'
-import { SPECIALISATIONS, REQUIRED_SPEC_LEVEL } from '../../content/specialisations'
+import { SPECIALISATIONS, REQUIRED_SPEC_LEVEL, MASTERY_SPEC_LEVEL } from '../../content/specialisations'
 
 function validIds(state: GameState): Set<string> {
   return new Set(Object.keys(state.employees))
@@ -62,20 +62,32 @@ export function levelUpEmployee(state: GameState, empId: EmployeeId): boolean {
 }
 
 /**
- * Choose (or change) an employee's level-5 specialisation. Requires level ≥ 5
- * and a spec that matches the employee's role. Re-choosable (no cost) so a pick
- * is never permanently regrettable. Returns false if invalid.
+ * Choose (or change) an employee's specialisation in slot 1 (unlocked at level 5)
+ * or slot 2 (the Mastery slot, unlocked at the level cap). Requires the slot's
+ * level gate and a spec that matches the employee's role; the two slots must hold
+ * DIFFERENT specs (so the build always leaves one of the role's three out).
+ * Re-choosable (no cost) so a pick is never permanently regrettable. Returns false
+ * if invalid.
  */
 export function chooseSpecialisation(
   state: GameState,
   empId: EmployeeId,
   specId: string,
+  slot: 1 | 2 = 1,
 ): boolean {
   const e = state.employees[empId]
-  if (!e || e.level < REQUIRED_SPEC_LEVEL) return false
+  if (!e) return false
+  const minLevel = slot === 2 ? MASTERY_SPEC_LEVEL : REQUIRED_SPEC_LEVEL
+  if (e.level < minLevel) return false
   const spec = SPECIALISATIONS[specId]
   if (!spec || spec.role !== e.role) return false
-  e.specialisation = specId
+  if (slot === 2) {
+    if (e.specialisation === specId) return false // can't duplicate the slot-1 pick
+    e.specialisation2 = specId
+  } else {
+    if (e.specialisation2 === specId) e.specialisation2 = null // freed the slot-2 pick
+    e.specialisation = specId
+  }
   return true
 }
 

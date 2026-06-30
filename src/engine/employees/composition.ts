@@ -112,8 +112,10 @@ export function effectMagnitude(
   let base = role?.baseMagnitude[channel] ?? 0
   // Traits add cross-channel modifiers on top of the role's base.
   for (const t of e.traits) base += TRAIT_DEFS[t]?.channelDeltas[channel] ?? 0
-  // A chosen L5 specialisation amplifies the primary or branches a secondary.
+  // Chosen specialisations amplify the primary or branch a secondary (slot 1 at L5,
+  // the optional Mastery slot 2 at the level cap).
   if (e.specialisation) base += SPECIALISATIONS[e.specialisation]?.channelDeltas[channel] ?? 0
+  if (e.specialisation2) base += SPECIALISATIONS[e.specialisation2]?.channelDeltas[channel] ?? 0
   if (!base) return 0
   const rarity = RARITY_MULT[e.rarity]
   const level = 1 + 0.15 * (e.level - 1)

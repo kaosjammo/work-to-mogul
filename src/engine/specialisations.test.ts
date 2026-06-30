@@ -58,3 +58,55 @@ describe('L5 specialisations', () => {
     expect(loaded.employees.c2.specialisation).toBe('rainmaker') // valid → kept
   })
 })
+
+describe('Mastery (level-10) second specialisation slot', () => {
+  it('slot 2 requires the level cap, a role match, and a spec different from slot 1', () => {
+    const s = initialGameState(0)
+    s.employees.c1 = closer(5)
+    chooseSpecialisation(s, 'c1', 'rainmaker') // slot 1
+    expect(chooseSpecialisation(s, 'c1', 'kingpin', 2)).toBe(false) // level < 10
+    s.employees.c1.level = 10
+    expect(chooseSpecialisation(s, 'c1', 'sprint_lead', 2)).toBe(false) // wrong role
+    expect(chooseSpecialisation(s, 'c1', 'rainmaker', 2)).toBe(false) // duplicates slot 1
+    expect(chooseSpecialisation(s, 'c1', 'kingpin', 2)).toBe(true) // the Mastery capstone
+    expect(s.employees.c1.specialisation2).toBe('kingpin')
+  })
+
+  it('both slots stack their channel deltas (a real two-pick build)', () => {
+    const s = initialGameState(0)
+    s.employees.c1 = closer(10)
+    const def = BUSINESSES.lemonade
+    const base = effectMagnitude(s.employees.c1, 'profitMult', def)
+    chooseSpecialisation(s, 'c1', 'rainmaker') // +profit
+    const oneSpec = effectMagnitude(s.employees.c1, 'profitMult', def)
+    chooseSpecialisation(s, 'c1', 'kingpin', 2) // +more profit (Mastery)
+    const twoSpec = effectMagnitude(s.employees.c1, 'profitMult', def)
+    expect(oneSpec).toBeGreaterThan(base)
+    expect(twoSpec).toBeGreaterThan(oneSpec) // the second pick adds on top
+  })
+
+  it('re-picking slot 1 to the slot-2 spec frees slot 2 (no duplicate build)', () => {
+    const s = initialGameState(0)
+    s.employees.c1 = closer(10)
+    chooseSpecialisation(s, 'c1', 'rainmaker')
+    chooseSpecialisation(s, 'c1', 'upseller', 2)
+    expect(s.employees.c1.specialisation2).toBe('upseller')
+    chooseSpecialisation(s, 'c1', 'upseller') // slot 1 now takes upseller → slot 2 clears
+    expect(s.employees.c1.specialisation).toBe('upseller')
+    expect(s.employees.c1.specialisation2).toBeNull()
+  })
+
+  it('save load keeps a valid slot-2 spec but drops a duplicate or role-mismatch', () => {
+    const loaded = tolerantLoad({
+      cash: 0,
+      employees: {
+        a: { id: 'a', templateId: 'x', name: 'A', role: 'closer', rarity: 'common', level: 10, affinity: null, traits: [], specialisation: 'rainmaker', specialisation2: 'kingpin' },
+        b: { id: 'b', templateId: 'x', name: 'B', role: 'closer', rarity: 'common', level: 10, affinity: null, traits: [], specialisation: 'rainmaker', specialisation2: 'rainmaker' },
+        c: { id: 'c', templateId: 'x', name: 'C', role: 'closer', rarity: 'common', level: 10, affinity: null, traits: [], specialisation: 'rainmaker', specialisation2: 'sprint_lead' },
+      },
+    } as never)
+    expect(loaded.employees.a.specialisation2).toBe('kingpin') // valid → kept
+    expect(loaded.employees.b.specialisation2).toBeNull() // duplicate of slot 1 → dropped
+    expect(loaded.employees.c.specialisation2).toBeNull() // runner spec on a closer → dropped
+  })
+})

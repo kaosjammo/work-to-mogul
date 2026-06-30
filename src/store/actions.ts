@@ -140,9 +140,9 @@ export function levelUp(empId: string): void {
   if (levelUpEmployee(getEngineState(), empId)) publishNow()
 }
 
-/** Pick (or change) a level-5 employee's specialisation. */
-export function chooseSpecialisation(empId: string, specId: string): void {
-  if (chooseSpecFn(getEngineState(), empId, specId)) publishNow()
+/** Pick (or change) an employee's specialisation — slot 1 (L5) or the Mastery slot 2 (cap). */
+export function chooseSpecialisation(empId: string, specId: string, slot: 1 | 2 = 1): void {
+  if (chooseSpecFn(getEngineState(), empId, specId, slot)) publishNow()
 }
 
 /** Fuse two matching employees → promote the kept one a rarity tier. */

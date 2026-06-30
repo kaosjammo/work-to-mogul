@@ -53,6 +53,47 @@ function TraitChips({ names }: { names: string[] }) {
   )
 }
 
+// One specialisation slot: a labelled row of pickable spec chips (chosen = accent).
+// Shared by the L5 slot and the L10 Mastery slot.
+function SpecPicker({
+  label,
+  options,
+  onPick,
+}: {
+  label: string
+  options: { id: string; name: string; icon: string; blurb: string; chosen: boolean }[]
+  onPick: (specId: string) => void
+}) {
+  if (options.length === 0) return null
+  return (
+    <div className="mt-1.5">
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
+        {label}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {options.map((sp) => (
+          <button
+            key={sp.id}
+            type="button"
+            onClick={() => onPick(sp.id)}
+            title={sp.blurb}
+            className="rounded-lg px-2 py-1 text-[11px] font-semibold transition active:scale-[0.98]"
+            style={{
+              minHeight: '32px',
+              background: sp.chosen ? 'var(--accent)' : 'var(--surface-3)',
+              color: sp.chosen ? 'var(--accent-ink)' : 'var(--text-dim)',
+              border: sp.chosen ? '1px solid var(--accent)' : '1px solid var(--border)',
+            }}
+          >
+            {sp.icon} {sp.name}
+            <span className="ml-1 font-normal opacity-80">· {sp.blurb}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function EmployeesScreen() {
   const employees = useEmployees()
   const hireOptions = useHireOptions()
@@ -183,31 +224,18 @@ export function EmployeesScreen() {
                     {e.assignedToName ? `Working: ${e.assignedToName}` : 'On the bench'}
                   </div>
                   {e.canSpecialise && (
-                    <div className="mt-1.5">
-                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
-                        {e.specialisationName ? 'Specialisation' : '🎓 Pick a specialisation'}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {e.specOptions.map((sp) => (
-                          <button
-                            key={sp.id}
-                            type="button"
-                            onClick={() => chooseSpecialisation(e.id, sp.id)}
-                            title={sp.blurb}
-                            className="rounded-lg px-2 py-1 text-[11px] font-semibold transition active:scale-[0.98]"
-                            style={{
-                              minHeight: '32px',
-                              background: sp.chosen ? 'var(--accent)' : 'var(--surface-3)',
-                              color: sp.chosen ? 'var(--accent-ink)' : 'var(--text-dim)',
-                              border: sp.chosen ? '1px solid var(--accent)' : '1px solid var(--border)',
-                            }}
-                          >
-                            {sp.icon} {sp.name}
-                            <span className="ml-1 font-normal opacity-80">· {sp.blurb}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <SpecPicker
+                      label={e.specialisationName ? 'Specialisation' : '🎓 Pick a specialisation'}
+                      options={e.specOptions}
+                      onPick={(specId) => chooseSpecialisation(e.id, specId)}
+                    />
+                  )}
+                  {e.canMastery && (
+                    <SpecPicker
+                      label={e.specialisation2Name ? '⭐ Mastery' : '⭐ Pick a Mastery spec'}
+                      options={e.specOptions2}
+                      onPick={(specId) => chooseSpecialisation(e.id, specId, 2)}
+                    />
                   )}
                 </div>
                 <div className="flex shrink-0 flex-col items-stretch gap-1">

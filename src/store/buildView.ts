@@ -28,7 +28,7 @@ import { ART_UPGRADES, ART_MILESTONE } from '../content/artManifest'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
 import { TRAIT_NAME } from '../content/traits'
 import { TALENTS, TALENT_ORDER, type TalentTheme } from '../content/talents'
-import { SPECIALISATIONS, SPECS_BY_ROLE, REQUIRED_SPEC_LEVEL } from '../content/specialisations'
+import { SPECIALISATIONS, SPECS_BY_ROLE, REQUIRED_SPEC_LEVEL, MASTERY_SPEC_LEVEL } from '../content/specialisations'
 import { resolveBusiness } from '../engine/resolveBusiness'
 import { automatedIncomePerSec } from '../engine/catchUp'
 import {
@@ -123,7 +123,12 @@ export interface EmployeeView {
   canSpecialise: boolean // level >= REQUIRED_SPEC_LEVEL
   specialisationId: string | null
   specialisationName: string | null
-  specOptions: SpecOptionView[] // role's picks (empty until canSpecialise)
+  specOptions: SpecOptionView[] // role's base picks (empty until canSpecialise)
+  // Mastery (second) specialisation slot — unlocks at the level cap
+  canMastery: boolean // level >= MASTERY_SPEC_LEVEL
+  specialisation2Id: string | null
+  specialisation2Name: string | null
+  specOptions2: SpecOptionView[] // role's picks minus the slot-1 choice (empty until canMastery)
   // Fusion / promotion (Tier 5)
   canFuse: boolean // a matching duplicate exists and rarity < epic
   fuseWithId: string | null // the partner to consume
@@ -491,20 +496,27 @@ export function buildView(
     const role = ROLE_DEFS[e.role]
     const bizId = assignmentOf[e.id] ?? null
     const canSpecialise = e.level >= REQUIRED_SPEC_LEVEL
+    const canMastery = e.level >= MASTERY_SPEC_LEVEL
     const fuseTo = nextRarity(e.rarity)
     const partnerId = fuseTo
       ? (fuseGroups[`${e.templateId}|${e.rarity}`] ?? []).find((id) => id !== e.id) ?? null
       : null
+    const roleSpecs = SPECS_BY_ROLE[e.role] ?? []
+    // Slot 1 (L5): the two base specs only — the Mastery capstone is L10-exclusive.
     const specOptions: SpecOptionView[] = canSpecialise
-      ? (SPECS_BY_ROLE[e.role] ?? []).map((sp) => ({
-          id: sp.id,
-          name: sp.name,
-          icon: sp.icon,
-          blurb: sp.blurb,
-          chosen: e.specialisation === sp.id,
-        }))
+      ? roleSpecs
+          .filter((sp) => !sp.mastery)
+          .map((sp) => ({ id: sp.id, name: sp.name, icon: sp.icon, blurb: sp.blurb, chosen: e.specialisation === sp.id }))
+      : []
+    // Slot 2 (cap): any of the role's specs except the slot-1 pick (so the leftover
+    // base spec or the Mastery capstone) — the real "which two of three" decision.
+    const specOptions2: SpecOptionView[] = canMastery
+      ? roleSpecs
+          .filter((sp) => sp.id !== e.specialisation)
+          .map((sp) => ({ id: sp.id, name: sp.name, icon: sp.icon, blurb: sp.blurb, chosen: e.specialisation2 === sp.id }))
       : []
     const specDef = e.specialisation ? SPECIALISATIONS[e.specialisation] : null
+    const spec2Def = e.specialisation2 ? SPECIALISATIONS[e.specialisation2] : null
     return {
       id: e.id,
       templateId: e.templateId,
@@ -530,6 +542,10 @@ export function buildView(
       specialisationId: e.specialisation,
       specialisationName: specDef?.name ?? null,
       specOptions,
+      canMastery,
+      specialisation2Id: e.specialisation2 ?? null,
+      specialisation2Name: spec2Def?.name ?? null,
+      specOptions2,
       canFuse: partnerId != null,
       fuseWithId: partnerId,
       fuseToRarity: partnerId ? fuseTo : null,
