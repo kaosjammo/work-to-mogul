@@ -318,6 +318,23 @@ button {
   }
 }
 
+/* Cash crosses into a new magnitude (K→M→B→…) — a quick celebratory bounce. */
+@keyframes cash-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 10px rgba(245, 197, 24, 0.7));
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.cash-pop {
+  animation: cash-pop 0.6s ease-out;
+}
+
 /* Gentle glow on a manual business that's ready to run — guides the early game. */
 @keyframes tap-ready {
   0%,

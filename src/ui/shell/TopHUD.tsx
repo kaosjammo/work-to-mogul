@@ -1,15 +1,35 @@
+import { useEffect, useRef, useState } from 'react'
 import type { BuyMode } from '../../types/domain'
 import { money, formatRate } from '../../engine/num'
 import { useCash, useTotalPps, useBuyMode } from '../../store/gameStore'
 import { setBuyMode } from '../../store/actions'
+import { haptic } from '../../lib/haptics'
 import { AccountButton } from '../account/AccountButton'
 
 const BUY_MODES: BuyMode[] = ['x1', 'x10', 'x100', 'max']
+
+/** Wealth magnitude tier — bumps each ×1000 (K → M → B → T …). */
+function cashTier(cash: number): number {
+  return cash >= 1 ? Math.floor(Math.log10(cash) / 3) : 0
+}
 
 export function TopHUD() {
   const cash = useCash()
   const pps = useTotalPps()
   const buyMode = useBuyMode()
+
+  // Pop + buzz the cash only when it crosses into a new magnitude (a rare,
+  // satisfying "you hit millions!" beat — never on ordinary idle ticks).
+  const tier = cashTier(cash)
+  const prevTier = useRef(tier)
+  const [popKey, setPopKey] = useState(0)
+  useEffect(() => {
+    if (tier > prevTier.current) {
+      setPopKey((k) => k + 1)
+      haptic(20)
+    }
+    prevTier.current = tier
+  }, [tier])
 
   return (
     <header
@@ -27,7 +47,11 @@ export function TopHUD() {
           to ~70px on a phone, truncating anything past ~5 characters.) */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="tnum truncate text-2xl font-bold leading-tight" style={{ color: 'var(--accent)' }}>
+          <span
+            key={popKey}
+            className={`tnum truncate text-2xl font-bold leading-tight ${popKey > 0 ? 'cash-pop' : ''}`}
+            style={{ color: 'var(--accent)', transformOrigin: 'left center' }}
+          >
             {money(cash)}
           </span>
           <span className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
