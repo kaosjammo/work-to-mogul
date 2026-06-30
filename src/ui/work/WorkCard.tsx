@@ -1,6 +1,8 @@
 import { money, format, formatDuration } from '../../engine/num'
 import { useCareer } from '../../store/gameStore'
 import { workShift, consult } from '../../store/actions'
+import { useUiStore } from '../../store/uiStore'
+import { haptic } from '../../lib/haptics'
 import { ProgressBar } from '../business/ProgressBar'
 import { Icon } from '../shared/Icon'
 import { ART_WORK } from '../../content/artManifest'
@@ -107,7 +109,14 @@ export function WorkCard() {
 
       <button
         type="button"
-        onClick={workShift}
+        onClick={(e) => {
+          // Immediate payoff on the game's very first action: pop the shift's pay.
+          if (!c.working && c.salaryDrawValue > 0) {
+            useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(c.salaryDrawValue)}`)
+          }
+          haptic(12)
+          workShift()
+        }}
         disabled={c.working}
         className="rounded-xl font-bold transition active:scale-[0.98]"
         style={{
