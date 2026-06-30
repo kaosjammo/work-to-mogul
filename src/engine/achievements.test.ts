@@ -70,13 +70,15 @@ describe('achievements', () => {
     s.upgradesPurchased = Object.keys(UPGRADES) // fully_upgraded
     // Own ≥1 in all 7 industries' first business; lemonade maxed for the
     // unit-count + specialist goals; Mars Colony for the capstone goal.
-    const firstBiz = ['lemonade', 'corner_shop', 'mobile_app', 'apartments', 'courier', 'solar_farm', 'satellite']
+    const firstBiz = ['lemonade', 'corner_shop', 'mobile_app', 'apartments', 'courier', 'solar_farm', 'satellite', 'quantum_computer']
     for (const id of firstBiz) {
       s.businesses[id].owned = id === 'lemonade' ? 1000 : 1
       s.businesses[id].unlocked = true
     }
     s.businesses.mars_colony.owned = 1
     s.businesses.mars_colony.unlocked = true
+    s.businesses.multiverse.owned = 1 // capstone — multiverse_mogul
+    s.businesses.multiverse.unlocked = true
     // 25 staff incl. an operator that automates lemonade; one epic, one maxed level.
     const op = hireEmployee(s, 'mickey_gears')!
     assignToFirstFreeSlot(s, op, 'lemonade')

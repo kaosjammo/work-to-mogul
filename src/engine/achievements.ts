@@ -59,7 +59,7 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   first_hire: (s) => Object.keys(s.employees).length >= 1,
   ten_staff: (s) => Object.keys(s.employees).length >= 10,
   three_industries: (s) => industriesEntered(s) >= 3,
-  all_industries: (s) => industriesEntered(s) >= 7,
+  all_industries: (s) => industriesEntered(s) >= 8,
   millionaire: (s) => s.lifetimeEarnings >= 1e6,
   billionaire: (s) => s.lifetimeEarnings >= 1e9,
   first_ascension: (s) => s.prestige.resets >= 1,
@@ -79,6 +79,8 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   maxed_employee: (s) => Object.values(s.employees).some((e) => e.level >= MAX_EMPLOYEE_LEVEL),
   big_team: (s) => Object.keys(s.employees).length >= 25,
   fully_upgraded: (s) => s.upgradesPurchased.length >= UPGRADE_COUNT,
+  quantum_frontier: (s) => ownsInIndustry(s, 'quantum'),
+  multiverse_mogul: (s) => (s.businesses.multiverse?.owned ?? 0) >= 1,
 }
 
 /**
