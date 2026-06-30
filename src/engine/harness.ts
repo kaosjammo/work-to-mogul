@@ -15,6 +15,9 @@ import { startShift } from './career'
 import { hireEmployee } from './employees/roster'
 import { autoAssignBest } from './employees/autoAssign'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
+import { prestigePending, prestigeReset } from './prestige'
+import { buyTalent, nextTalentCost, availableTokens } from './talents'
+import { TALENTS, TALENT_ORDER } from '../content/talents'
 
 export interface SimSample {
   t: number
@@ -229,4 +232,95 @@ export function simulateSession(
     industriesEntered: industriesEntered(s),
     employees: Object.keys(s.employees).length,
   }
+}
+
+// ============================================================
+//  Multi-ascension progression sim — drives the PRESTIGE loop the single-run
+//  harness never touches. Each run plays the greedy bot for a fixed wall-clock
+//  budget, then ascends (banking pending tokens) and spends them on talents
+//  cheapest-rank-first (a "reasonable player": fill the cheap base tree before the
+//  expensive deep Mastery sinks). Lets CI assert the meta-economy is sane —
+//  e.g. that token yield grows sub-exponentially, the class of bug behind the
+//  "1.48B tokens overnight" blowup.
+// ============================================================
+
+// Base talents = the shallow, explicit-cost tree (excludes the deep formula-cost
+// Mastery sinks, which a player only dips into with a real surplus).
+const BASE_TALENTS = TALENT_ORDER.filter((id) => Array.isArray(TALENTS[id].cost))
+const TOTAL_BASE_RANKS = BASE_TALENTS.reduce((n, id) => n + TALENTS[id].maxRank, 0)
+
+/** Greedily spend available tokens on the cheapest next talent rank, until broke. */
+function spendTokensGreedy(s: GameState): void {
+  for (;;) {
+    let cheapestId: string | null = null
+    let cheapestCost = Infinity
+    for (const id of TALENT_ORDER) {
+      const c = nextTalentCost(s, id)
+      if (c != null && c <= availableTokens(s) && c < cheapestCost) {
+        cheapestCost = c
+        cheapestId = id
+      }
+    }
+    if (!cheapestId || !buyTalent(s, cheapestId)) break
+  }
+}
+
+function baseRanksFilled(s: GameState): number {
+  let n = 0
+  for (const id of BASE_TALENTS) n += s.prestige.talents?.[id] ?? 0
+  return n
+}
+
+export interface AscensionRecord {
+  run: number // 1-based
+  runLifetime: number // lifetime earned during this run (before ascending)
+  tokensBanked: number // Empire Tokens this ascension granted
+  cumulativeTokens: number // total tokens ever banked
+  baseTreeFilledPct: number // 0..1 of the base talent tree filled after spending
+}
+
+export interface ProgressionResult {
+  ascensions: AscensionRecord[]
+  tokensPerAscension: number[]
+}
+
+/**
+ * Simulate N ascensions. Each run plays for `perRunSec` of sim time, then the bot
+ * ascends and spends its banked tokens. Talents persist + compound across runs.
+ */
+export function simulateProgression(
+  opts: { ascensions?: number; perRunSec?: number; dtMs?: number; seed?: number } = {},
+): ProgressionResult {
+  const N = opts.ascensions ?? 6
+  const perRunSec = opts.perRunSec ?? 4 * 3600 // a long-ish play session per run
+  const dtMs = opts.dtMs ?? 5000 // coarse steps — the loop is framerate-independent
+  const rng = makeRng(opts.seed ?? 7)
+  const s = initialGameState(0)
+  const stepsPerRun = Math.floor((perRunSec * 1000) / dtMs)
+
+  const ascensions: AscensionRecord[] = []
+  let cumulativeTokens = 0
+  let step = 0
+
+  for (let run = 1; run <= N; run++) {
+    for (let i = 0; i < stepsPerRun; i++) {
+      botStep(s, step)
+      applyTick(s, dtMs, rng)
+      step++
+    }
+    const runLifetime = s.lifetimeEarnings
+    const tokensBanked = prestigePending(s)
+    prestigeReset(s) // banks tokensBanked into totalPoints, wipes the run
+    cumulativeTokens += tokensBanked
+    spendTokensGreedy(s)
+    ascensions.push({
+      run,
+      runLifetime,
+      tokensBanked,
+      cumulativeTokens,
+      baseTreeFilledPct: baseRanksFilled(s) / TOTAL_BASE_RANKS,
+    })
+  }
+
+  return { ascensions, tokensPerAscension: ascensions.map((a) => a.tokensBanked) }
 }
