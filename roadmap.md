@@ -72,7 +72,7 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 | # | Task | Why it matters for retention | Status |
 |---|---|---|---|
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass** | Harness landed (`673dbdc`) — proved the cut is non-exploding but **over-corrected to a flat loop**; the power-curve re-tune is the live work | **harness DONE · re-tune NEXT** |
-| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | Ready after the re-tune |
+| **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **🔨 IN PROGRESS** (uncommitted) — 4 trade-off perks, data-driven, tested; looks to-spec |
 | **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | Backlog |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
@@ -123,24 +123,37 @@ harness is the guard: tighten its bounds to lock the target band.
 - [ ] Decide the Mastery sink explicitly: if still unreachable after the bump, lower `costBase`/`costGrowth` so rank 1 is affordable within ~3–4 ascensions, OR re-label it an "infinity sink for whales" in a code comment and accept it.
 - [ ] `npm run build` ✓, lint ✓, full suite green. No save-format change (pure constants).
 
-**Then → Task 2: founder perk choices** (below) — perks add the *decision*, this pass
-adds the *power curve*. They're complementary: founder perks on a flat slope still feel
-weak, so do the slope first.
+**Sequencing update:** founder perks (Task 2 below) are being built *first* — they add
+the *decision/variety*; this pass adds the *power curve*. They're complementary, but a
+flat slope undercuts the perks (variety without rising power still churns), so the slope
+re-tune **remains required** — land it right after the perks, and re-measure with perks
+active.
 
 ---
 
-## Task 2 (next): Prestige v1 — founder perk choices
+## Task 2 (🔨 in progress, uncommitted): Prestige v1 — founder perk choices
 
-When the player ascends, present **one choice of 3 founder perks** that re-flavours the
-coming run (not just +stats). The talent shop stays; this adds the *decision* on top.
+On ascend the player picks 1 of N founder perks that re-flavour the whole run (not just
++stats). **Design review of the uncommitted work — it's good:** `founderPerks.ts` ships
+4 *divergent trade-offs* — Industrialist (×1.5 profit / ×0.78 speed), Sprinter (×1.6
+speed / ×0.8 profit), Speculator (×2 Golden / ×0.9 profit), Homebody (×2 offline / ×0.92
+profit) — each with a real downside, data-driven (`FOUNDER_PERKS` + `FOUNDER_PERK_ORDER`),
+with a `founderPerks.test.ts` guard. That matches the spec well.
 
-**Acceptance criteria (draft — refine after Task 1 lands)**
-- [ ] On ascend, the player picks 1 of 3 perks (e.g. **Industrialist** — businesses cheaper but slower; **Speculator** — Golden Deals/Time-Warp supercharged; **Taskmaster** — staff effects amplified). Perks are *divergent*, ideally with a downside, so the choice is real.
-- [ ] The chosen perk persists for the run, is visible in the HUD/Stats, and is **wiped on the next ascension** (re-chosen each run) — distinct from permanent talents.
-- [ ] Perks are **data-driven** (a `FOUNDER_PERKS` table like `talents.ts`) with a `content.test`-style guard that every perk's effect is actually wired (we've shipped dead-perk bugs before — don't repeat).
-- [ ] Save migration: existing saves load with **no perk selected** (neutral) until their next ascension; no data loss.
-- [ ] The **harness v2 bot picks a perk** (e.g. fixed or round-robin) so prestige-loop pacing stays measured with perks active.
-- [ ] Surfaced clearly on mobile: the ascend confirm flow shows the 3 perks with one-line effect text; choosing is one tap. Build/lint/tests green.
+**Status of the acceptance criteria**
+- [x] Pick 1 of N *divergent* perks, each with a downside so the choice is real.
+- [x] Data-driven table + a wired-effect test guard (no dead-perk repeat).
+- [ ] **Confirm per-run lifecycle:** the perk persists for the run, shows in HUD/Stats, and is **re-chosen each ascension** (wiped on reset) — verify in `prestige.ts`/`actions.ts`.
+- [ ] **Save migration:** existing saves load with **no perk** (neutral) until their next ascension; add a regression test (the diff touches `serialize.ts`/`initialState.ts`/`domain.ts` — make sure old saves don't crash).
+- [ ] ⚠️ **CRITICAL — wire perks into `simulateProgression`.** `harness.ts` is *not* in the change set, so the prestige-loop sim will keep measuring the economy **without** the perk the player always has. The bot must pick a perk each ascension (round-robin over `FOUNDER_PERK_ORDER`) or the slope guard silently rots. Do this in the same PR as the perks.
+- [ ] **Mobile:** the ascend confirm flow shows the perks with one-line effect text, one-tap choose, at 375px / 44px targets.
+
+> **Coordination note (reviewer):** perks are landing *before* the slope re-tune, and
+> they're **net-sideways trade-offs** (≈ +15–28% net value each) — they add *variety*,
+> not a power curve. So the flat-slope problem (run output plateaus, ~5 tok/run, Mastery
+> sink unreachable) **is not fixed by this** — the balance pass above is still required,
+> and now more urgent: variety without a rising power feel still churns. Re-run
+> `progressionLoop` *with perks active* before setting the new target band.
 
 ---
 
