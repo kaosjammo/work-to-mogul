@@ -4,6 +4,23 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Confirmed root cause + login error polish — Supabase outage
+
+**Root cause confirmed by the user's Supabase status page:** an active incident,
+"Project status change failures in multiple regions" (project creation/resize/
+restart failing in ap-northeast-2, ap-south-1, eu-north-1). A free-tier project
+resume/restart failing during the incident leaves the API/auth edge down → the
+0-auth-logs + "Failed to fetch" symptom. **Not a code/config bug** — resolves when
+Supabase restores capacity. Code is verified (publishable-key fix + 158 tests).
+
+**Polish (Goal 1 error handling):** `authErrorMessage` (accountStore) now tells the
+user, on a network failure, that **Supabase may be temporarily down (check
+status.supabase.com)** or the URL/key may be misconfigured, and reassures that
+**local progress is saved** — turning a vague failure into an actionable message.
+`npm run lint` ✓, `npm run test` ✓ (158), `npm run build` ✓.
+
+---
+
 ## Debugging aid — Supabase config self-diagnosis ("Failed to fetch" still seen)
 
 **Context:** after the publishable-key fix, login still showed "Couldn't reach the

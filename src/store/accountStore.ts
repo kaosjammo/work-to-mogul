@@ -85,8 +85,8 @@ function authErrorMessage(error: { message?: string }): string {
   const msg = error?.message ?? 'Something went wrong. Please try again.'
   if (/failed to fetch|load failed|networkerror|network request failed|fetch/i.test(msg)) {
     // Never log the URL/key values — just that the request didn't reach the server.
-    console.warn('[supabase] auth request could not reach the server (network or config issue).')
-    return 'Couldn’t reach the sign-in server. Check your connection and that the Supabase URL/key are configured correctly.'
+    console.warn('[supabase] auth request could not reach the server (network / Supabase outage / config).')
+    return 'Couldn’t reach the sign-in server. Supabase may be temporarily down (check status.supabase.com), or the Supabase URL/key may be misconfigured. Your progress is saved locally — try again shortly.'
   }
   return msg
 }
