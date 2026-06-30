@@ -83,19 +83,22 @@ talent/contract node frames).
 
 ## Next highest-value task
 
-Goals 1 (cloud save) and 2 (art) are done; **Goal 3 — mobile-first UI polish**
-is in progress. Iteration 3 landed a first pass (nav active state, industry
-affordability cues, button press feedback). Remaining polish (iteration 4),
-no redesign:
-1. **Work/Career card** — tighten the wage / shift / promotion hierarchy further.
-2. **Business card** — layout pass around the new "▶ Run store" manual button.
-3. **Empty states** — Upgrades/Stats/Prestige first-time states.
-4. **Account pill** spacing/affordance refinement; Stats/Prestige headers.
-5. Consistent icon sizing + no-layout-shift audit (reserve image dims) across cards.
+Goals 1–3 (cloud save, art, mobile polish) are done. Now under the standing /goal
+("deepest, most satisfying mobile idle mogul") — alternate **satisfying** (juice)
+and **depth** (content/meta) increments, one validated commit at a time.
 
-Then **provision Supabase** + set Vercel env vars to test the configured
-login/sync paths on a phone (see `deploy-notes.md`). Optional: code-split
-`@supabase/supabase-js` to shrink the anonymous bundle.
+Cheap + safe depth is largely exhausted: the data-driven content systems
+(upgrades/contracts/talents/achievements/milestones) are all expanded and don't
+touch the harness/balance tests. Further content that DOES affect pacing
+(businesses, industries, employees, milestones, synergies) must keep
+`balance.test.ts` (efficiency monotonicity) and `harness.test.ts` green — size
+carefully. Remaining satisfaction headroom: cash-HUD number animation, business-card
+juice, celebration polish.
+
+Operational: **provision Supabase** + set Vercel env vars to test login/sync on a
+phone (`deploy-notes.md`); optional **code-split `@supabase/supabase-js`** to shrink
+the anonymous bundle. A parallel Claude session also commits here — fetch/rebase and
+stage only your own files before pushing.
 
 ## Deferred ideas
 
@@ -107,6 +110,26 @@ login/sync paths on a phone (see `deploy-notes.md`). Optional: code-split
 - Native packaging (Electron/Tauri/Capacitor/Steam) — explicitly not now.
 
 ## Latest loop summary
+
+**Session — depth + "satisfaction" pass** (standing /goal: deepest, most satisfying
+mobile idle mogul). Shipped in ~15 validated commits (each: `npm run build` + 165
+Vitest + oxlint + browser-verified on a throwaway dev server, then pushed):
+- **Pacing:** Food Truck unlocks in ~1 min (was ~80) — gentler cost-growth steepness
+  + lower Food gates; income-efficiency monotonicity invariant intact.
+- **Mobile cash HUD:** two-tier layout so cash is never truncated on a phone.
+- **Staff UX:** HIRE-first (no list shift on hire), a Hire-staff path from a business's
+  assignment sheet, self-documenting trait chips.
+- **Quick-spend:** "Spend Cash" (best-value greedy) + "Buy all affordable" upgrades.
+- **Depth:** achievements 14→28, upgrades 14→32 (endgame ladder to ~$1e21), contracts
+  14→22, ascension milestones 5→10, talents 10→15 (incl. a novel **Golden Touch** that
+  boosts Time-Warp payouts). All data-driven; harness/balance pacing unaffected.
+- **Satisfaction/feel:** floating "+$" pops + profit-burst + haptics on taps / Golden
+  Deals / rewards; reactive founder mascot (idle→working→excited); celebratory
+  welcome-back; nav badges for claimable contracts + worthwhile ascension; idle
+  "ready" pulse on manual businesses. A **Settings** section (Stats tab) toggles
+  haptics + floating numbers (persisted).
+- **Art:** integrated the generated money-themed layer (city backdrop, mascot poses,
+  cash VFX/props) behind a non-interactive ambient layer.
 
 **Bug fix — Supabase new publishable-key (`sb_publishable_…`) auth:** signup/login
 was failing with "Failed to fetch" because supabase-js sent the publishable key as
