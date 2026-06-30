@@ -26,12 +26,13 @@ Tokens → run again, faster.
 - **Meta:** Prestige → Empire Tokens; **20-talent tree** (incl. 3 deep rank-50 "Mastery" sinks); 10 ascension milestones; 25-contract rotating board; 30 achievements (token-rewarding); 34 upgrades; Golden Deals / MEGA jackpots / Time-Warp / Profit Rush.
 - **Legibility/feel:** ⭐ best-ROI cue, ⏳ time-to-afford countdowns, `Next ✦ at $X` prestige cue, floating "+$" pops + haptics, reactive mascot, celebration toasts, nav badges, Settings (FX/haptics toggles), Stats tab.
 - **Platform:** versioned localStorage save + migrate hook; env-gated Supabase cloud save + accounts; complete gameplay art coverage; PWA (manifest + service worker).
+- **Art created this pass:** filled the real manifest gaps introduced by the endgame expansion: Quantum Frontier icon/banner/pattern, Dyson Sphere + Quantum business icons, 20 expanded-upgrade icons, and the Zeta Quark portrait. `artManifest.test.ts` now fails on future business/industry/upgrade/employee art gaps instead of only logging them.
 
 **Known issues / notes**
 
 - Employee systems already exceed the old "4 roles only" MVP rule — intentional pre-existing state, stable. Don't *add* roles; **do** deepen the existing ones (see Task 3).
 - Cloud save needs real Supabase creds for an on-device test (code verified, env-gated, anonymous play unaffected). `@supabase/supabase-js` adds ~153 kB gzip — deferred code-split.
-- No standalone `typecheck` script; `tsc -b` runs inside `npm run build`. Art coverage complete; only optional P2 emoji depth-glyphs remain.
+- No standalone `typecheck` script; `tsc -b` runs inside `npm run build`. Art coverage complete for 32 businesses / 8 industries / 34 upgrades / 18 employee portraits; only optional P2 emoji depth-glyphs remain.
 
 ---
 
@@ -148,7 +149,7 @@ a unlock). Acceptance criteria to be written when Task 2 is close.
 ## Risks, balancing & UX notes for the main dev
 
 - **The token re-tune is unproven.** `c038473` cut yield ~100,000× by eyeball. Task 1 exists specifically to verify it. Do **not** layer Task 2's perks on top until the loop curve is printed and bounded — a perk that multiplies token yield could re-open the blowup.
-- **In-flight dev work (uncommitted, watch for landmark drift):** a parallel session is dampening the late milestone curve (`defaultMilestones.ts`: 500→2000-owned tiers cut to ×1.5 / smaller ×2) and registering new quantum/space art (`artManifest.ts` +~28 assets). The milestone dampening **lowers late first-run income**, which can push `harness.test.ts`'s landmarks later (`prestigeEligible`) or below their floors (`industriesEntered ≥ 7`, `secondIndustry`). Whoever commits it must re-run the harness and **re-baseline those bounds in the same commit** — don't let a balance change silently break the pacing guard. This also confirms the value of Task 1: first-run pacing is guarded; the *prestige* loop still isn't.
+- **Late-game dampening landed (`17e9bdb`), harness held.** A parallel session cut the high-owned milestone + industry-tier multipliers (`defaultMilestones.ts` 500→2000-owned tiers to ×1.5 / smaller ×2, plus `economy.ts`) to slow the late first run. Verified this pass: it did **not** touch `harness.test.ts` and the harness is still green (6/6) — the landmarks stayed in-band, so no re-baseline was needed. General guard for the *next* such change: any balance edit that moves late-run income must re-run the harness and re-baseline `harness.test.ts` bounds **in the same commit** if landmarks shift. (Art registration for new quantum/space assets is still in-flight/uncommitted — doesn't affect balance.) This reinforces Task 1: first-run pacing is guarded; the *prestige* loop still isn't.
 - **Sink/supply mismatch is live.** Deep Mastery talents (`industrialist`/`grandmaster`/`overclock`, rank-50, growth 1.55) were sized for the *old* token flood. After Task 1 prints `cumulativeTokens` over N ascensions, decide: are they reachable? If not, either lower `costBase`/`costGrowth` or accept them as a true infinity-sink and say so in a comment.
 - **Harness fidelity caveat:** the current bot never claims Golden Deals or spends tokens, so its pacing intentionally ignores those. Task 1's bot adds token-spend; keep Golden-Deal claiming out (or deterministic) so `balance.test.ts`'s first-run invariants don't shift.
 - **Save safety:** Tasks 2–3 touch the save shape. Every new field needs a default-on-load migration + a regression test (we already have a save-compat guard pattern — extend it).
