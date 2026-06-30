@@ -65,7 +65,7 @@ function BusinessCardImpl({ view, accent }: Props) {
               tap(view.id)
             }}
             disabled={!idle}
-            className="w-full rounded-xl text-sm font-extrabold uppercase tracking-wide transition-opacity"
+            className={`w-full rounded-xl text-sm font-extrabold uppercase tracking-wide transition-opacity ${idle ? 'tap-ready' : ''}`}
             style={{
               minHeight: 'var(--tap-lg)',
               background: idle ? accent : 'var(--surface-3)',
