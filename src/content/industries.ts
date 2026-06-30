@@ -92,6 +92,20 @@ export const INDUSTRIES: Record<IndustryId, IndustryDef> = {
       preferredChannels: ['profitMult', 'critChance'],
     },
   },
+  quantum: {
+    id: 'quantum',
+    name: 'Quantum Frontier',
+    theme: 'var(--industry-quantum)',
+    playstyle: 'volatile',
+    unlock: { kind: 'free' },
+    // Ultra-endgame: the priciest ladder in the game (entry $10Qi), a long-term
+    // frontier for deeply-prestiged empires beyond the standard arc.
+    businessIds: ['quantum_computer', 'antimatter', 'wormhole', 'multiverse'],
+    bonus: {
+      signaturePerkId: 'moonshot',
+      preferredChannels: ['profitMult', 'critChance'],
+    },
+  },
 }
 
 // Ordered by ascending entry cost (price of each industry's first business) so the
@@ -105,4 +119,5 @@ export const INDUSTRY_ORDER: IndustryId[] = [
   'finance',
   'energy',
   'space',
+  'quantum',
 ]

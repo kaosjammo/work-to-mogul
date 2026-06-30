@@ -246,6 +246,22 @@ export const UPGRADES: Record<UpgradeId, UpgradeDef> = {
     scope: { kind: 'global' },
     effect: { kind: 'profitMult', factor: 6 },
   },
+
+  // --- Quantum Frontier (ultra-endgame industry boosts) ---
+  quantum_speed_2x: {
+    id: 'quantum_speed_2x',
+    name: 'Entangled Throughput',
+    cost: 5e19,
+    scope: { kind: 'industry', industryId: 'quantum' },
+    effect: { kind: 'speedMult', factor: 2 },
+  },
+  quantum_profit_3x: {
+    id: 'quantum_profit_3x',
+    name: 'Probability Engine',
+    cost: 5e21,
+    scope: { kind: 'industry', industryId: 'quantum' },
+    effect: { kind: 'profitMult', factor: 3 },
+  },
 }
 
 // Ordered roughly by cost (the Upgrades screen re-sorts affordable-first).
@@ -280,6 +296,8 @@ export const UPGRADE_ORDER: UpgradeId[] = [
   'energy_profit_3x',
   'economies_of_scale',
   'space_profit_3x',
+  'quantum_speed_2x',
   'global_profit_10x',
   'global_profit_25x',
+  'quantum_profit_3x',
 ]

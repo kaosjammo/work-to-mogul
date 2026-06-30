@@ -52,7 +52,11 @@ describe('balancing harness — 10-hour greedy session', () => {
     // still spends a meaningful first stretch building Food before expanding, and
     // reaching ALL industries takes the long arc (hours), not a quick sprint.
     expect(result.events.secondIndustry!).toBeGreaterThan(10 * 60) // > 10 min — not trivially fast
-    expect(result.industriesEntered).toBe(7)
+    // Reaches every *affordable* industry over the arc. There are 8 industries;
+    // the 8th (Quantum Frontier, entry $10Qi) is priced beyond what the greedy
+    // 10h bot can earn (~$6Qi lifetime) — an ultra-endgame frontier for
+    // deeply-prestiged players, intentionally outside the standard sim.
+    expect(result.industriesEntered).toBeGreaterThanOrEqual(7)
   })
 
   it('unlocks prestige within the session, but not in the first hour', () => {

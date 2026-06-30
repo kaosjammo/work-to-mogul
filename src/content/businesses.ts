@@ -106,6 +106,13 @@ const ROWS: Row[] = [
   // the top of the global cost order so its efficiency (E0·g^27 ≈ 1.055, the new
   // max) simply continues the monotonic curve without shifting any other rank.
   { id: 'dyson', industryId: 'space', name: 'Dyson Sphere', icon: '🔆', baseCost: 1e18, growthRate: 1.14, baseRevenue: 1.69e20, cycleMs: 160000, unlock: prev('mars_colony', 20), preferred: ['profitMult', 'critChance'] },
+
+  // ---- Quantum Frontier (ultra-endgame; ranks 28-31, all costlier than Dyson so
+  //      they extend the monotonic efficiency curve without shifting any rank) ----
+  { id: 'quantum_computer', industryId: 'quantum', name: 'Quantum Computer', icon: '🔮', baseCost: 1e19, growthRate: 1.12, baseRevenue: 1.97e21, cycleMs: 180000, unlock: { kind: 'free' }, preferred: ['profitMult', 'critChance'] },
+  { id: 'antimatter', industryId: 'quantum', name: 'Antimatter Reactor', icon: '🌀', baseCost: 1e20, growthRate: 1.13, baseRevenue: 2.49e22, cycleMs: 220000, unlock: prev('quantum_computer', 20), preferred: ['profitMult', 'critChance'] },
+  { id: 'wormhole', industryId: 'quantum', name: 'Wormhole Gate', icon: '🕳️', baseCost: 1e21, growthRate: 1.14, baseRevenue: 3.28e23, cycleMs: 280000, unlock: prev('antimatter', 20), preferred: ['profitMult', 'critChance'] },
+  { id: 'multiverse', industryId: 'quantum', name: 'Multiverse Exchange', icon: '♾️', baseCost: 1e22, growthRate: 1.14, baseRevenue: 4.36e24, cycleMs: 360000, unlock: prev('wormhole', 20), preferred: ['profitMult', 'critChance'] },
 ]
 
 function toDef(r: Row): BusinessDef {
