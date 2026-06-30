@@ -30,6 +30,7 @@ import { haptic } from '../lib/haptics'
 import { describeMilestone, newlyReached } from '../engine/milestones'
 import type { UpgradeId } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
+import { INDUSTRIES } from '../content/industries'
 import { publishNow, resetPublishTracking } from '../loop/publisher'
 import { clearSave } from '../save/saveManager'
 import { useUiStore } from './uiStore'
@@ -41,17 +42,29 @@ export function buyBusiness(id: BusinessId): void {
   if (!def || !bs) return
   const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash)
   const before = [...s.milestonesReached]
+  // Entering a new industry (its first owned unit) is a major beat — detect it
+  // before the purchase so we can celebrate the expansion.
+  const ind = INDUSTRIES[def.industryId]
+  const enteringIndustry =
+    !!ind && ind.businessIds.every((bid) => (s.businesses[bid]?.owned ?? 0) === 0)
   if (purchase(s, id, qty)) {
     haptic(8) // light tactile click on a successful buy
+    const msgs: string[] = []
+    if (enteringIndustry && ind) {
+      msgs.push(`🏭 Welcome to ${ind.name}!`)
+      haptic(26)
+    }
     const fresh = newlyReached(before, s.milestonesReached)
     if (fresh.length) {
       haptic(26) // a milestone crossed — celebratory buzz
-      const msgs = fresh
-        .map(describeMilestone)
-        .filter((m): m is NonNullable<typeof m> => m != null)
-        .map((m) => m.text)
-      if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
+      msgs.push(
+        ...fresh
+          .map(describeMilestone)
+          .filter((m): m is NonNullable<typeof m> => m != null)
+          .map((m) => m.text),
+      )
     }
+    if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
     publishNow()
   }
 }
