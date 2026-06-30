@@ -65,3 +65,43 @@ describe('progression loop — multi-ascension prestige economy', () => {
     expect(backHalfGrowth).toBeGreaterThan(1.4) // was ~1.08 (a plateau) before the re-tune
   })
 })
+
+// Re-measures the slope with a Founder Perk active — the reviewer's "re-measure with
+// perks active" follow-up. A perk is an economy multiplier on top of the talent tree,
+// so a chosen perk must NOT distort the re-tuned slope into a plateau again. We test
+// the Industrialist perk (the strongest economy perk: +50% profit / −22% speed) since
+// the greedy bot exercises profit/speed but never claims Golden Deals or goes offline
+// (so it can't fairly measure the Speculator/Homebody perks — documented in harness.ts).
+describe('progression loop — slope holds with a Founder Perk active', () => {
+  const perked = simulateProgression({
+    ascensions: 6,
+    perRunSec: 4 * 3600,
+    seed: 7,
+    founderPerk: 'industrialist',
+  })
+
+  it('prints the Industrialist-perk curve (for tuning)', () => {
+    console.log('\n[progression · Industrialist perk] (run / runLifetime / +tok / cum / base%):')
+    for (const a of perked.ascensions) {
+      console.log(
+        `  #${a.run}  life $${format(a.runLifetime).padStart(8)}  +${String(a.tokensBanked).padStart(6)} tok  cum ${String(a.cumulativeTokens).padStart(7)}  base ${(a.baseTreeFilledPct * 100).toFixed(0)}%`,
+      )
+    }
+    expect(perked.ascensions.length).toBe(6)
+  })
+
+  it('still banks a small first ascension and never explodes (perk does not break the guards)', () => {
+    expect(perked.tokensPerAscension[0]).toBeGreaterThanOrEqual(1)
+    expect(perked.tokensPerAscension[0]).toBeLessThan(100)
+    for (let i = 1; i < perked.tokensPerAscension.length; i++) {
+      const prev = Math.max(1, perked.tokensPerAscension[i - 1])
+      expect(perked.tokensPerAscension[i] / prev).toBeLessThan(20)
+    }
+  })
+
+  it('the rising slope survives the perk — no plateau', () => {
+    const lifes = perked.ascensions.map((a) => a.runLifetime)
+    const backHalfGrowth = lifes[lifes.length - 1] / lifes[2] // run #6 / run #3
+    expect(backHalfGrowth).toBeGreaterThan(1.4) // same climb guarantee as the no-perk run
+  })
+})

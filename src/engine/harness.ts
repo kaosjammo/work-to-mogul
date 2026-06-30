@@ -17,6 +17,7 @@ import { autoAssignBest } from './employees/autoAssign'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
 import { prestigePending, prestigeReset } from './prestige'
 import { buyTalent, nextTalentCost, availableTokens } from './talents'
+import { chooseFounderPerk } from './founderPerks'
 import { TALENTS, TALENT_ORDER } from '../content/talents'
 
 export interface SimSample {
@@ -289,13 +290,25 @@ export interface ProgressionResult {
  * ascends and spends its banked tokens. Talents persist + compound across runs.
  */
 export function simulateProgression(
-  opts: { ascensions?: number; perRunSec?: number; dtMs?: number; seed?: number } = {},
+  opts: {
+    ascensions?: number
+    perRunSec?: number
+    dtMs?: number
+    seed?: number
+    /** Optionally play every run under a Founder Perk (folds into the economy), so the
+     *  prestige slope can be re-measured with a perk active. NOTE: only the economy
+     *  perks (profit/speed) are exercised by the greedy bot — it never claims Golden
+     *  Deals or goes offline, so the Speculator/Homebody perks would show only their
+     *  profit penalty here. Use this to validate the economy perks, not to rank all four. */
+    founderPerk?: string
+  } = {},
 ): ProgressionResult {
   const N = opts.ascensions ?? 6
   const perRunSec = opts.perRunSec ?? 4 * 3600 // a long-ish play session per run
   const dtMs = opts.dtMs ?? 5000 // coarse steps — the loop is framerate-independent
   const rng = makeRng(opts.seed ?? 7)
   const s = initialGameState(0)
+  if (opts.founderPerk) chooseFounderPerk(s, opts.founderPerk) // persists across ascensions
   const stepsPerRun = Math.floor((perRunSec * 1000) / dtMs)
 
   const ascensions: AscensionRecord[] = []
