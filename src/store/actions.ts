@@ -21,6 +21,7 @@ import { autoAssignBest } from '../engine/employees/autoAssign'
 import { buyUpgrade as buyUpgradeFn } from '../engine/upgrades'
 import { prestigeReset } from '../engine/prestige'
 import { buyTalent as buyTalentFn } from '../engine/talents'
+import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
 import { claimGoldenDeal } from '../engine/golden'
 import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
@@ -188,6 +189,11 @@ export function prestige(): void {
 /** Spend an Empire Token rank on a prestige talent. */
 export function buyTalent(id: string): void {
   if (buyTalentFn(getEngineState(), id)) publishNow()
+}
+
+/** Choose (or clear) the run's Founder Perk — flavours the whole current run. */
+export function chooseFounderPerk(id: string | null): void {
+  if (chooseFounderPerkFn(getEngineState(), id)) publishNow()
 }
 
 /** Claim a completed contract → bank its Empire Tokens + rotate in the next. */

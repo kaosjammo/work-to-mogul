@@ -22,6 +22,7 @@ import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { SYNERGY_LABEL } from '../content/synergies'
 import { ACHIEVEMENTS } from '../content/achievements'
 import { achievementProgress } from '../engine/achievements'
+import { FOUNDER_PERKS, FOUNDER_PERK_ORDER, type FounderPerkDef } from '../content/founderPerks'
 import { PRESTIGE_MILESTONES } from '../content/prestigeMilestones'
 import { ART_UPGRADES, ART_MILESTONE } from '../content/artManifest'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
@@ -219,6 +220,15 @@ export interface TalentView {
   nextLabel: string | null // effect after buying the next rank (null if maxed)
 }
 
+export interface FounderPerkView {
+  id: string
+  name: string
+  icon: string
+  blurb: string
+  chosen: boolean
+  effectLabel: string // e.g. "+50% profit · −22% speed"
+}
+
 export interface RevealedTabs {
   employees: boolean
   upgrades: boolean
@@ -270,6 +280,7 @@ export interface ViewSnapshot {
   prestigeNextTokenProgress: number // 0..1 through the current sqrt band
   prestigeProfitBonusPct: number // permanent profit bonus from talents (whole %)
   talents: TalentView[]
+  founderPerks: FounderPerkView[]
   talentTokensAvailable: number
   talentTokensSpent: number
   onboardingStep: number
@@ -354,6 +365,17 @@ function milestoneLabel(effect: { kind: string; factor: number }): string {
   if (effect.kind === 'profitMult') return `×${effect.factor} profit`
   if (effect.kind === 'speedMult') return `×${effect.factor} speed`
   return `−cost`
+}
+
+// "+50% profit · −22% speed · ×2 golden" — the perk's trade-off at a glance.
+function founderPerkEffectLabel(p: FounderPerkDef): string {
+  const parts: string[] = []
+  const pct = (m: number) => `${m >= 1 ? '+' : '−'}${Math.round(Math.abs(m - 1) * 100)}%`
+  if (p.profitMult != null && p.profitMult !== 1) parts.push(`${pct(p.profitMult)} profit`)
+  if (p.speedMult != null && p.speedMult !== 1) parts.push(`${pct(p.speedMult)} speed`)
+  if (p.goldenMult != null && p.goldenMult !== 1) parts.push(`×${p.goldenMult} golden`)
+  if (p.offlineMult != null && p.offlineMult !== 1) parts.push(`×${p.offlineMult} offline`)
+  return parts.join(' · ')
 }
 
 function scopeLabel(id: UpgradeId): string {
@@ -612,6 +634,20 @@ export function buildView(
     }
   })
 
+  // Founder Perks — the per-run flavour choice.
+  const chosenPerk = state.prestige?.founderPerk ?? null
+  const founderPerks: FounderPerkView[] = FOUNDER_PERK_ORDER.map((id) => {
+    const p = FOUNDER_PERKS[id]
+    return {
+      id,
+      name: p.name,
+      icon: p.icon,
+      blurb: p.blurb,
+      chosen: chosenPerk === id,
+      effectLabel: founderPerkEffectLabel(p),
+    }
+  })
+
   const unlockedAch = new Set(state.achievementsUnlocked)
   const achievements: AchievementView[] = ACHIEVEMENTS.map((a) => {
     const unlocked = unlockedAch.has(a.id)
@@ -760,6 +796,7 @@ export function buildView(
     prestigeNextTokenProgress: nextTokenProgress(state),
     prestigeProfitBonusPct: talentProfitBonusPct(state),
     talents,
+    founderPerks,
     talentTokensAvailable: tokensAvailable,
     talentTokensSpent: state.prestige.spentPoints ?? 0,
     onboardingStep: state.onboardingStep,

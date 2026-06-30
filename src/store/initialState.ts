@@ -59,7 +59,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     achievementsUnlocked: [],
     prestigeMilestonesClaimed: [],
     contracts: initialContractsState(),
-    prestige: { totalPoints: 0, spentPoints: 0, talents: {}, multiplier: 1, resets: 0 },
+    prestige: { totalPoints: 0, spentPoints: 0, talents: {}, multiplier: 1, resets: 0, founderPerk: null },
     onboardingStep: 0,
     nextEmployeeSeq: 1,
   }

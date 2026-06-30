@@ -50,6 +50,7 @@ export function prestigeReset(state: GameState): boolean {
   const spentPoints = state.prestige.spentPoints ?? 0
   const talents = { ...(state.prestige.talents ?? {}) }
   const resets = state.prestige.resets + 1
+  const founderPerk = state.prestige.founderPerk ?? null // chosen style persists across runs
   // Meta-progression survives an ascension.
   const achievements = [...state.achievementsUnlocked]
   const prestigeMilestones = [...(state.prestigeMilestonesClaimed ?? [])]
@@ -67,6 +68,7 @@ export function prestigeReset(state: GameState): boolean {
     talents,
     multiplier: 1, // deprecated; profit now comes from talents
     resets,
+    founderPerk,
   }
   state.achievementsUnlocked = achievements
   state.prestigeMilestonesClaimed = prestigeMilestones

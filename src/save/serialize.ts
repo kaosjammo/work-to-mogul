@@ -13,6 +13,7 @@ import { ROLE_DEFS, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { TRAIT_DEFS } from '../content/traits'
 import { TALENTS } from '../content/talents'
 import { talentCostAt } from '../engine/talents'
+import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
@@ -166,6 +167,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     s.prestige.talents = talents
     // Trust the recomputed spend over the stored value, but never exceed earned.
     s.prestige.spentPoints = Math.min(s.prestige.totalPoints, spent)
+    // Founder Perk — keep only a known id, else clear.
+    const fp = loaded.prestige.founderPerk
+    s.prestige.founderPerk = typeof fp === 'string' && FOUNDER_PERKS[fp] ? fp : null
   }
 
   // Employees — fully validated (drop ones with an unknown role; clamp level;

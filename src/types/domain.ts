@@ -186,6 +186,7 @@ export interface PrestigeState {
   talents: Record<string, number> // talentId → rank
   multiplier: number // deprecated (kept for save compat); profit now comes from talents
   resets: number
+  founderPerk?: string | null // chosen Founder Perk id flavouring the current run (null = none)
 }
 
 export interface CareerState {

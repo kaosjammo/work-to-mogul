@@ -69,6 +69,7 @@ export const useTalents = () =>
       total: s.prestige.totalPoints,
     })),
   )
+export const useFounderPerks = () => useGameStore(useShallow((s) => s.founderPerks))
 export const usePrestigeMilestones = () => useGameStore(useShallow((s) => s.prestigeMilestones))
 export const useGolden = () => useGameStore(useShallow((s) => s.golden))
 export const useContracts = () =>

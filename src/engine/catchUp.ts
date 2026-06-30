@@ -9,6 +9,7 @@ import type { GameState } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
 import { resolveBusiness } from './resolveBusiness'
 import { offlineMult } from './talents'
+import { founderOfflineMult } from './founderPerks'
 
 export const OFFLINE_CAP_MS = 2 * 60 * 60 * 1000 // 2 hours
 const MIN_REPORTABLE_MS = 1000
@@ -30,7 +31,8 @@ export function applyOfflineEarnings(state: GameState, now: number): OfflineResu
   if (elapsed < MIN_REPORTABLE_MS) return { elapsedMs: 0, earned: 0 }
 
   const seconds = elapsed / 1000
-  const earned = automatedIncomePerSec(state) * seconds * offlineMult(state) // Idle Mastery talent
+  const earned =
+    automatedIncomePerSec(state) * seconds * offlineMult(state) * founderOfflineMult(state) // Idle Mastery talent + Homebody perk
 
   if (earned > 0 && Number.isFinite(earned)) {
     state.cash += earned

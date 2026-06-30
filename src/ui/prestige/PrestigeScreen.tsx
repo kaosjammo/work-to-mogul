@@ -1,14 +1,15 @@
 import { money, format } from '../../engine/num'
 import { PRESTIGE_UNLOCK_LIFETIME } from '../../engine/economy'
 import { TALENT_THEMES } from '../../content/talents'
-import { usePrestige, useAchievements, useTalents, usePrestigeMilestones } from '../../store/gameStore'
+import { usePrestige, useAchievements, useTalents, useFounderPerks, usePrestigeMilestones } from '../../store/gameStore'
 import type { TalentView } from '../../store/buildView'
-import { prestige, buyTalent, hardReset } from '../../store/actions'
+import { prestige, buyTalent, chooseFounderPerk, hardReset } from '../../store/actions'
 import { HoldToConfirmButton } from './HoldToConfirmButton'
 
 export function PrestigeScreen() {
   const { prestige: p, pending, unlocked, lifetime, nextTokenAt, nextTokenProgress, profitBonusPct } = usePrestige()
   const talents = useTalents()
+  const founderPerks = useFounderPerks()
   const milestones = usePrestigeMilestones()
   const achievements = useAchievements()
   const milestonesReached = milestones.filter((m) => m.reached).length
@@ -88,6 +89,40 @@ export function PrestigeScreen() {
           </div>
         )}
       </div>
+
+      {/* ---- Founder Perk: the per-run flavour choice ---- */}
+      <section>
+        <h2 className="mb-1 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+          FOUNDER PERK
+        </h2>
+        <p className="mb-2 text-xs" style={{ color: 'var(--text-faint)' }}>
+          Pick a style for this run — each is a trade-off, so every empire plays differently.
+        </p>
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+          {founderPerks.map((fp) => (
+            <button
+              key={fp.id}
+              type="button"
+              onClick={() => chooseFounderPerk(fp.chosen ? null : fp.id)}
+              className="flex items-start gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+              style={{
+                background: fp.chosen ? 'rgba(245,197,24,0.12)' : 'var(--surface)',
+                border: `1px solid ${fp.chosen ? 'var(--accent)' : 'var(--border)'}`,
+              }}
+            >
+              <span className="text-2xl leading-none">{fp.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-semibold">{fp.name}</span>
+                  {fp.chosen && <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>✓ Active</span>}
+                </span>
+                <span className="block text-xs" style={{ color: 'var(--text-dim)' }}>{fp.blurb}</span>
+                <span className="mt-0.5 block text-xs font-semibold" style={{ color: 'var(--good)' }}>{fp.effectLabel}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* ---- Talent tree ---- */}
       <section>

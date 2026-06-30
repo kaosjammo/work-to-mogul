@@ -7,6 +7,7 @@
 import type { GameState, GoldenState } from '../types/domain'
 import { automatedIncomePerSec } from './catchUp'
 import { offlineMult, goldenValueMult, goldenFreqMult } from './talents'
+import { founderGoldenMult } from './founderPerks'
 
 export const GOLDEN_SPAWN_INTERVAL_MS = 120_000 // ~2 min between deals
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
@@ -26,7 +27,13 @@ export function profitFrenzyActive(state: GameState): boolean {
 
 /** Cash a *normal* Time Warp would grant right now (idle income × warp window). */
 export function timeWarpValue(state: GameState): number {
-  return automatedIncomePerSec(state) * GOLDEN_WARP_SECONDS * offlineMult(state) * goldenValueMult(state)
+  return (
+    automatedIncomePerSec(state) *
+    GOLDEN_WARP_SECONDS *
+    offlineMult(state) *
+    goldenValueMult(state) *
+    founderGoldenMult(state)
+  )
 }
 
 /** Cash the CURRENT offer would grant (MEGA offers pay GOLDEN_MEGA_MULT× a normal one). */

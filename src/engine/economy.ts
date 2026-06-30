@@ -13,6 +13,7 @@ import type {
 import { INDUSTRIES } from '../content/industries'
 import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
+import { founderProfitMult, founderSpeedMult } from './founderPerks'
 
 // ----- Cost scaling -----
 
@@ -164,8 +165,8 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // import cycle with engine/golden). Bounded + active-play only → harness-safe.
   const frenzy = (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
   return {
-    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy,
-    speed: ms.speed * ind.speed * tal.speed * up.speed,
+    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state),
+    speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state),
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }
 }
