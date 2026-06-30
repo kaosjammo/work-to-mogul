@@ -4,6 +4,7 @@ import { useEmployees, useHireOptions } from '../../store/gameStore'
 import { hire, unassign, levelUp, autoAssign, chooseSpecialisation, fuse } from '../../store/actions'
 import { Icon } from '../shared/Icon'
 import { employeeArt } from '../shared/art'
+import { TRAIT_BY_NAME } from '../../content/traits'
 
 const RARITY_COLOR: Record<Rarity, string> = {
   common: '#9aa1ad',
@@ -22,6 +23,36 @@ function RarityDot({ rarity }: { rarity: Rarity }) {
   )
 }
 
+// Self-documenting trait chips: icon + name + plain-language effect, with a
+// fuller tooltip. So "what does Workaholic do?" is answered at a glance.
+function TraitChips({ names }: { names: string[] }) {
+  if (names.length === 0) return null
+  return (
+    <div className="mt-0.5 flex flex-wrap gap-1">
+      {names.map((n) => {
+        const info = TRAIT_BY_NAME[n]
+        return (
+          <span
+            key={n}
+            title={info?.blurb ?? n}
+            className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+            style={{ background: 'var(--surface-3)', color: 'var(--text-dim)' }}
+          >
+            {info ? (
+              <>
+                {info.icon} {info.name}
+                <span className="font-normal opacity-75"> · {info.effect}</span>
+              </>
+            ) : (
+              n
+            )}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 export function EmployeesScreen() {
   const employees = useEmployees()
   const hireOptions = useHireOptions()
@@ -29,6 +60,57 @@ export function EmployeesScreen() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* HIRE first: hiring adds to YOUR TEAM below, so the hire buttons keep a
+          stable position — you can recruit repeatedly without the list shifting
+          out from under your finger. */}
+      <section>
+        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+          HIRE
+        </h2>
+        <div className="flex flex-col gap-2">
+          {hireOptions.map((o) => (
+            <div
+              key={o.templateId}
+              className="flex items-center gap-3 rounded-2xl p-3"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            >
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+                style={{ background: 'var(--surface-2)' }}
+              >
+                <Icon art={employeeArt(o.templateId)} size={40} alt={o.name} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <RarityDot rarity={o.rarity} />
+                  <span className="truncate font-semibold">{o.name}</span>
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                  {o.roleName}
+                  {o.affinityName ? ` · ${o.affinityName} ⭐` : ''}
+                </div>
+                <TraitChips names={o.traitNames} />
+              </div>
+              <button
+                type="button"
+                disabled={!o.affordable}
+                onClick={() => hire(o.templateId)}
+                className="flex flex-col items-center justify-center rounded-xl px-3 font-bold transition active:scale-[0.98]"
+                style={{
+                  minHeight: 'var(--tap-lg)',
+                  minWidth: '92px',
+                  background: o.affordable ? 'var(--accent)' : 'var(--surface-3)',
+                  color: o.affordable ? 'var(--accent-ink)' : 'var(--text-faint)',
+                }}
+              >
+                <span className="text-sm">Hire</span>
+                <span className="tnum text-xs opacity-90">{money(o.cost)}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
@@ -61,7 +143,8 @@ export function EmployeesScreen() {
               style={{ width: 120, height: 90 }}
             />
             <span>
-              No staff yet. Hire someone below, then assign them to a business from its
+              No staff yet. Hire someone from the list above, then assign them to a business
+              from its
               <span className="font-semibold"> 👤 staff </span>
               button.
             </span>
@@ -92,19 +175,7 @@ export function EmployeesScreen() {
                     {e.roleName} · {e.effectLabel}
                     {e.affinityName ? ` · ${e.affinityName} ⭐` : ''}
                   </div>
-                  {e.traitNames.length > 0 && (
-                    <div className="mt-0.5 flex flex-wrap gap-1">
-                      {e.traitNames.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-full px-1.5 text-[10px] font-semibold"
-                          style={{ background: 'var(--surface-3)', color: 'var(--text-dim)' }}
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <TraitChips names={e.traitNames} />
                   <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
                     {e.assignedToName ? `Working: ${e.assignedToName}` : 'On the bench'}
                   </div>
@@ -186,54 +257,6 @@ export function EmployeesScreen() {
             ))}
           </div>
         )}
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          HIRE
-        </h2>
-        <div className="flex flex-col gap-2">
-          {hireOptions.map((o) => (
-            <div
-              key={o.templateId}
-              className="flex items-center gap-3 rounded-2xl p-3"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-                style={{ background: 'var(--surface-2)' }}
-              >
-                <Icon art={employeeArt(o.templateId)} size={40} alt={o.name} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <RarityDot rarity={o.rarity} />
-                  <span className="truncate font-semibold">{o.name}</span>
-                </div>
-                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                  {o.roleName}
-                  {o.affinityName ? ` · ${o.affinityName} ⭐` : ''}
-                  {o.traitNames.length > 0 ? ` · ${o.traitNames.join(', ')}` : ''}
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={!o.affordable}
-                onClick={() => hire(o.templateId)}
-                className="flex flex-col items-center justify-center rounded-xl px-3 font-bold"
-                style={{
-                  minHeight: 'var(--tap-lg)',
-                  minWidth: '92px',
-                  background: o.affordable ? 'var(--accent)' : 'var(--surface-3)',
-                  color: o.affordable ? 'var(--accent-ink)' : 'var(--text-faint)',
-                }}
-              >
-                <span className="text-sm">Hire</span>
-                <span className="tnum text-xs opacity-90">{money(o.cost)}</span>
-              </button>
-            </div>
-          ))}
-        </div>
       </section>
     </div>
   )

@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { formatRate } from '../../engine/num'
 import { useUiStore } from '../../store/uiStore'
 import { useGameStore, useEmployees } from '../../store/gameStore'
-import { assignToBusiness, unassign } from '../../store/actions'
+import { assignToBusiness, unassign, setActiveTab } from '../../store/actions'
 import { Icon } from '../shared/Icon'
 import { roleArt } from '../shared/art'
 
@@ -14,6 +14,12 @@ export function AssignmentSheet() {
   const employees = useEmployees()
 
   const open = !!businessId && !!view
+
+  // Jump to the Staff tab to recruit (closes this sheet first).
+  const goHire = () => {
+    close()
+    setActiveTab('employees')
+  }
 
   // Roster lookups
   const byId = new Map(employees.map((e) => [e.id, e]))
@@ -126,13 +132,28 @@ export function AssignmentSheet() {
 
               {/* Available staff */}
               <div>
-                <div className="mb-1 text-xs font-bold" style={{ color: 'var(--text-dim)' }}>
-                  AVAILABLE STAFF
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>
+                    AVAILABLE STAFF
+                  </span>
+                  <button
+                    type="button"
+                    onClick={goHire}
+                    className="rounded-full px-2.5 py-1 text-xs font-bold"
+                    style={{ minHeight: '32px', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+                  >
+                    ＋ Hire staff
+                  </button>
                 </div>
                 {available.length === 0 ? (
-                  <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-                    No benched staff. Hire more from the Staff tab.
-                  </p>
+                  <button
+                    type="button"
+                    onClick={goHire}
+                    className="w-full rounded-xl p-3 text-center text-xs font-semibold"
+                    style={{ background: 'var(--surface-2)', border: '1px dashed var(--border)', color: 'var(--text-dim)' }}
+                  >
+                    No benched staff — tap to hire someone on the Staff page →
+                  </button>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {available.map((e) => {
