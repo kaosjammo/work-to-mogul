@@ -10,9 +10,11 @@ import {
   offlineMult,
   tokenYieldMult,
   goldenValueMult,
+  staffEffectMult,
   startCash,
 } from './talents'
 import { timeWarpValue } from './golden'
+import { computeEmployeeEffects } from './employees/composition'
 import { economyMultipliers, PRESTIGE_SCALE } from './economy'
 import { prestigeReset } from './prestige'
 import { hireEmployee, levelUpCost } from './employees/roster'
@@ -129,6 +131,24 @@ describe('tempo talents', () => {
     buyTalent(s, 'golden_touch') // +25%
     expect(goldenValueMult(s)).toBeCloseTo(1.25)
     expect(timeWarpValue(s)).toBeCloseTo(base * 1.25, 1)
+  })
+
+  it('empire training scales every assigned employee’s effect', () => {
+    const s = withTokens(99)
+    s.businesses.lemonade.owned = 30
+    s.businesses.lemonade.unlocked = true
+    s.businesses.lemonade.assigned = ['c']
+    s.employees.c = {
+      id: 'c', templateId: 'maxine_hustle', name: 'C', role: 'closer',
+      rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null,
+    }
+    const before = computeEmployeeEffects(s, BUSINESSES.lemonade, s.businesses.lemonade).profitAdd
+    expect(before).toBeGreaterThan(0)
+    expect(staffEffectMult(s)).toBeCloseTo(1)
+    buyTalent(s, 'empire_training') // +10%
+    expect(staffEffectMult(s)).toBeCloseTo(1.1)
+    const after = computeEmployeeEffects(s, BUSINESSES.lemonade, s.businesses.lemonade).profitAdd
+    expect(after).toBeCloseTo(before * 1.1, 5)
   })
 
   it('prestige scholar increases tokens banked at ascension', () => {

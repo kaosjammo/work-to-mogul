@@ -18,6 +18,7 @@ import { SYNERGY_DEFS, type SynergyMods } from '../../content/synergies'
 import { TRAIT_DEFS } from '../../content/traits'
 import { SPECIALISATIONS } from '../../content/specialisations'
 import { INDUSTRIES } from '../../content/industries'
+import { staffEffectMult } from '../talents'
 import type { RoleId } from '../../types/domain'
 
 /** Effects that change nothing — the multiplicative/additive identity. */
@@ -97,11 +98,15 @@ export function reconcileSlots(
   }
 }
 
-/** Per-employee magnitude for a channel: role base × rarity × level × affinity. */
+/**
+ * Per-employee magnitude for a channel: role base × rarity × level × affinity,
+ * then × `mult` (the Empire Training prestige talent, 1 when unlearned).
+ */
 export function effectMagnitude(
   e: EmployeeInstance,
   channel: EffectChannel,
   def: BusinessDef,
+  mult = 1,
 ): number {
   const role = ROLE_DEFS[e.role]
   let base = role?.baseMagnitude[channel] ?? 0
@@ -113,7 +118,7 @@ export function effectMagnitude(
   const rarity = RARITY_MULT[e.rarity]
   const level = 1 + 0.15 * (e.level - 1)
   const affinity = e.affinity && e.affinity === def.industryId ? 1.25 : 1
-  return base * rarity * level * affinity
+  return base * rarity * level * affinity * mult
 }
 
 /**
@@ -129,6 +134,7 @@ export function computeEmployeeEffects(
   const out = identityEffects()
   if (!bs) return out
 
+  const sm = staffEffectMult(state) // Empire Training: all staff effects scale
   let buyerRaw = 0
   let critChance = 0
   let critMultAdd = 0
@@ -139,11 +145,11 @@ export function computeEmployeeEffects(
     if (!e) continue
     roleCounts[e.role] = (roleCounts[e.role] ?? 0) + 1
     if (ROLE_DEFS[e.role]?.primaryChannels.includes('automation')) out.isAutomated = true
-    out.speedAdd += effectMagnitude(e, 'cycleSpeed', def)
-    out.profitAdd += effectMagnitude(e, 'profitMult', def)
-    buyerRaw += effectMagnitude(e, 'costReduction', def)
-    critChance += effectMagnitude(e, 'critChance', def)
-    critMultAdd += effectMagnitude(e, 'critMult', def)
+    out.speedAdd += effectMagnitude(e, 'cycleSpeed', def, sm)
+    out.profitAdd += effectMagnitude(e, 'profitMult', def, sm)
+    buyerRaw += effectMagnitude(e, 'costReduction', def, sm)
+    critChance += effectMagnitude(e, 'critChance', def, sm)
+    critMultAdd += effectMagnitude(e, 'critMult', def, sm)
   }
 
   // Named synergies (team-composition bonuses).
@@ -176,12 +182,13 @@ export const RISK_EVENT_PENALTY = 0.5
 
 /** Combined risk-accrual reduction from assigned auditors (0..~1, softcapped). */
 export function auditReduction(state: GameState, def: BusinessDef, bs: BusinessState): number {
+  const sm = staffEffectMult(state)
   let raw = 0
   for (const id of bs.assigned) {
     if (!id) continue
     const e = state.employees[id]
     if (!e) continue
-    raw += effectMagnitude(e, 'riskReduction', def)
+    raw += effectMagnitude(e, 'riskReduction', def, sm)
   }
   return softcap(raw)
 }
@@ -196,12 +203,13 @@ export function moraleEquilibrium(
   def: BusinessDef,
   bs: BusinessState,
 ): number {
+  const sm = staffEffectMult(state)
   let eq = 60 // neutral-positive baseline
   for (const id of bs.assigned) {
     if (!id) continue
     const e = state.employees[id]
     if (!e) continue
-    eq += effectMagnitude(e, 'morale', def)
+    eq += effectMagnitude(e, 'morale', def, sm)
   }
   return clamp01to100(eq)
 }

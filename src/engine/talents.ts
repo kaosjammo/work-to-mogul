@@ -58,10 +58,11 @@ type ScalarTalentKey =
   | 'offlineMultPerRank'
   | 'tokenYieldPerRank'
   | 'goldenMultPerRank'
+  | 'staffEffectPerRank'
 
 function sumPerRank(state: GameState, key: ScalarTalentKey): number {
   let sum = 0
-  const talents = state.prestige.talents ?? {}
+  const talents = state.prestige?.talents ?? {}
   for (const id in talents) {
     const def = TALENTS[id]
     const rank = talents[id]
@@ -74,7 +75,7 @@ function sumPerRank(state: GameState, key: ScalarTalentKey): number {
 /** Product of per-talent reduction factors ×(1 − per·rank), floored at 0.1. */
 function productReduc(state: GameState, key: ScalarTalentKey): number {
   let m = 1
-  const talents = state.prestige.talents ?? {}
+  const talents = state.prestige?.talents ?? {}
   for (const id in talents) {
     const def = TALENTS[id]
     const rank = talents[id]
@@ -132,10 +133,15 @@ export function goldenValueMult(state: GameState): number {
   return 1 + sumPerRank(state, 'goldenMultPerRank')
 }
 
+/** Multiplier on every employee's effect magnitude (≥ 1, from Empire Training). */
+export function staffEffectMult(state: GameState): number {
+  return 1 + sumPerRank(state, 'staffEffectPerRank')
+}
+
 /** Cash granted at the start of each run (highest Seed Capital rank). */
 export function startCash(state: GameState): number {
   let cash = 0
-  const talents = state.prestige.talents ?? {}
+  const talents = state.prestige?.talents ?? {}
   for (const id in talents) {
     const def = TALENTS[id]
     const rank = talents[id]
@@ -163,5 +169,6 @@ export function talentLabel(def: TalentDef, rank: number): string {
   if (def.offlineMultPerRank) return `+${pct(def.offlineMultPerRank)}% offline earnings`
   if (def.tokenYieldPerRank) return `+${pct(def.tokenYieldPerRank)}% token yield`
   if (def.goldenMultPerRank) return `+${pct(def.goldenMultPerRank)}% Time Warp value`
+  if (def.staffEffectPerRank) return `+${pct(def.staffEffectPerRank)}% staff effectiveness`
   return ''
 }

@@ -30,6 +30,7 @@ export interface TalentDef {
   offlineMultPerRank?: number // offline / away earnings ×(1 + x·rank)
   tokenYieldPerRank?: number // prestige tokens gained ×(1 + x·rank)
   goldenMultPerRank?: number // Golden Deal / Time-Warp payout ×(1 + x·rank)
+  staffEffectPerRank?: number // every employee's effect magnitude ×(1 + x·rank)
 }
 
 export const TALENTS: Record<string, TalentDef> = {
@@ -136,6 +137,16 @@ export const TALENTS: Record<string, TalentDef> = {
     cost: [6, 12, 20],
     hireLevelPerRank: 1,
   },
+  empire_training: {
+    id: 'empire_training',
+    name: 'Empire Training',
+    blurb: 'Every employee pulls more weight — all staff effects scale up.',
+    theme: 'Workforce',
+    icon: '💪',
+    maxRank: 5,
+    cost: [4, 8, 13, 20, 30],
+    staffEffectPerRank: 0.1,
+  },
 
   // ---------- Tempo ----------
   efficiency: {
@@ -200,6 +211,7 @@ export const TALENT_ORDER: string[] = [
   'liquidation',
   'fast_learners',
   'dynasty',
+  'empire_training',
   'headhunter',
   'mentorship',
   'efficiency',
