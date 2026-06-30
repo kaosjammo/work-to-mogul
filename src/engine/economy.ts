@@ -107,11 +107,14 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
   let profit = ind?.bonus.globalProfitMult ?? 1
   let speed = ind?.bonus.globalSpeedMult ?? 1
+  // Specialisation tiers: a strong early ×1.5 at 100, then gentler ×1.5 steps at
+  // 250/500 (was ×2 each) so deeply maxing an industry climbs more slowly — part of
+  // the late-game slowdown. (Was ×1.5 ×2 ×2 = ×6 maxed; now ×1.5 ×1.5 ×1.5 = ×3.4.)
   const total = totalOwnedInIndustry(state, industryId)
   if (total >= 100) profit *= 1.5
-  if (total >= 250) profit *= 2
+  if (total >= 250) profit *= 1.5
   if (total >= 500) {
-    profit *= 2
+    profit *= 1.5
     // Signature perk at the deep specialisation threshold.
     const perk = ind ? SIGNATURE_PERKS[ind.bonus.signaturePerkId] : undefined
     if (perk) {
