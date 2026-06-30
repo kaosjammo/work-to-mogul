@@ -15,9 +15,10 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **198 tests / 32 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **208 tests / 32 files green** (`npx vitest run`, verified this pass — incl. the uncommitted dampener WIP), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
+- **Late-game pacing dampener — in flight (uncommitted, `economy.ts`):** a runtime profit multiplier (`lateGameDampen`, ×0.85 compounding from tier 3 / Logistics onward) that slows the mid/late game per a "slow it down significantly" steer. Cleanly layered on top (base curve untouched, so `balance.test` monotonicity holds). **Verified harness-safe this pass:** first-run landmarks still in-band (7 industries, prestige unlock ~3h) and the prestige slope still climbs ($10.2Qi at run #6, no plateau) with the Mastery sink still reachable. ⚠️ But it shrank the token margin over that sink (cum 67 → 54 at #6) — see Risks.
 
 **What exists (inventory — do not re-build):**
 
@@ -149,6 +150,13 @@ So Finance doesn't *compound*, Space/Quantum aren't *volatile*, "rush hour" isn'
 existing systems feel meaningfully different* — these don't). Replacing two of these with a
 **felt mechanic** is higher replayability value than any new content.
 
+**Why now (the dampener raises this):** the in-flight late-game dampener deliberately
+makes players **linger longer** in tiers 3+ (Logistics → Energy → Space → Quantum) — which
+are exactly the interchangeable industries. Slowing the climb buys engagement time, but a
+*longer* climb through samey content is a churn risk, not a win. So the dampener and Task 4
+are complementary: the slowdown only pays off in retention if the industries you now dwell
+in feel genuinely different. Differentiate **before** slowing further.
+
 **Acceptance criteria (vertical slice — pick 2–3 industries, prove the pattern)**
 - [ ] Give a first industry a **mechanic that matches its name**, e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer that industry runs uninterrupted, or auto-reinvests a %), so the playstyle label is *true*, not decorative.
 - [ ] A second, **mechanically different** one, e.g. Food/`rush_hour`: a recurring short speed-surge **window** on a *deterministic* cadence — reuse `golden.ts`'s exact tick-counter pattern (`cooldownMs` decremented per `dtMs`, `spawnCount % N` to fire), **not** RNG, so the harness/balance tests stay stable. An active-play reason to tap in; mirror the Golden-Deal countdown HUD so it's not a new UI paradigm.
@@ -210,6 +218,7 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 ## Risks, balancing & UX notes for the main dev
 
 - **Prestige economy is now converged — keep it that way.** The full arc sqrt → `0.2` → `0.26` is done and guarded by `progressionLoop.test.ts` (no ascension > 20× the prior; tree a journey; Mastery sink reachable). Any future change touching token yield, talent strength, or employee power must re-run that sim and stay inside the band — it's the trip-wire on both ends (blowup *and* flat).
+- **⚠️ Dampener ↔ Mastery-sink coupling (new).** The late-game dampener feeds lifetime → tokens, so it lowered cumulative tokens at run #6 from **67 → 54** (the Mastery sink needs ~50). The margin is now only **+4**. The dampener comment says it's "tunable — raise the rate / lower the start for more": **any further dampening must re-run `progressionLoop` and confirm cum tokens still clear ~50**, or the deep Mastery talents become unreachable dead content again (the exact bug from earlier passes). If they go aggressive on the slowdown, also lower the Mastery `costBase` to compensate.
 - **Task 4 industry mechanics must be deterministic + monotonic.** Felt mechanics (rush-hour windows, compounding) change pps, so: (a) **no RNG** in the income fold — use a spawn-counter cadence like Golden Deals so `harness`/`balance` tests stay stable; (b) preserve `balance.test.ts`'s income-efficiency monotonicity (a pricier business stays a better $/s-per-$); (c) re-run `harness.test.ts` + `progressionLoop` and re-baseline bounds in the same commit if pps shifts.
 - **Two-spec employee power ceiling (`3b2daf4`).** Two specs + a Mastery capstone ≈ doubles an employee's effect ceiling. The harness bot likely doesn't reach L10 staff, so the sim didn't move — but watch that hand-optimised late rosters don't trivialise pps; if a balance complaint surfaces, it's the first place to look.
 - **Save safety:** every new field (Task 4 industry state, any 3b XP) needs a default-on-load migration + a regression test — the spec-fork slice did this right (`serialize.ts` + `specialisations.test.ts`); follow that pattern.
