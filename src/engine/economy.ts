@@ -89,6 +89,19 @@ export function totalOwnedInIndustry(state: GameState, industryId: IndustryId): 
   return total
 }
 
+// Signature perks unlocked at 500 owned in an industry — one per industry, applied
+// on top of the generic ×2 tier. Data-driven (vs a hard-coded if-chain) so every
+// industry's perk actually does something; `content.test` guards against dead perks.
+export const SIGNATURE_PERKS: Record<string, { profit?: number; speed?: number }> = {
+  rush_hour: { speed: 2 }, // Food — fast cycles
+  franchise: { profit: 1.5 }, // Retail — the chain scales
+  network_effect: { profit: 1.25 }, // Tech — audience compounds
+  compound_interest: { profit: 1.5 }, // Finance — wealth compounds
+  just_in_time: { speed: 2 }, // Logistics — lean, fast turnaround
+  grid_surge: { profit: 1.5 }, // Energy — peak-demand pricing
+  moonshot: { profit: 2 }, // Space / Quantum — high-variance payoff
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
 export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
@@ -100,11 +113,11 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
   if (total >= 500) {
     profit *= 2
     // Signature perk at the deep specialisation threshold.
-    if (ind?.bonus.signaturePerkId === 'rush_hour') speed *= 2
-    if (ind?.bonus.signaturePerkId === 'network_effect') profit *= 1.25
-    if (ind?.bonus.signaturePerkId === 'just_in_time') speed *= 2
-    if (ind?.bonus.signaturePerkId === 'grid_surge') profit *= 1.5
-    if (ind?.bonus.signaturePerkId === 'moonshot') profit *= 2
+    const perk = ind ? SIGNATURE_PERKS[ind.bonus.signaturePerkId] : undefined
+    if (perk) {
+      profit *= perk.profit ?? 1
+      speed *= perk.speed ?? 1
+    }
   }
   return { profit, speed }
 }

@@ -5,6 +5,7 @@ import { BUSINESSES } from './businesses'
 import { UPGRADES, UPGRADE_ORDER } from './upgrades'
 import { purchase } from '../engine/buy'
 import { initialGameState } from '../store/initialState'
+import { SIGNATURE_PERKS } from '../engine/economy'
 
 describe('content integrity', () => {
   it('passes referential validation with all industries', () => {
@@ -17,6 +18,16 @@ describe('content integrity', () => {
         expect(BUSINESSES[bid]).toBeDefined()
         expect(BUSINESSES[bid].industryId).toBe(iid)
       }
+    }
+  })
+
+  it('every industry signature perk has a wired effect (no dead perks)', () => {
+    for (const iid of INDUSTRY_ORDER) {
+      const perkId = INDUSTRIES[iid].bonus.signaturePerkId
+      const perk = SIGNATURE_PERKS[perkId]
+      expect(perk, `${iid}'s perk "${perkId}" must be wired in SIGNATURE_PERKS`).toBeDefined()
+      // A perk must actually change profit or speed, else it's a no-op identity.
+      expect((perk.profit ?? 1) > 1 || (perk.speed ?? 1) > 1).toBe(true)
     }
   })
 })
