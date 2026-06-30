@@ -50,6 +50,7 @@ import {
 } from '../engine/talents'
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
+import { RUSH_SPEED_MULT } from '../engine/rushHour'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
 import type { EffectChannel, EmployeeInstance } from '../types/domain'
@@ -251,6 +252,14 @@ export interface GoldenView {
   frenzySecondsLeft: number
 }
 
+export interface RushHourView {
+  offerActive: boolean // a Rush Hour window is open to tap
+  offerSecondsLeft: number
+  surgeActive: boolean // a claimed surge is boosting Food
+  surgeSecondsLeft: number
+  speedMult: number // the Food speed multiplier during a surge (for the label)
+}
+
 export interface ContractView {
   id: string
   name: string
@@ -273,6 +282,7 @@ export interface ViewSnapshot {
   career: CareerView
   revealedTabs: RevealedTabs
   golden: GoldenView
+  rushHour: RushHourView
   contracts: ContractView[]
   contractsClaimable: number
   buyMode: BuyMode
@@ -721,6 +731,14 @@ export function buildView(
     frenzySecondsLeft: Math.ceil(frenzyMs / 1000),
   }
 
+  const rushHour: RushHourView = {
+    offerActive: (state.rushHour?.offerMsLeft ?? 0) > 0,
+    offerSecondsLeft: Math.ceil((state.rushHour?.offerMsLeft ?? 0) / 1000),
+    surgeActive: (state.rushHour?.surgeMsLeft ?? 0) > 0,
+    surgeSecondsLeft: Math.ceil((state.rushHour?.surgeMsLeft ?? 0) / 1000),
+    speedMult: RUSH_SPEED_MULT,
+  }
+
   const contracts: ContractView[] = (state.contracts?.active ?? [])
     .map((id) => CONTRACT_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
@@ -808,6 +826,7 @@ export function buildView(
     career,
     revealedTabs,
     golden,
+    rushHour,
     contracts,
     contractsClaimable,
     buyMode: state.buyMode,

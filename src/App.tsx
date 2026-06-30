@@ -5,6 +5,7 @@ import { AssignmentSheet } from './ui/employees/AssignmentSheet'
 import { WelcomeBackBanner } from './ui/shared/WelcomeBackBanner'
 import { MilestoneCelebration } from './ui/shared/MilestoneCelebration'
 import { FloatingGoldenDeal } from './ui/shared/FloatingGoldenDeal'
+import { FloatingRushHour } from './ui/shared/FloatingRushHour'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
 import { WealthStage } from './ui/shared/WealthStage'
 import { AccountModal } from './ui/account/AccountModal'
@@ -27,6 +28,7 @@ export function App() {
       <NavBar />
       <FloatingProfitLayer />
       <FloatingGoldenDeal />
+      <FloatingRushHour />
       <AssignmentSheet />
       <AccountModal />
       <MilestoneCelebration />

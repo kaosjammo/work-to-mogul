@@ -72,5 +72,6 @@ export const useTalents = () =>
 export const useFounderPerks = () => useGameStore(useShallow((s) => s.founderPerks))
 export const usePrestigeMilestones = () => useGameStore(useShallow((s) => s.prestigeMilestones))
 export const useGolden = () => useGameStore(useShallow((s) => s.golden))
+export const useRushHour = () => useGameStore(useShallow((s) => s.rushHour))
 export const useContracts = () =>
   useGameStore(useShallow((s) => ({ list: s.contracts, claimable: s.contractsClaimable })))

@@ -9,6 +9,7 @@ import { applyCareerTick } from './career'
 import { moraleEquilibrium, auditReduction } from './employees/composition'
 import { checkAchievements } from './achievements'
 import { tickGolden } from './golden'
+import { tickRushHour } from './rushHour'
 
 /** Morale eases toward its equilibrium with ~20s time constant. */
 const MORALE_DRIFT_PER_MS = 1 / 20000
@@ -102,6 +103,7 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   }
 
   tickGolden(state, dtMs)
+  tickRushHour(state, dtMs)
   checkUnlocks(state)
   checkAchievements(state)
 }

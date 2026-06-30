@@ -209,6 +209,14 @@ export interface GoldenState {
   frenzyMsLeft: number // > 0 while a claimed deal's temporary "Profit Rush" (×profit) is active
 }
 
+/** Food's signature mechanic — a recurring tappable "Rush Hour" speed-surge window.
+ *  Transient (not persisted; fresh on load/prestige), deterministic cadence. */
+export interface RushHourState {
+  offerMsLeft: number // > 0 while the Rush Hour window is tappable
+  cooldownMs: number // time until the next window opens
+  surgeMsLeft: number // > 0 while a claimed surge is boosting Food's speed
+}
+
 /** Contracts board — the currently-offered missions + pool pointer. */
 export interface ContractsState {
   active: string[] // contract ids currently on the board
@@ -221,6 +229,7 @@ export interface GameState {
   lastWallClock: number // Date.now() anchor for catch-up
   career: CareerState
   golden: GoldenState
+  rushHour: RushHourState
   buyMode: BuyMode
   activeTab: TabId
   activeIndustryTab: IndustryId

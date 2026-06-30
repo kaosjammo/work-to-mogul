@@ -11,6 +11,7 @@ import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { BUSINESSES, BUSINESS_ORDER } from '../content/businesses'
 import { initialCareerState } from '../engine/career'
 import { initialGoldenState } from '../engine/golden'
+import { initialRushHourState } from '../engine/rushHour'
 import { initialContractsState } from '../engine/contracts'
 
 // Players now start broke and earn their first capital from Work (the career
@@ -46,6 +47,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     lastWallClock: now,
     career: initialCareerState(),
     golden: initialGoldenState(),
+    rushHour: initialRushHourState(),
     buyMode: 'x1',
     activeTab: 'business',
     activeIndustryTab: 'food',

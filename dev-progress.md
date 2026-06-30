@@ -4,6 +4,40 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 4 (industry identity) — Food "Rush Hour" felt mechanic (engine/depth track)
+
+**Analysed:** roadmap Task 4 flagged "build now" — the 8 industries are 2 reskinned
+multipliers that *look* distinct but *play* identically. Reviewer pre-pointed at reusing
+`golden.ts`'s deterministic spawn-counter for a Food "rush hour" window.
+
+**Implemented (finished vertical slice):** Food's signature mechanic — a recurring,
+tappable **Rush Hour** window on a deterministic cadence (`engine/rushHour.ts`, mirrors
+`golden.ts`; no RNG). Tapping starts a 25s **×3 Food speed surge**, folded into
+`economyMultipliers` for the Food industry only. New `RushHourState` (transient, like
+golden — no save migration), `tickRushHour` in `applyTick`, `claimRush` action,
+`RushHourView` + `useRushHour`, and `FloatingRushHour` HUD (mirrors the Golden-Deal
+button, stacked one row higher; shows a surge countdown pill). Tap-activated, so the
+greedy bot never triggers it.
+
+**Validation:** 213 tests (+5 `rushHour.test.ts`), build + lint clean. **Harness
+byte-identical** (first business 10s / prestige 179m / final $2.83Qi / 7 industries —
+unchanged), confirming harness-safety; `progressionLoop` Mastery margin intact (cum 54
+clears ~50). Browser-verified on dev2: window button → tap → surge → countdown pill, no
+console errors.
+
+**Also this session (prior commits):** prestige slope re-tune validation, employee
+Mastery spec slot + legibility, mobile polish (prestige collapse, roster grouping), and
+the late-game dampener (`722c386`, -55% 10h lifetime, invariant-safe).
+
+**Files:** +`engine/rushHour.ts`, +`engine/rushHour.test.ts`, +`ui/shared/FloatingRushHour.tsx`;
+~`types/domain.ts`, `engine/economy.ts`, `engine/simulate.ts`, `store/{initialState,actions,buildView,gameStore}.ts`, `App.tsx`.
+
+**Next:** extend the felt-mechanic pattern to a second industry (Finance compound /
+Quantum signature) per Task 4's "2-3 industries" slice. Magnitude of the late-game
+dampener still wants a playtest feel-check.
+
+---
+
 ## Confirmed root cause + login error polish — Supabase outage
 
 **Root cause confirmed by the user's Supabase status page:** an active incident,

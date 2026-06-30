@@ -68,7 +68,7 @@ give 2–3 industries a felt, name-matching mechanic before adding any more cont
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
-| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **NEXT — build now** (criteria below) |
+| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food "Rush Hour" window (1st of ~3); Finance compounding + Quantum signature next |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
@@ -150,23 +150,39 @@ So Finance doesn't *compound*, Space/Quantum aren't *volatile*, "rush hour" isn'
 existing systems feel meaningfully different* — these don't). Replacing two of these with a
 **felt mechanic** is higher replayability value than any new content.
 
-**Why now (the dampener raises this):** the in-flight late-game dampener deliberately
+**Why now (the dampener raises this):** the late-game dampener (`722c386`) deliberately
 makes players **linger longer** in tiers 3+ (Logistics → Energy → Space → Quantum) — which
 are exactly the interchangeable industries. Slowing the climb buys engagement time, but a
 *longer* climb through samey content is a churn risk, not a win. So the dampener and Task 4
 are complementary: the slowdown only pays off in retention if the industries you now dwell
 in feel genuinely different. Differentiate **before** slowing further.
 
-**Acceptance criteria (vertical slice — pick 2–3 industries, prove the pattern)**
-- [ ] Give a first industry a **mechanic that matches its name**, e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer that industry runs uninterrupted, or auto-reinvests a %), so the playstyle label is *true*, not decorative.
-- [ ] A second, **mechanically different** one, e.g. Food/`rush_hour`: a recurring short speed-surge **window** on a *deterministic* cadence — reuse `golden.ts`'s exact tick-counter pattern (`cooldownMs` decremented per `dtMs`, `spawnCount % N` to fire), **not** RNG, so the harness/balance tests stay stable. An active-play reason to tap in; mirror the Golden-Deal countdown HUD so it's not a new UI paradigm.
-- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity.
-- [ ] **Harness + balance safe:** keep `balance.test.ts`'s income-efficiency monotonicity and re-run `harness.test.ts` + `progressionLoop`; re-baseline bounds in the same commit if pps shifts. Deterministic mechanics only (no RNG in the income fold).
-- [ ] **Data-driven + tested:** mechanics described in content, a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
-- [ ] **Mobile-legible:** each industry's signature is shown on its banner/entry in one line, and any window/active mechanic has a clear on-screen cue + countdown at 375px.
+**🔨 In progress (uncommitted): Food "Rush Hour" — the first felt mechanic.** Design
+review — strong, exactly to spec: `rushHour.ts` opens a 12s **tappable window** every ~3 min
+that grants a 25s **×3 Food speed surge**, on the deterministic `golden.ts` tick-counter
+cadence (no RNG), with `FloatingRushHour.tsx` as the countdown cue. State is transient (not
+persisted → no save migration). Harness-safe by construction (the bot never claims, so
+`surgeMsLeft` stays 0 and first-run landmarks don't move); 14 tests green across
+rushHour/harness/balance.
 
-Scope guard: 2–3 industries as a slice, not all 8 at once. Prove the "felt mechanic"
-pattern; the rest follow once it reads well and stays harness-safe.
+**⚠️ Balance + design call to resolve before extending:** the surge **stacks on** Food's
+existing passive `rush_hour: speed ×2` (still in `SIGNATURE_PERKS`), so a claimed window =
+**×6 Food speed** for 25s. Fine and bounded for one industry, but **decide the pattern now**
+for the rest: does each felt mechanic *layer on* the flat perk (power creep across 8
+industries; the old perks linger as vestigial multipliers) or *replace* it (the mechanic
+becomes the identity, perk table stays clean)? Pick one and apply consistently.
+
+**Acceptance criteria — remaining**
+- [x] An **active-window** mechanic (Food/`rush_hour`), deterministic + harness-safe + mobile cue. ✅ in flight.
+- [ ] A **mechanically *different*** second one — e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer Finance runs uninterrupted / auto-reinvests a %). Important that it's a *different shape* from Food's tap-window (a passive-but-dynamic curve), to prove the pattern generalises beyond "another tappable thing".
+- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity.
+- [ ] **Data-driven + tested:** a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
+- [ ] **Harness + balance safe** for each: keep `balance.test.ts` monotonicity, re-run `harness.test.ts` + `progressionLoop`, re-baseline if pps shifts. Deterministic only.
+- [ ] **Mobile-legible:** each signature shown on its banner/entry in one line; active mechanics get an on-screen cue + countdown at 375px (Rush Hour already does).
+
+Scope guard: 2–3 industries as a slice, not all 8 at once. Rush Hour proves the *active*
+shape — make the next one *passive-dynamic* (compounding) so the slice shows two distinct
+mechanic types, then the rest follow.
 
 ---
 

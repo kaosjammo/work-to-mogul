@@ -23,6 +23,7 @@ import { prestigeReset } from '../engine/prestige'
 import { buyTalent as buyTalentFn } from '../engine/talents'
 import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
 import { claimGoldenDeal } from '../engine/golden'
+import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
 import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
@@ -212,6 +213,15 @@ export function claimGolden(): void {
   if (earned > 0) {
     haptic(24)
     useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
+    publishNow()
+  }
+}
+
+/** Tap the active Food Rush Hour window → start a Food speed surge (×3 for 25s). */
+export function claimRush(): void {
+  if (claimRushHour(getEngineState())) {
+    haptic(20)
+    useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed`])
     publishNow()
   }
 }

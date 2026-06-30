@@ -14,6 +14,7 @@ import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
+import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
 
 // ----- Cost scaling -----
 
@@ -188,9 +189,11 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // import cycle with engine/golden). Bounded + active-play only → harness-safe.
   const frenzy = (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
   const lateDampen = lateGameDampen(def.industryId) // slows the higher tiers (≤ 1)
+  // Food's "Rush Hour" signature: a claimed surge multiplies Food speed (1 otherwise).
+  const rush = def.industryId === FOOD_INDUSTRY_ID ? foodRushSpeedMult(state) : 1
   return {
     profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen,
-    speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state),
+    speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }
 }
