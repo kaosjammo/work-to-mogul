@@ -1,7 +1,8 @@
 import { memo } from 'react'
 import type { BusinessView } from '../../store/buildView'
-import { formatRate } from '../../engine/num'
+import { formatRate, money } from '../../engine/num'
 import { tap } from '../../store/actions'
+import { haptic } from '../../lib/haptics'
 import { useUiStore } from '../../store/uiStore'
 import { Icon } from '../shared/Icon'
 import { businessArt } from '../shared/art'
@@ -56,7 +57,13 @@ function BusinessCardImpl({ view, accent }: Props) {
         <div className="flex flex-col gap-1">
           <button
             type="button"
-            onClick={() => tap(view.id)}
+            onClick={(e) => {
+              // Satisfying payoff: a "+$X" pop at the tap point + a haptic tick.
+              const payout = view.pps * (view.cycleMs / 1000)
+              if (payout > 0) useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(payout)}`)
+              haptic(12)
+              tap(view.id)
+            }}
             disabled={!idle}
             className="w-full rounded-xl text-sm font-extrabold uppercase tracking-wide transition-opacity"
             style={{

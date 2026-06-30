@@ -26,6 +26,7 @@ import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { money } from '../engine/num'
+import { haptic } from '../lib/haptics'
 import { describeMilestone, newlyReached } from '../engine/milestones'
 import type { UpgradeId } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
@@ -41,8 +42,10 @@ export function buyBusiness(id: BusinessId): void {
   const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash)
   const before = [...s.milestonesReached]
   if (purchase(s, id, qty)) {
+    haptic(8) // light tactile click on a successful buy
     const fresh = newlyReached(before, s.milestonesReached)
     if (fresh.length) {
+      haptic(26) // a milestone crossed — celebratory buzz
       const msgs = fresh
         .map(describeMilestone)
         .filter((m): m is NonNullable<typeof m> => m != null)
@@ -69,6 +72,7 @@ export function spendCash(): void {
     .filter((m): m is NonNullable<typeof m> => m != null)
     .map((m) => m.text)
   msgs.push(`💸 Spent ${money(spent)} · +${units} ${units === 1 ? 'unit' : 'units'}`)
+  haptic(24)
   useUiStore.getState().pushCelebrations(msgs)
   publishNow()
 }
@@ -131,6 +135,7 @@ export function chooseSpecialisation(empId: string, specId: string): void {
 export function fuse(keepId: string, consumeId: string): void {
   const promoted = fuseEmployees(getEngineState(), keepId, consumeId)
   if (promoted) {
+    haptic(22)
     useUiStore.getState().pushCelebrations([`✨ Promoted to ${promoted}!`])
     publishNow()
   }
@@ -150,6 +155,7 @@ export function prestige(): void {
   const s = getEngineState()
   const before = new Set(s.prestigeMilestonesClaimed)
   if (prestigeReset(s)) {
+    haptic(45) // ascension — a big, satisfying reset
     // Celebrate any ascension-count milestones that just paid out.
     const fresh = s.prestigeMilestonesClaimed
       .filter((id) => !before.has(id))
@@ -180,6 +186,7 @@ export function claimContract(id: string): void {
 export function claimGolden(): void {
   const earned = claimGoldenDeal(getEngineState())
   if (earned > 0) {
+    haptic(24)
     useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
     publishNow()
   }

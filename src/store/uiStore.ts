@@ -7,10 +7,23 @@ export interface WelcomeBack {
   elapsedMs: number
 }
 
+/** A transient "+$X" pop that rises and fades at a screen point (tap juice). */
+export interface FloatItem {
+  id: number
+  x: number
+  y: number
+  text: string
+}
+
+let floatSeq = 0
+
 interface UiStore {
   assignmentBusinessId: BusinessId | null
   openAssignment: (id: BusinessId) => void
   closeAssignment: () => void
+  floats: FloatItem[]
+  spawnFloat: (x: number, y: number, text: string) => void
+  removeFloat: (id: number) => void
   welcomeBack: WelcomeBack | null
   setWelcomeBack: (w: WelcomeBack) => void
   dismissWelcomeBack: () => void
@@ -26,6 +39,14 @@ export const useUiStore = create<UiStore>((set) => ({
   assignmentBusinessId: null,
   openAssignment: (id) => set({ assignmentBusinessId: id }),
   closeAssignment: () => set({ assignmentBusinessId: null }),
+  floats: [],
+  spawnFloat: (x, y, text) =>
+    set((s) => {
+      const next = [...s.floats, { id: ++floatSeq, x, y, text }]
+      // Cap the live count so rapid taps can't grow the array unbounded.
+      return { floats: next.length > 24 ? next.slice(next.length - 24) : next }
+    }),
+  removeFloat: (id) => set((s) => ({ floats: s.floats.filter((f) => f.id !== id) })),
   welcomeBack: null,
   setWelcomeBack: (welcomeBack) => set({ welcomeBack }),
   dismissWelcomeBack: () => set({ welcomeBack: null }),

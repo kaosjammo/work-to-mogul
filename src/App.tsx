@@ -5,6 +5,7 @@ import { AssignmentSheet } from './ui/employees/AssignmentSheet'
 import { WelcomeBackBanner } from './ui/shared/WelcomeBackBanner'
 import { MilestoneCelebration } from './ui/shared/MilestoneCelebration'
 import { FloatingGoldenDeal } from './ui/shared/FloatingGoldenDeal'
+import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
 import { AccountModal } from './ui/account/AccountModal'
 import { ART_GENERATED } from './content/artManifest'
 
@@ -28,6 +29,7 @@ export function App() {
         </div>
       </main>
       <NavBar />
+      <FloatingProfitLayer />
       <FloatingGoldenDeal />
       <AssignmentSheet />
       <AccountModal />
