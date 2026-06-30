@@ -85,7 +85,7 @@ export const INDUSTRIES: Record<IndustryId, IndustryDef> = {
     theme: 'var(--industry-space)',
     playstyle: 'volatile',
     unlock: { kind: 'free' },
-    businessIds: ['satellite', 'rocket_pad', 'asteroid_mine', 'mars_colony'],
+    businessIds: ['satellite', 'rocket_pad', 'asteroid_mine', 'mars_colony', 'dyson'],
     bonus: {
       // Moonshots: rewards profit + crit (jackpot) staffing.
       signaturePerkId: 'moonshot',

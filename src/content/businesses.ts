@@ -102,6 +102,10 @@ const ROWS: Row[] = [
   { id: 'rocket_pad', industryId: 'space', name: 'Rocket Launch Pad', icon: '🚀', baseCost: 1e15, growthRate: 1.13, baseRevenue: 4.76e16, cycleMs: 50000, unlock: prev('satellite', 20), preferred: ['profitMult', 'critChance'] },
   { id: 'asteroid_mine', industryId: 'space', name: 'Asteroid Mine', icon: '☄️', baseCost: 1e16, growthRate: 1.14, baseRevenue: 7.88e17, cycleMs: 80000, unlock: prev('rocket_pad', 20), preferred: ['profitMult', 'critChance'] },
   { id: 'mars_colony', industryId: 'space', name: 'Mars Colony', icon: '🪐', baseCost: 1e17, growthRate: 1.14, baseRevenue: 1.32e19, cycleMs: 130000, unlock: prev('asteroid_mine', 20), preferred: ['profitMult', 'critChance'] },
+  // Capstone of capstones — the most expensive business in the game, appended at
+  // the top of the global cost order so its efficiency (E0·g^27 ≈ 1.055, the new
+  // max) simply continues the monotonic curve without shifting any other rank.
+  { id: 'dyson', industryId: 'space', name: 'Dyson Sphere', icon: '🔆', baseCost: 1e18, growthRate: 1.14, baseRevenue: 1.69e20, cycleMs: 160000, unlock: prev('mars_colony', 20), preferred: ['profitMult', 'critChance'] },
 ]
 
 function toDef(r: Row): BusinessDef {
