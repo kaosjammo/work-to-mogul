@@ -1,7 +1,7 @@
 import { useGameStore, useActiveIndustry } from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
-import { money } from '../../engine/num'
+import { money, formatEta } from '../../engine/num'
 import { spendCash } from '../../store/actions'
 import { WorkCard } from '../work/WorkCard'
 import { IndustryTabs } from './IndustryTabs'
@@ -116,7 +116,9 @@ export function BusinessesScreen() {
               </div>
             ) : (
               <div className="mt-1" style={{ color: 'var(--text-faint)' }}>
-                Earn more capital to buy into this industry.
+                {industryView.entryEtaSec != null
+                  ? `⏳ About ${formatEta(industryView.entryEtaSec)} away at your current income.`
+                  : 'Earn more capital to buy into this industry.'}
               </div>
             )}
           </div>

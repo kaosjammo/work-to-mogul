@@ -158,6 +158,9 @@ export interface IndustryView {
   entryCost: number
   firstBusinessName: string
   entryAffordable: boolean
+  // Seconds until the entry cost is affordable on current idle income (null when
+  // already affordable or there's no idle income to estimate from).
+  entryEtaSec: number | null
   ownsAny: boolean
   totalOwned: number
 }
@@ -528,13 +531,15 @@ export function buildView(state: GameState): ViewSnapshot {
     let totalOwned = 0
     for (const bid of ind.businessIds) totalOwned += state.businesses[bid]?.owned ?? 0
     const entryCost = firstDef.baseCost
+    const entryAffordable = state.cash >= entryCost
     return {
       id: iid,
       name: ind.name,
       theme: ind.theme,
       entryCost,
       firstBusinessName: firstDef.name,
-      entryAffordable: state.cash >= entryCost,
+      entryAffordable,
+      entryEtaSec: !entryAffordable && totalPps > 0 ? (entryCost - state.cash) / totalPps : null,
       ownsAny: totalOwned > 0,
       totalOwned,
     }
