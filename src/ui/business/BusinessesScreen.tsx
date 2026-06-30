@@ -10,6 +10,38 @@ import { BusinessCard } from './BusinessCard'
 import { LockedBusinessCard } from './LockedBusinessCard'
 import { industryPattern } from '../shared/art'
 
+// Industry specialisation bonuses unlock at owned thresholds (industryMultipliers):
+// 100 → ×1.5 profit, 250 → ×2, 500 → ×2 + the industry's signature perk.
+const INDUSTRY_TIERS = [
+  { at: 100, label: '×1.5 profit' },
+  { at: 250, label: '×2 profit' },
+  { at: 500, label: '×2 profit + perk' },
+]
+
+/** Surfaces the (otherwise invisible) industry specialisation bonus + progress. */
+function IndustryBonusCue({ totalOwned, theme }: { totalOwned: number; theme: string }) {
+  const nextIdx = INDUSTRY_TIERS.findIndex((t) => totalOwned < t.at)
+  const next = nextIdx >= 0 ? INDUSTRY_TIERS[nextIdx] : null
+  const reached = nextIdx === -1 ? INDUSTRY_TIERS[INDUSTRY_TIERS.length - 1] : nextIdx > 0 ? INDUSTRY_TIERS[nextIdx - 1] : null
+  const prevAt = next ? (nextIdx > 0 ? INDUSTRY_TIERS[nextIdx - 1].at : 0) : 500
+  const frac = next ? Math.min(1, (totalOwned - prevAt) / (next.at - prevAt)) : 1
+  return (
+    <div className="mb-3 rounded-2xl px-3 py-2" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span style={{ color: 'var(--text-dim)' }}>⭐ Industry bonus{reached ? `: ${reached.label}` : ''}</span>
+        <span className="tnum" style={{ color: next ? 'var(--text-faint)' : 'var(--good)' }}>
+          {next ? `next ${next.label} at ${next.at}` : 'maxed + perk ✓'}
+        </span>
+      </div>
+      {next && (
+        <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+          <div className="h-full rounded-full" style={{ background: theme, width: `${Math.round(frac * 100)}%` }} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function BusinessesScreen() {
   const activeId = useActiveIndustry()
   const ind = INDUSTRIES[activeId]
@@ -37,6 +69,10 @@ export function BusinessesScreen() {
       <WorkCard />
       <IndustryTabs />
       <IndustryBanner industryId={activeId} name={ind.name} totalOwned={industryView.totalOwned} />
+
+      {industryView.totalOwned > 0 && (
+        <IndustryBonusCue totalOwned={industryView.totalOwned} theme={ind.theme} />
+      )}
 
       {hasAnyBusiness && (
         <button
