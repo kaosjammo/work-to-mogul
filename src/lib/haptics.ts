@@ -1,8 +1,11 @@
+import { useSettingsStore } from '../store/settingsStore'
+
 // Tiny haptic feedback helper. A short vibration on supported devices (mobile),
 // a safe no-op everywhere else. Keeps the satisfying-tap feel without coupling
-// the engine to the DOM.
+// the engine to the DOM. Respects the player's haptics preference.
 export function haptic(ms = 12): void {
   try {
+    if (!useSettingsStore.getState().haptics) return
     if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
       navigator.vibrate(ms)
     }

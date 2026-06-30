@@ -1,6 +1,7 @@
 // Ephemeral UI-only state (not persisted, not part of the sim).
 import { create } from 'zustand'
 import type { BusinessId } from '../types/domain'
+import { useSettingsStore } from './settingsStore'
 
 export interface WelcomeBack {
   earned: number
@@ -40,12 +41,14 @@ export const useUiStore = create<UiStore>((set) => ({
   openAssignment: (id) => set({ assignmentBusinessId: id }),
   closeAssignment: () => set({ assignmentBusinessId: null }),
   floats: [],
-  spawnFloat: (x, y, text) =>
+  spawnFloat: (x, y, text) => {
+    if (!useSettingsStore.getState().effects) return // player disabled the pops
     set((s) => {
       const next = [...s.floats, { id: ++floatSeq, x, y, text }]
       // Cap the live count so rapid taps can't grow the array unbounded.
       return { floats: next.length > 24 ? next.slice(next.length - 24) : next }
-    }),
+    })
+  },
   removeFloat: (id) => set((s) => ({ floats: s.floats.filter((f) => f.id !== id) })),
   welcomeBack: null,
   setWelcomeBack: (welcomeBack) => set({ welcomeBack }),

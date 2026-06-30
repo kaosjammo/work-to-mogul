@@ -2,8 +2,38 @@ import type { ReactNode } from 'react'
 import { money, formatRate } from '../../engine/num'
 import { CAREER_LEVELS } from '../../content/career'
 import { useStats, useContracts } from '../../store/gameStore'
+import { useSettingsStore } from '../../store/settingsStore'
 import type { ContractView } from '../../store/buildView'
 import { claimContract } from '../../store/actions'
+
+function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string; on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)', minHeight: 'var(--tap)' }}
+    >
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        <span className="block text-xs" style={{ color: 'var(--text-faint)' }}>
+          {hint}
+        </span>
+      </span>
+      <span
+        className="relative shrink-0 rounded-full transition-colors"
+        style={{ width: 44, height: 26, background: on ? 'var(--accent)' : 'var(--surface-3)' }}
+      >
+        <span
+          className="absolute top-0.5 rounded-full transition-all"
+          style={{ width: 22, height: 22, background: '#fff', left: on ? 20 : 2 }}
+        />
+      </span>
+    </button>
+  )
+}
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -92,6 +122,10 @@ export function StatsScreen() {
   const contracts = useContracts()
   const careerTitle = CAREER_LEVELS[s.stats.careerLevel]?.title ?? '—'
   const bonusPct = s.prestigeProfitBonusPct
+  const haptics = useSettingsStore((st) => st.haptics)
+  const effects = useSettingsStore((st) => st.effects)
+  const toggleHaptics = useSettingsStore((st) => st.toggleHaptics)
+  const toggleEffects = useSettingsStore((st) => st.toggleEffects)
 
   return (
     <div className="flex flex-col gap-4">
@@ -127,6 +161,21 @@ export function StatsScreen() {
         <Row label="Ascensions" value={String(s.prestige.resets)} />
         <Row label="Empire tokens" value={String(s.prestige.totalPoints)} />
         <Row label="Achievements" value={`${s.achievements}/${s.achievementsTotal}`} />
+      </Section>
+
+      <Section title="SETTINGS">
+        <ToggleRow
+          label="Haptics"
+          hint="Vibration feedback on taps & rewards"
+          on={haptics}
+          onToggle={toggleHaptics}
+        />
+        <ToggleRow
+          label="Floating numbers"
+          hint="Show +$ pops when you earn"
+          on={effects}
+          onToggle={toggleEffects}
+        />
       </Section>
     </div>
   )
