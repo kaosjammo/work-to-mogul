@@ -17,7 +17,13 @@ export interface TalentDef {
   theme: TalentTheme
   icon: string
   maxRank: number
-  cost: number[] // length === maxRank; cost[rank] = price of the next rank
+  // Cost of the next rank — EITHER an explicit array (length === maxRank, used by
+  // the shallow tree) OR a geometric formula `round(costBase × costGrowth^rank)`
+  // (used by the deep "Mastery" talents, whose escalating cost absorbs huge token
+  // counts over many ranks with diminishing value — a self-balancing sink).
+  cost?: number[]
+  costBase?: number
+  costGrowth?: number
 
   // ---- effect descriptors (only the relevant one(s) are set) ----
   profitMultPerRank?: number // global profit ×(1 + x·rank)
@@ -210,6 +216,44 @@ export const TALENTS: Record<string, TalentDef> = {
     cost: [2, 4, 6, 9, 13],
     tokenYieldPerRank: 0.15,
   },
+
+  // ---------- Mastery (deep, late-game token sinks) ----------
+  // Many ranks with a geometrically-escalating cost: a near-bottomless sink for
+  // the Empire Tokens that pile up across many ascensions, with small per-rank
+  // gains so dumping a huge surplus is meaningful but never runaway.
+  industrialist: {
+    id: 'industrialist',
+    name: 'Industrialist',
+    blurb: 'Endless industrial expansion — profit keeps climbing, rank after rank.',
+    theme: 'Economy',
+    icon: '🏭',
+    maxRank: 50,
+    costBase: 50,
+    costGrowth: 1.55,
+    profitMultPerRank: 0.04,
+  },
+  grandmaster: {
+    id: 'grandmaster',
+    name: 'Grandmaster',
+    blurb: 'Train your workforce without limit — every employee keeps getting better.',
+    theme: 'Workforce',
+    icon: '🎖️',
+    maxRank: 50,
+    costBase: 60,
+    costGrowth: 1.55,
+    staffEffectPerRank: 0.04,
+  },
+  overclock: {
+    id: 'overclock',
+    name: 'Overclock',
+    blurb: 'Push production speed ever higher — there is no ceiling.',
+    theme: 'Tempo',
+    icon: '⚡',
+    maxRank: 50,
+    costBase: 50,
+    costGrowth: 1.55,
+    speedMultPerRank: 0.03,
+  },
 }
 
 // Display order: grouped by theme, strongest-first within each.
@@ -231,6 +275,10 @@ export const TALENT_ORDER: string[] = [
   'golden_touch',
   'lucky_streak',
   'prestige_scholar',
+  // deep Mastery sinks — shown last within each theme
+  'industrialist',
+  'grandmaster',
+  'overclock',
 ]
 
 export const TALENT_THEMES: TalentTheme[] = ['Economy', 'Workforce', 'Tempo']

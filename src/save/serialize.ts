@@ -12,6 +12,7 @@ import { MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { TRAIT_DEFS } from '../content/traits'
 import { TALENTS } from '../content/talents'
+import { talentCostAt } from '../engine/talents'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
@@ -158,7 +159,7 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
         const r = clamp(Math.floor(num(rank)), 0, def.maxRank)
         if (r > 0) {
           talents[id] = r
-          for (let i = 0; i < r; i++) spent += def.cost[i] // tokens spent reaching rank r
+          for (let i = 0; i < r; i++) spent += talentCostAt(def, i) // tokens spent reaching rank r
         }
       }
     }

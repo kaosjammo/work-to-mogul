@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { initialGameState } from '../store/initialState'
 import {
   buyTalent,
+  talentCostAt,
   availableTokens,
   talentEconomy,
   hireStartLevel,
@@ -21,6 +22,7 @@ import { prestigeReset } from './prestige'
 import { hireEmployee, levelUpCost } from './employees/roster'
 import { applyOfflineEarnings } from './catchUp'
 import { BUSINESSES } from '../content/businesses'
+import { TALENTS } from '../content/talents'
 
 function withTokens(n: number) {
   const s = initialGameState(0)
@@ -57,6 +59,22 @@ describe('buyTalent', () => {
       /* spend until maxed */
     }
     expect(s.prestige.talents.overdrive).toBe(3) // overdrive maxRank
+  })
+
+  it('formula-cost (deep Mastery) talents escalate geometrically and drain a surplus', () => {
+    // industrialist: costBase 50, costGrowth 1.55 → cost[rank] = round(50·1.55^rank)
+    expect(talentCostAt(TALENTS.industrialist, 0)).toBe(50)
+    expect(talentCostAt(TALENTS.industrialist, 1)).toBe(78) // round(50·1.55)
+    expect(talentCostAt(TALENTS.industrialist, 10)).toBe(Math.round(50 * 1.55 ** 10))
+
+    // A huge surplus buys many ranks (the sink), not just a few.
+    const s = withTokens(1_000_000)
+    let bought = 0
+    while (buyTalent(s, 'industrialist')) bought++
+    expect(bought).toBeGreaterThan(15) // geometric, so a million tokens ⇒ ~20 ranks
+    // spentPoints reflects the geometric sum, never exceeding what was available.
+    expect(s.prestige.spentPoints).toBeLessThanOrEqual(1_000_000)
+    expect(s.prestige.spentPoints).toBeGreaterThan(500_000)
   })
 })
 

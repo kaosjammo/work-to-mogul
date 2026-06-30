@@ -1,4 +1,4 @@
-import { money } from '../../engine/num'
+import { money, format } from '../../engine/num'
 import { PRESTIGE_UNLOCK_LIFETIME } from '../../engine/economy'
 import { TALENT_THEMES } from '../../content/talents'
 import { usePrestige, useAchievements, useTalents, usePrestigeMilestones } from '../../store/gameStore'
@@ -33,14 +33,14 @@ export function PrestigeScreen() {
 
         <div className="my-2 flex w-full justify-around">
           <Stat label="Profit bonus" value={`+${profitBonusPct}%`} />
-          <Stat label="Tokens to spend" value={String(talents.available)} />
+          <Stat label="Tokens to spend" value={format(talents.available)} />
           <Stat label="Ascensions" value={String(p.resets)} />
         </div>
 
         {unlocked ? (
           <div className="flex w-full flex-col gap-2">
             <p className="text-sm">
-              Ascend now to bank <span className="font-bold" style={{ color: 'var(--accent)' }}>+{pending} {pending === 1 ? 'token' : 'tokens'}</span>
+              Ascend now to bank <span className="font-bold" style={{ color: 'var(--accent)' }}>+{format(pending)} {pending === 1 ? 'token' : 'tokens'}</span>
             </p>
             <HoldToConfirmButton
               label="Hold to Ascend"
@@ -96,7 +96,7 @@ export function PrestigeScreen() {
             TALENTS
           </h2>
           <span className="tnum text-xs" style={{ color: 'var(--accent)' }}>
-            ✦ {talents.available} available · {talents.spent} spent
+            ✦ {format(talents.available)} available · {format(talents.spent)} spent
           </span>
         </div>
         {talents.total === 0 ? (
@@ -290,7 +290,7 @@ function TalentCard({ t }: { t: TalentView }) {
             cursor: t.affordable ? 'pointer' : 'not-allowed',
           }}
         >
-          {t.rank > 0 ? 'Next' : 'Unlock'}: {t.nextLabel} · ✦{t.nextCost}
+          {t.rank > 0 ? 'Next' : 'Unlock'}: {t.nextLabel} · ✦{t.nextCost != null ? format(t.nextCost) : ''}
         </button>
       )}
     </div>

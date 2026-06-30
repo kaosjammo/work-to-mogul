@@ -44,6 +44,7 @@ import {
   levelCostMult,
   talentRank,
   talentLabel,
+  talentCostAt,
   talentProfitBonusPct,
 } from '../engine/talents'
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
@@ -594,7 +595,7 @@ export function buildView(
     const def = TALENTS[id]
     const rank = talentRank(state, id)
     const maxed = rank >= def.maxRank
-    const nextCost = maxed ? null : def.cost[rank]
+    const nextCost = maxed ? null : talentCostAt(def, rank)
     return {
       id,
       name: def.name,

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { money, formatRate } from '../../engine/num'
+import { money, formatRate, format } from '../../engine/num'
 import { CAREER_LEVELS } from '../../content/career'
 import { useStats, useContracts } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -159,7 +159,7 @@ export function StatsScreen() {
       <Section title="PROGRESS">
         <Row label="Career" value={careerTitle} />
         <Row label="Ascensions" value={String(s.prestige.resets)} />
-        <Row label="Empire tokens" value={String(s.prestige.totalPoints)} />
+        <Row label="Empire tokens" value={format(s.prestige.totalPoints)} />
         <Row label="Achievements" value={`${s.achievements}/${s.achievementsTotal}`} />
       </Section>
 

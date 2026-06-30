@@ -22,13 +22,22 @@ export function availableTokens(state: GameState): number {
   return Math.max(0, (p.totalPoints ?? 0) - (p.spentPoints ?? 0))
 }
 
+/** Token cost to buy the rank at index `rank` — explicit array or geometric formula. */
+export function talentCostAt(def: TalentDef, rank: number): number {
+  if (def.cost) return def.cost[rank] ?? Infinity
+  if (def.costBase != null && def.costGrowth != null) {
+    return Math.round(def.costBase * Math.pow(def.costGrowth, rank))
+  }
+  return Infinity
+}
+
 /** Token cost of the NEXT rank, or null if maxed/unknown. */
 export function nextTalentCost(state: GameState, id: string): number | null {
   const def = TALENTS[id]
   if (!def) return null
   const rank = talentRank(state, id)
   if (rank >= def.maxRank) return null
-  return def.cost[rank]
+  return talentCostAt(def, rank)
 }
 
 /** Buy one rank of a talent if affordable and not maxed. Mutates state. */
@@ -37,7 +46,7 @@ export function buyTalent(state: GameState, id: string): boolean {
   if (!def) return false
   const rank = talentRank(state, id)
   if (rank >= def.maxRank) return false
-  const cost = def.cost[rank]
+  const cost = talentCostAt(def, rank)
   if (availableTokens(state) < cost) return false
   if (!state.prestige.talents) state.prestige.talents = {}
   state.prestige.talents[id] = rank + 1
