@@ -28,7 +28,7 @@ function letterSuffix(tier: number): string {
 
 /**
  * Format a number with short-scale suffixes.
- * 1234 -> "1.23K", 4.56e9 -> "4.56B", 1e18 -> "1.00aa".
+ * 1234 -> "1.23K", 4.56e9 -> "4.56B", 1e18 -> "1.00Qi", 1e36 -> "1.00aa".
  */
 export function format(value: Num, sigFigs = 3): string {
   const n = sanitize(value)
