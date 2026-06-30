@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { money } from '../../engine/num'
 import { useGolden } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
+import { haptic } from '../../lib/haptics'
 import { claimGolden } from '../../store/actions'
 
 /**
@@ -10,6 +12,11 @@ import { claimGolden } from '../../store/actions'
  */
 export function FloatingGoldenDeal() {
   const g = useGolden()
+  // Buzz when a deal appears so the 12s window isn't missed (respects the
+  // haptics setting; effect runs before the early return per the hooks rule).
+  useEffect(() => {
+    if (g.offerActive) haptic(18)
+  }, [g.offerActive])
   if (!g.offerActive) return null
 
   return (
