@@ -11,14 +11,21 @@ import { offlineMult, goldenValueMult, goldenFreqMult } from './talents'
 export const GOLDEN_SPAWN_INTERVAL_MS = 120_000 // ~2 min between deals
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
 export const GOLDEN_WARP_SECONDS = 900 // reward = 15 min of idle income
+export const GOLDEN_MEGA_EVERY = 5 // every Nth deal is a MEGA jackpot (deterministic)
+export const GOLDEN_MEGA_MULT = 5 // a MEGA is worth this many normal Time Warps
 
 export function initialGoldenState(): GoldenState {
-  return { offerMsLeft: 0, cooldownMs: GOLDEN_SPAWN_INTERVAL_MS }
+  return { offerMsLeft: 0, cooldownMs: GOLDEN_SPAWN_INTERVAL_MS, offerMega: false, spawnCount: 0 }
 }
 
-/** Cash a Time Warp would grant right now (idle income × warp window). */
+/** Cash a *normal* Time Warp would grant right now (idle income × warp window). */
 export function timeWarpValue(state: GameState): number {
   return automatedIncomePerSec(state) * GOLDEN_WARP_SECONDS * offlineMult(state) * goldenValueMult(state)
+}
+
+/** Cash the CURRENT offer would grant (MEGA offers pay GOLDEN_MEGA_MULT× a normal one). */
+export function goldenOfferValue(state: GameState): number {
+  return timeWarpValue(state) * (state.golden?.offerMega ? GOLDEN_MEGA_MULT : 1)
 }
 
 /**
@@ -36,6 +43,8 @@ export function tickGolden(state: GameState, dtMs: number): void {
   if (automatedIncomePerSec(state) <= 0) return // nothing to warp yet
   g.cooldownMs -= dtMs
   if (g.cooldownMs <= 0) {
+    g.spawnCount = (g.spawnCount ?? 0) + 1
+    g.offerMega = g.spawnCount % GOLDEN_MEGA_EVERY === 0 // every Nth deal is a jackpot
     g.offerMsLeft = GOLDEN_OFFER_WINDOW_MS
     g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
   }
@@ -48,8 +57,9 @@ export function tickGolden(state: GameState, dtMs: number): void {
 export function claimGoldenDeal(state: GameState): number {
   const g = state.golden
   if (!g || g.offerMsLeft <= 0) return 0
-  const earned = timeWarpValue(state)
+  const earned = goldenOfferValue(state) // MEGA offers pay more
   g.offerMsLeft = 0
+  g.offerMega = false
   g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
   if (earned > 0 && Number.isFinite(earned)) {
     state.cash += earned

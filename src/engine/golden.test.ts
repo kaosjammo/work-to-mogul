@@ -5,9 +5,12 @@ import {
   tickGolden,
   claimGoldenDeal,
   timeWarpValue,
+  goldenOfferValue,
   GOLDEN_SPAWN_INTERVAL_MS,
   GOLDEN_OFFER_WINDOW_MS,
   GOLDEN_WARP_SECONDS,
+  GOLDEN_MEGA_EVERY,
+  GOLDEN_MEGA_MULT,
 } from './golden'
 import { automatedIncomePerSec } from './catchUp'
 
@@ -56,5 +59,26 @@ describe('golden deals', () => {
     const s = initialGameState(0)
     automate(s)
     expect(claimGoldenDeal(s)).toBe(0)
+  })
+
+  it('makes every Nth deal a MEGA jackpot worth more', () => {
+    const s = initialGameState(0)
+    automate(s)
+    const base = timeWarpValue(s)
+    let megaSeen = false
+    let megaValue = 0
+    // Spawn + claim repeatedly; the GOLDEN_MEGA_EVERY-th spawn must be a MEGA.
+    for (let i = 1; i <= GOLDEN_MEGA_EVERY; i++) {
+      tickGolden(s, GOLDEN_SPAWN_INTERVAL_MS) // cooldown elapses → spawn
+      const isNth = i % GOLDEN_MEGA_EVERY === 0
+      expect(s.golden.offerMega).toBe(isNth)
+      if (s.golden.offerMega) {
+        megaSeen = true
+        megaValue = goldenOfferValue(s)
+      }
+      claimGoldenDeal(s) // resets the cooldown for the next spawn
+    }
+    expect(megaSeen).toBe(true)
+    expect(megaValue).toBeCloseTo(base * GOLDEN_MEGA_MULT, 0)
   })
 })

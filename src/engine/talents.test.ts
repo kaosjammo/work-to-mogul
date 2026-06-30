@@ -157,7 +157,7 @@ describe('tempo talents', () => {
     expect(goldenFreqMult(s)).toBeCloseTo(1)
     buyTalent(s, 'lucky_streak') // +20% frequency
     expect(goldenFreqMult(s)).toBeCloseTo(1.2)
-    s.golden = { offerMsLeft: 1000, cooldownMs: 0 } // an offer is up
+    s.golden = { offerMsLeft: 1000, cooldownMs: 0, offerMega: false, spawnCount: 0 } // an offer is up
     claimGoldenDeal(s)
     expect(s.golden.cooldownMs).toBeCloseTo(GOLDEN_SPAWN_INTERVAL_MS / 1.2, 1)
   })

@@ -15,8 +15,8 @@ export function FloatingGoldenDeal() {
   // Buzz when a deal appears so the 12s window isn't missed (respects the
   // haptics setting; effect runs before the early return per the hooks rule).
   useEffect(() => {
-    if (g.offerActive) haptic(18)
-  }, [g.offerActive])
+    if (g.offerActive) haptic(g.mega ? 40 : 18) // a bigger buzz for the jackpot
+  }, [g.offerActive, g.mega])
   if (!g.offerActive) return null
 
   return (
@@ -27,18 +27,23 @@ export function FloatingGoldenDeal() {
         useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(g.warpValue)}`)
         claimGolden()
       }}
-      aria-label={`Golden Deal: Time Warp for ${money(g.warpValue)}`}
+      aria-label={`${g.mega ? 'MEGA ' : ''}Golden Deal: Time Warp for ${money(g.warpValue)}`}
       className="golden-pulse fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 font-bold shadow-lg"
       style={{
         bottom: 'calc(var(--nav-h, 64px) + env(safe-area-inset-bottom) + 14px)',
-        background: 'linear-gradient(135deg, #f5c518, #ffae34)',
+        // MEGA deals get a hotter gradient + bolder ring so the jackpot reads instantly.
+        background: g.mega
+          ? 'linear-gradient(135deg, #ff7a18, #ffd24a, #ff4d6d)'
+          : 'linear-gradient(135deg, #f5c518, #ffae34)',
         color: '#1a1205',
-        border: '2px solid #fff3c4',
+        border: g.mega ? '2px solid #fff' : '2px solid #fff3c4',
       }}
     >
-      <span className="text-xl">⚡</span>
+      <span className="text-xl">{g.mega ? '🌟' : '⚡'}</span>
       <span className="flex flex-col items-start leading-tight">
-        <span className="text-sm">Time Warp · +{money(g.warpValue)}</span>
+        <span className="text-sm">
+          {g.mega ? 'MEGA Time Warp' : 'Time Warp'} · +{money(g.warpValue)}
+        </span>
         <span className="text-[10px] font-semibold opacity-80">
           {g.warpMinutes} min of income · tap! ({g.offerSecondsLeft}s)
         </span>

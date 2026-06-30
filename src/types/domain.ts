@@ -202,6 +202,8 @@ export interface CareerState {
 export interface GoldenState {
   offerMsLeft: number // > 0 while a deal is tappable on screen
   cooldownMs: number // time until the next deal spawns
+  offerMega: boolean // the current offer is a MEGA jackpot (worth several normal deals)
+  spawnCount: number // deals spawned this session — every Nth is a MEGA (deterministic)
 }
 
 /** Contracts board — the currently-offered missions + pool pointer. */

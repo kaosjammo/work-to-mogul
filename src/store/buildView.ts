@@ -47,7 +47,7 @@ import {
   talentProfitBonusPct,
 } from '../engine/talents'
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
-import { timeWarpValue, GOLDEN_WARP_SECONDS } from '../engine/golden'
+import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
 import type { EffectChannel, EmployeeInstance } from '../types/domain'
@@ -227,8 +227,9 @@ export interface RevealedTabs {
 export interface GoldenView {
   offerActive: boolean
   offerSecondsLeft: number
-  warpValue: number // cash a tap grants right now
+  warpValue: number // cash a tap grants right now (MEGA-adjusted)
   warpMinutes: number // for the label ("15 min of income")
+  mega: boolean // the current offer is a MEGA jackpot
 }
 
 export interface ContractView {
@@ -627,11 +628,13 @@ export function buildView(state: GameState): ViewSnapshot {
     stats: veteran || totalOwned >= 1,
   }
 
+  const goldenMega = state.golden?.offerMega ?? false
   const golden: GoldenView = {
     offerActive: (state.golden?.offerMsLeft ?? 0) > 0,
     offerSecondsLeft: Math.ceil((state.golden?.offerMsLeft ?? 0) / 1000),
-    warpValue: timeWarpValue(state),
-    warpMinutes: Math.round(GOLDEN_WARP_SECONDS / 60),
+    warpValue: goldenOfferValue(state),
+    warpMinutes: Math.round((GOLDEN_WARP_SECONDS * (goldenMega ? GOLDEN_MEGA_MULT : 1)) / 60),
+    mega: goldenMega,
   }
 
   const contracts: ContractView[] = (state.contracts?.active ?? [])
