@@ -83,6 +83,40 @@ const PREDICATES: Record<string, (s: GameState) => boolean> = {
   multiverse_mogul: (s) => (s.businesses.multiverse?.owned ?? 0) >= 1,
 }
 
+// Progress toward the *countable* achievements (current ÷ target, clamped 0..1) so
+// the UI can show a "how close am I?" bar — like contracts + ascension milestones.
+// Event/one-shot goals (first hire, reach space, own a Mars Colony …) return null:
+// they're binary, so a bar would be meaningless.
+const PROGRESS: Record<string, (s: GameState) => number> = {
+  promoted: (s) => s.career.level / 2,
+  max_career: (s) => s.career.level / MAX_CAREER_LEVEL,
+  hundred_units: (s) => totalOwned(s) / 100,
+  five_hundred_units: (s) => totalOwned(s) / 500,
+  thousand_units: (s) => totalOwned(s) / 1000,
+  specialist: (s) => maxSingleOwned(s) / 500,
+  ten_staff: (s) => Object.keys(s.employees).length / 10,
+  big_team: (s) => Object.keys(s.employees).length / 25,
+  three_industries: (s) => industriesEntered(s) / 3,
+  all_industries: (s) => industriesEntered(s) / 8,
+  millionaire: (s) => s.lifetimeEarnings / 1e6,
+  billionaire: (s) => s.lifetimeEarnings / 1e9,
+  trillionaire: (s) => s.lifetimeEarnings / 1e12,
+  quadrillionaire: (s) => s.lifetimeEarnings / 1e15,
+  quintillionaire: (s) => s.lifetimeEarnings / 1e18,
+  first_ascension: (s) => s.prestige.resets / 1,
+  ascend_three: (s) => s.prestige.resets / 3,
+  ascend_ten: (s) => s.prestige.resets / 10,
+  talented: (s) => (s.prestige.spentPoints ?? 0) / 10,
+  fully_upgraded: (s) => s.upgradesPurchased.length / UPGRADE_COUNT,
+}
+
+/** Fraction (0..1) toward a countable achievement, or null if it's an event goal. */
+export function achievementProgress(s: GameState, id: string): number | null {
+  const fn = PROGRESS[id]
+  if (!fn) return null
+  return Math.min(1, Math.max(0, fn(s)))
+}
+
 /**
  * Unlock any newly-satisfied achievements. Mutates state.achievementsUnlocked,
  * banks each one's Empire-Token reward (spendable on talents), and returns the

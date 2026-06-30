@@ -21,6 +21,7 @@ import { careerLevelDef, MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { SYNERGY_LABEL } from '../content/synergies'
 import { ACHIEVEMENTS } from '../content/achievements'
+import { achievementProgress } from '../engine/achievements'
 import { PRESTIGE_MILESTONES } from '../content/prestigeMilestones'
 import { ART_UPGRADES, ART_MILESTONE } from '../content/artManifest'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
@@ -296,6 +297,7 @@ export interface AchievementView {
   icon: string
   unlocked: boolean
   reward: number // Empire Tokens granted on unlock
+  progress: number | null // 0..1 toward a countable goal (null = event/one-shot)
 }
 
 export interface PrestigeMilestoneView {
@@ -589,14 +591,19 @@ export function buildView(state: GameState): ViewSnapshot {
   })
 
   const unlockedAch = new Set(state.achievementsUnlocked)
-  const achievements: AchievementView[] = ACHIEVEMENTS.map((a) => ({
-    id: a.id,
-    name: a.name,
-    description: a.description,
-    icon: a.icon,
-    unlocked: unlockedAch.has(a.id),
-    reward: a.reward,
-  }))
+  const achievements: AchievementView[] = ACHIEVEMENTS.map((a) => {
+    const unlocked = unlockedAch.has(a.id)
+    return {
+      id: a.id,
+      name: a.name,
+      description: a.description,
+      icon: a.icon,
+      unlocked,
+      reward: a.reward,
+      // Only locked, countable goals need a progress bar.
+      progress: unlocked ? null : achievementProgress(state, a.id),
+    }
+  })
 
   const claimedPm = new Set(state.prestigeMilestonesClaimed)
   const prestigeMilestones: PrestigeMilestoneView[] = PRESTIGE_MILESTONES.map((m) => ({

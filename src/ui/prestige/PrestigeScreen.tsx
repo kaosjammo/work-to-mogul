@@ -203,6 +203,19 @@ export function PrestigeScreen() {
                 <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
                   {a.description}
                 </div>
+                {!a.unlocked && a.progress != null && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{ background: 'var(--accent)', width: `${Math.round(a.progress * 100)}%` }}
+                      />
+                    </div>
+                    <span className="tnum text-[10px]" style={{ color: 'var(--text-faint)' }}>
+                      {Math.round(a.progress * 100)}%
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           ))}

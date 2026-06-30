@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { checkAchievements } from './achievements'
+import { checkAchievements, achievementProgress } from './achievements'
 import { prestigeReset } from './prestige'
 import { PRESTIGE_SCALE } from './economy'
 import { hireEmployee, assignToFirstFreeSlot } from './employees/roster'
@@ -45,6 +45,19 @@ describe('achievements', () => {
     // Re-checking the same satisfied conditions grants nothing more.
     checkAchievements(s)
     expect(s.prestige.totalPoints).toBe(before + expected)
+  })
+
+  it('reports clamped progress for countable goals, null for event goals', () => {
+    const s = initialGameState(0)
+    s.businesses.lemonade.owned = 50 // toward hundred_units (100)
+    expect(achievementProgress(s, 'hundred_units')).toBeCloseTo(0.5)
+    s.businesses.lemonade.owned = 200 // overshoot → clamped to 1
+    expect(achievementProgress(s, 'hundred_units')).toBe(1)
+    s.prestige.resets = 1
+    expect(achievementProgress(s, 'ascend_three')).toBeCloseTo(1 / 3)
+    // Event/one-shot goals have no meaningful bar.
+    expect(achievementProgress(s, 'first_automation')).toBeNull()
+    expect(achievementProgress(s, 'reach_space')).toBeNull()
   })
 
   it('unlocks first_automation when an operator automates a business', () => {
