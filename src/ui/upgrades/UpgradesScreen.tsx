@@ -62,8 +62,9 @@ export function UpgradesScreen() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate font-semibold">{u.name}</div>
-            <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-              {u.scopeLabel}
+            <div className="flex flex-wrap items-center gap-x-1.5 text-xs">
+              <span className="font-bold" style={{ color: 'var(--good)' }}>{u.effectLabel}</span>
+              <span style={{ color: 'var(--text-faint)' }}>· {u.scopeLabel}</span>
             </div>
           </div>
           {u.purchased ? (

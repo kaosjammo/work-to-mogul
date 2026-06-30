@@ -199,6 +199,7 @@ export interface UpgradeView {
   purchased: boolean
   affordable: boolean
   scopeLabel: string
+  effectLabel: string // what it does, e.g. "×2 profit" / "+25% speed" / "−10% cost"
   iconSrc: string
 }
 
@@ -354,6 +355,16 @@ function scopeLabel(id: UpgradeId): string {
   if (up.scope.kind === 'global') return 'All businesses'
   if (up.scope.kind === 'industry') return INDUSTRIES[up.scope.industryId]?.name ?? 'Industry'
   return BUSINESSES[up.scope.businessId]?.name ?? 'Business'
+}
+
+// Plain-language "what it does" — a multiplier (×2) for doublings, a percentage
+// (+25%) for smaller boosts, so the buy decision isn't a guess from the name.
+function upgradeEffectLabel(id: UpgradeId): string {
+  const e = UPGRADES[id].effect
+  const grow = (f: number) => (f >= 2 ? `×${+f.toFixed(2)}` : `+${Math.round((f - 1) * 100)}%`)
+  if (e.kind === 'profitMult') return `${grow(e.factor)} profit`
+  if (e.kind === 'speedMult') return `${grow(e.factor)} speed`
+  return `−${Math.round((1 - e.factor) * 100)}% cost`
 }
 
 export function buildView(state: GameState): ViewSnapshot {
@@ -561,6 +572,7 @@ export function buildView(state: GameState): ViewSnapshot {
       purchased,
       affordable: !purchased && state.cash >= up.cost,
       scopeLabel: scopeLabel(uid),
+      effectLabel: upgradeEffectLabel(uid),
       iconSrc: ART_UPGRADES[uid]?.icon ?? ART_MILESTONE[up.effect.kind],
     }
   })
