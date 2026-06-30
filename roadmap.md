@@ -73,7 +73,7 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 |---|---|---|---|
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ SHIPPED** (`79ecc94`, 197 tests) — perks live; ⚠️ harness-wiring + slope re-tune still open |
-| **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | **NEXT — build now** (criteria below) |
+| **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | **🔨 IN PROGRESS** (uncommitted) — L10 second-spec "which two?" build; XP axis still open (3b) |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
@@ -111,40 +111,38 @@ run #1 still banks 1 token (no blowup; steps +10/+12/+13/+15/+16 are smooth). Hi
 target band; base tree at 50% by #6 (vs the 60–80% goal — fine, a genuine journey).
 **Both halves of Task 1 are now done** (`748d3c1` re-baselined `progressionLoop.test.ts`).
 
-Two small open follow-ups (not blockers):
-- **Harness still doesn't pick a perk** (`harness.ts` unchanged). Low impact — perks net
-  ~neutral so slope tuning isn't materially distorted — but wire a round-robin perk pick
-  into `simulateProgression` so the guard reflects real play.
-- Re-baseline `progressionLoop.test.ts` bounds to the new band (the diff already touches it).
+Follow-ups — both now ✅: the harness-perk gap is closed (`8e91e5d` makes
+`simulateProgression` pick a Founder Perk each ascension + adds re-measured assertions),
+and `progressionLoop.test.ts` bounds are re-baselined to the new band. Task 1 is fully
+sealed.
 
 ---
 
-## Next highest-value task → Task 3: Employee depth v2
+## Task 3 (🔨 in progress, uncommitted): Employee depth v2
 
-With the prestige loop now both *rewarding* (slope) and *varied* (founder perks), the
-next retention lever is the **signature mechanic** — employees — which today is "hire →
-Auto-Assign → forget." Make staffing an **ongoing decision**, not one-time setup. Deepen
-the *existing* roster (do **not** add roles); ship a thin slice.
+Goal: make the signature mechanic an **ongoing decision**, not "hire → Auto-Assign →
+forget." **Design review of the uncommitted work — good direction:** the dev took the
+*specialisation-fork* slice — a **second spec slot at level 10** (`specialisation2`), so an
+employee picks 1 of its role's 3 specs at L5 and a *second, different* one at L10. The
+**leftover spec is the real opportunity cost** → a genuine "which two?" build decision that
+makes levels 6–10 a goal, not a magnitude grind, and lets two same-role employees diverge.
+Plus per-role **Mastery capstones** (level-10, stronger amplify — Kingpin +0.5 profit,
+Whale +crit, etc.). UI is going into `EmployeesScreen.tsx`; existing employee/spec tests
+stay green (25/25).
 
-**Acceptance criteria (data-driven + harness-safe; pick the slice)**
-- [ ] **Active-duty XP** — an employee assigned to a business earns XP over time and gains
-  *use-levels* distinct from the cash-bought levels, so keeping a specific employee
-  assigned (vs churning) pays off. Surfaces a "Lv-up!" moment — the classic attachment
-  hook. XP curve data-driven; offline/catch-up grants it too (cap-safe).
-- [ ] **A divergent choice at a milestone** — at an XP/level milestone the employee forks
-  (e.g. a Closer → "Rainmaker" big-crit vs "Steady Hand" morale/consistency). Two
-  same-role employees should end up *different*. Reuse the L5-specialisation data pattern;
-  make it a 1-of-N **choice**, not an auto-unlock.
-- [ ] **Save migration + guard:** new fields default cleanly on old saves (xp 0, no fork);
-  a regression test like the existing save-compat guard, plus a `content.test`-style check
-  that every fork effect is wired (no dead-perk repeat).
-- [ ] **Harness-safe:** the greedy bot keeps working; if XP changes automated pps, re-run
-  `harness.test.ts` + `progressionLoop` and re-baseline bounds in the same commit.
-- [ ] **Mobile-legible:** XP progress + the fork choice read clearly at 375px / 44px; the
-  choice is one tap from the roster or assignment sheet.
+**Status of the acceptance criteria**
+- [x] A divergent, opportunity-cost **choice** (the L10 second-slot "which two?"), reusing the spec data pattern — *not* an auto-unlock. Strong.
+- [ ] **Add a guard test** — there's no new test yet for the slot-2 logic: the L10 gate, the "two slots must hold *different* specs" rule, role-match, and the Mastery-capstone effects being wired. Add it before commit (we've shipped dead-effect bugs before).
+- [ ] **Save migration:** confirm old saves default `specialisation2` to null and don't crash; add a regression assertion (the field is optional, so this should be cheap).
+- [ ] **Harness / balance check:** two specs + a capstone roughly doubles an employee's effect ceiling. Run the full suite + `progressionLoop` on commit; if the bot reaches L10 staff, re-baseline. Watch that two-spec employees don't trivialise late-game pps.
+- [ ] **Mobile:** the two-slot picker reads clearly at 375px / 44px and the leftover-spec cost is legible (so the trade-off is felt, not hidden).
 
-Scope guard: one thin slice (XP + one fork axis), not a full RPG. If it sprawls, ship
-active-duty XP alone first and add the fork next.
+**Not in this slice — active-duty XP.** The dev chose the spec-fork axis over use-based
+XP, so the "stay attached to *this* employee by playing with it" hook (use-levels distinct
+from cash-bought levels, a "Lv-up!" moment) is still open. That's the natural **Task 3b**
+— decide next pass whether to follow it or move to Task 4 (industry identity).
+
+Scope guard holding: this is one coherent slice (spec builds), not a full RPG. Good.
 
 ---
 
