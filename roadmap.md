@@ -151,7 +151,7 @@ existing systems feel meaningfully different* — these don't). Replacing two of
 
 **Acceptance criteria (vertical slice — pick 2–3 industries, prove the pattern)**
 - [ ] Give a first industry a **mechanic that matches its name**, e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer that industry runs uninterrupted, or auto-reinvests a %), so the playstyle label is *true*, not decorative.
-- [ ] A second, **mechanically different** one, e.g. Food/`rush_hour`: a recurring short speed-surge **window** on a *deterministic* cadence (reuse the Golden-Deal spawn-counter, **not** RNG, so the harness/balance tests stay stable) — an active-play reason to tap in.
+- [ ] A second, **mechanically different** one, e.g. Food/`rush_hour`: a recurring short speed-surge **window** on a *deterministic* cadence — reuse `golden.ts`'s exact tick-counter pattern (`cooldownMs` decremented per `dtMs`, `spawnCount % N` to fire), **not** RNG, so the harness/balance tests stay stable. An active-play reason to tap in; mirror the Golden-Deal countdown HUD so it's not a new UI paradigm.
 - [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity.
 - [ ] **Harness + balance safe:** keep `balance.test.ts`'s income-efficiency monotonicity and re-run `harness.test.ts` + `progressionLoop`; re-baseline bounds in the same commit if pps shifts. Deterministic mechanics only (no RNG in the income fold).
 - [ ] **Data-driven + tested:** mechanics described in content, a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
