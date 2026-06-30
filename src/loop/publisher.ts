@@ -37,7 +37,10 @@ function toastNewAchievements(): void {
 
 export function publishNow(): void {
   toastNewAchievements()
-  useGameStore.getState()._publish(buildView(getEngineState()))
+  // Pass the open assignment sheet's business so the view can compute "Assign → +$/s"
+  // previews only for that business (cheap; nothing computed when no sheet is open).
+  const openAssignment = useUiStore.getState().assignmentBusinessId
+  useGameStore.getState()._publish(buildView(getEngineState(), openAssignment))
 }
 
 export function publishThrottled(now: number): void {

@@ -11,6 +11,7 @@ export function AssignmentSheet() {
   const businessId = useUiStore((s) => s.assignmentBusinessId)
   const close = useUiStore((s) => s.closeAssignment)
   const view = useGameStore((s) => (businessId ? s.businesses[businessId] : undefined))
+  const assignPreviews = useGameStore((s) => s.assignPreviews)
   const employees = useEmployees()
 
   const open = !!businessId && !!view
@@ -161,6 +162,7 @@ export function AssignmentSheet() {
                   <div className="flex flex-col gap-2">
                     {available.map((e) => {
                       const match = e.affinity === view.industryId
+                      const gain = assignPreviews[e.id] ?? 0
                       return (
                         <button
                           key={e.id}
@@ -184,8 +186,15 @@ export function AssignmentSheet() {
                               {match && <span style={{ color: 'var(--accent)' }}> · ⭐ +25% on-theme</span>}
                             </div>
                           </div>
-                          <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
-                            Assign
+                          <span className="flex shrink-0 flex-col items-end">
+                            <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
+                              Assign
+                            </span>
+                            {gain > 0 && (
+                              <span className="tnum text-[11px] font-bold" style={{ color: 'var(--good)' }}>
+                                +{formatRate(gain)}
+                              </span>
+                            )}
                           </span>
                         </button>
                       )

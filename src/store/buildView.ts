@@ -280,6 +280,9 @@ export interface ViewSnapshot {
   prestigeMilestones: PrestigeMilestoneView[]
   navBadges: Partial<Record<TabId, number>> // actionable-reward counts per tab
   stats: GameStats
+  // Benched employee id → $/s the open assignment sheet's business would gain by
+  // assigning them (empty unless a sheet is open). Powers the "Assign → +$X/s" cue.
+  assignPreviews: Record<string, number>
 }
 
 export interface GameStats {
@@ -367,7 +370,10 @@ function upgradeEffectLabel(id: UpgradeId): string {
   return `−${Math.round((1 - e.factor) * 100)}% cost`
 }
 
-export function buildView(state: GameState): ViewSnapshot {
+export function buildView(
+  state: GameState,
+  openAssignmentBusinessId: BusinessId | null = null,
+): ViewSnapshot {
   const businesses: Record<BusinessId, BusinessView> = {}
   let totalPps = 0
   let totalOwned = 0
@@ -706,6 +712,29 @@ export function buildView(state: GameState): ViewSnapshot {
   if (contractsClaimable > 0) navBadges.stats = contractsClaimable
   if (prestigeUnlocked && pendingTokens > 0) navBadges.prestige = pendingTokens
 
+  // "Assign → +$X/s" previews for the open assignment sheet: resolve the business
+  // against a shallow clone that drops each benched employee into a free slot, and
+  // report the $/s gain. Non-mutating; only runs while a sheet is open + has a slot.
+  const assignPreviews: Record<string, number> = {}
+  if (openAssignmentBusinessId) {
+    const def = BUSINESSES[openAssignmentBusinessId]
+    const bs = state.businesses[openAssignmentBusinessId]
+    const freeSlot = bs ? bs.assigned.findIndex((x) => x == null) : -1
+    if (def && bs && freeSlot >= 0) {
+      const before = resolveBusiness(state, def).pps
+      for (const e of Object.values(state.employees)) {
+        if (assignmentOf[e.id]) continue // already working somewhere
+        const trialAssigned = bs.assigned.slice()
+        trialAssigned[freeSlot] = e.id
+        const trialState = {
+          ...state,
+          businesses: { ...state.businesses, [def.id]: { ...bs, assigned: trialAssigned } },
+        }
+        assignPreviews[e.id] = resolveBusiness(trialState, def).pps - before
+      }
+    }
+  }
+
   return {
     cash: state.cash,
     lifetimeEarnings: state.lifetimeEarnings,
@@ -746,5 +775,6 @@ export function buildView(state: GameState): ViewSnapshot {
       employees: Object.values(state.employees).length,
       careerLevel: state.career.level,
     },
+    assignPreviews,
   }
 }
