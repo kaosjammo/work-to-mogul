@@ -154,15 +154,20 @@ export function buyUpgrade(id: UpgradeId): void {
 export function prestige(): void {
   const s = getEngineState()
   const before = new Set(s.prestigeMilestonesClaimed)
+  const tokensBefore = s.prestige.totalPoints ?? 0
   if (prestigeReset(s)) {
     haptic(45) // ascension — a big, satisfying reset
-    // Celebrate any ascension-count milestones that just paid out.
-    const fresh = s.prestigeMilestonesClaimed
-      .filter((id) => !before.has(id))
-      .map((id) => PRESTIGE_MILESTONE_NAME[id])
-      .filter(Boolean)
-      .map((name) => `${name} reached!`)
-    if (fresh.length) useUiStore.getState().pushCelebrations(fresh)
+    const msgs: string[] = []
+    // Headline payoff: the tokens this ascension banked (base + any milestone bonus).
+    const gained = (s.prestige.totalPoints ?? 0) - tokensBefore
+    if (gained > 0) msgs.push(`✦ Empire ascended! +${gained} Empire Token${gained === 1 ? '' : 's'}`)
+    // Plus any ascension-count milestones that just paid out.
+    for (const id of s.prestigeMilestonesClaimed) {
+      if (before.has(id)) continue
+      const name = PRESTIGE_MILESTONE_NAME[id]
+      if (name) msgs.push(`${name} reached!`)
+    }
+    if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
     publishNow()
   }
 }
