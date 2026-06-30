@@ -266,6 +266,7 @@ export interface ViewSnapshot {
   achievements: AchievementView[]
   achievementsUnlockedCount: number
   prestigeMilestones: PrestigeMilestoneView[]
+  navBadges: Partial<Record<TabId, number>> // actionable-reward counts per tab
   stats: GameStats
 }
 
@@ -648,6 +649,12 @@ export function buildView(state: GameState): ViewSnapshot {
     consultingFull: c.consultingMs >= CONSULT_CAP_MS,
   }
 
+  // Tab badges for actionable rewards — claimable contracts (Stats) and a
+  // worthwhile ascension (Ascend). Only unambiguous "go claim this" signals.
+  const navBadges: Partial<Record<TabId, number>> = {}
+  if (contractsClaimable > 0) navBadges.stats = contractsClaimable
+  if (prestigeUnlocked && pendingTokens > 0) navBadges.prestige = pendingTokens
+
   return {
     cash: state.cash,
     lifetimeEarnings: state.lifetimeEarnings,
@@ -676,6 +683,7 @@ export function buildView(state: GameState): ViewSnapshot {
     achievements,
     achievementsUnlockedCount: unlockedAch.size,
     prestigeMilestones,
+    navBadges,
     stats: {
       totalOwned,
       automatedCount,

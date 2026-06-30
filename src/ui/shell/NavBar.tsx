@@ -1,5 +1,5 @@
 import type { TabId } from '../../types/domain'
-import { useActiveTab, useRevealedTabs } from '../../store/gameStore'
+import { useActiveTab, useRevealedTabs, useNavBadges } from '../../store/gameStore'
 import { setActiveTab } from '../../store/actions'
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
@@ -13,6 +13,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
 export function NavBar() {
   const active = useActiveTab()
   const revealed = useRevealedTabs()
+  const badges = useNavBadges()
   // Business is always shown; others reveal as the player progresses (onboarding).
   const visibleTabs = TABS.filter(
     (t) => t.id === 'business' || revealed[t.id as 'employees' | 'upgrades' | 'prestige' | 'stats'],
@@ -28,12 +29,13 @@ export function NavBar() {
     >
       {visibleTabs.map((tab) => {
         const isActive = tab.id === active
+        const badge = badges[tab.id] ?? 0
         return (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className="flex flex-1 flex-col items-center justify-center gap-0.5"
+            className="relative flex flex-1 flex-col items-center justify-center gap-0.5"
             style={{
               minHeight: 'var(--nav-h)',
               color: isActive ? 'var(--accent)' : 'var(--text-faint)',
@@ -43,7 +45,27 @@ export function NavBar() {
             }}
             aria-current={isActive ? 'page' : undefined}
           >
-            <span className="text-lg leading-none">{tab.icon}</span>
+            <span className="relative text-lg leading-none">
+              {tab.icon}
+              {badge > 0 && (
+                <span
+                  className="tnum absolute flex items-center justify-center rounded-full px-1 text-[10px] font-bold"
+                  aria-label={`${badge} ready`}
+                  style={{
+                    top: -4,
+                    left: '100%',
+                    marginLeft: -6,
+                    minWidth: 16,
+                    height: 16,
+                    background: 'var(--bad)',
+                    color: '#fff',
+                    border: '1.5px solid var(--surface)',
+                  }}
+                >
+                  {badge > 99 ? '99+' : badge}
+                </span>
+              )}
+            </span>
             <span className={`text-[11px] ${isActive ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
           </button>
         )
