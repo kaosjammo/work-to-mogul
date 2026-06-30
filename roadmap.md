@@ -15,9 +15,9 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **197 tests / 32 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **198 tests / 32 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
-- **Prestige economy converged (`c038473` → `673dbdc` → slope re-tune, uncommitted):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved pending commit.**
+- **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
 
 **What exists (inventory — do not re-build):**
 
@@ -71,7 +71,7 @@ slope is too flat. Re-tune the power curve (next), then add the founder-perk dec
 
 | # | Task | Why it matters for retention | Status |
 |---|---|---|---|
-| **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness landed (`673dbdc`); the slope re-tune (uncommitted) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **harness ✅ · re-tune ✅ (uncommitted, validated)** |
+| **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ SHIPPED** (`79ecc94`, 197 tests) — perks live; ⚠️ harness-wiring + slope re-tune still open |
 | **3** | **Employee depth v2: XP / traits / specialisation decisions** | Turns the signature mechanic from "hire & forget" into ongoing choices | **NEXT — build now** (criteria below) |
 | 4 | Stronger industry identity / unique mechanics | Differentiates the 8 industries beyond numbers | Backlog |
@@ -93,9 +93,9 @@ now a CI guard). It also exposed the *opposite* problem — the new top priority
 
 ---
 
-## Prestige slope balance pass ✅ validated (uncommitted — re-tune in flight)
+## Prestige slope balance pass ✅ DONE (`748d3c1`)
 
-The re-tune is in the working tree and the harness confirms it fixed the flat loop.
+The re-tune landed and the harness confirms it fixed the flat loop.
 Levers: `PRESTIGE_YIELD_EXP` 0.2 → **0.26** + base talent profit effects ~doubled
 (Magnate 0.12 → 0.25, etc.). Before → after, same sim (`npx vitest run progressionLoop`):
 
@@ -109,7 +109,7 @@ Achieved: run lifetime now **climbs run-over-run** (no plateau — #6 ≈ 4.7× 
 wall-clock), yield grows to +16/run, the **Mastery sink is reachable** (cum 67 > ~50), and
 run #1 still banks 1 token (no blowup; steps +10/+12/+13/+15/+16 are smooth). Hits the
 target band; base tree at 50% by #6 (vs the 60–80% goal — fine, a genuine journey).
-**When committed, both halves of Task 1 are done.**
+**Both halves of Task 1 are now done** (`748d3c1` re-baselined `progressionLoop.test.ts`).
 
 Two small open follow-ups (not blockers):
 - **Harness still doesn't pick a perk** (`harness.ts` unchanged). Low impact — perks net
