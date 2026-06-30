@@ -116,6 +116,7 @@ function BusinessCardImpl({ view, accent }: Props) {
                 e.stopPropagation()
                 useUiStore.getState().openAssignment(view.id)
               }}
+              aria-label={`Manage staff for ${view.name} — ${view.assignedCount} of ${view.unlockedSlots} assigned`}
               className="flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
             >
