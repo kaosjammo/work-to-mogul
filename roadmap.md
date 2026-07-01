@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **227 tests / 34 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **231 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -50,11 +50,12 @@ decision-rich** — the earlier gaps are closed:
 
 **The gap has moved from *depth* to the *edges of the session* — D1 and D7:**
 - **D1 (first session): solid now.** Clear first-moment hint (tap Work Shift → buy a business), a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige), and — new this iteration — a "new" pulse dot so those reveals get *noticed* (`aa4e2b5`). The onboarding arc is guided end-to-end.
-- **D7 (return reason): a true zero — the last untouched lever.** All recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so **nothing pulls a lapsed player back tomorrow.** No daily hook exists.
+- **D7 (return reason): now built (`2ceff30`).** A once-per-real-day Daily Bonus (~2h idle income) with a "🔥 Day N" streak now gives a wall-clock reason to return. The one rough edge: it lands as a *second* modal on the return, stacked on Welcome-Back (see Next task).
 
-Diagnosis in one line: **the game is deep, polished, and now well-onboarded; the single
-remaining untouched retention lever is a *daily return reason* (D7) — a once-per-real-day
-claimable. Not more mid-game systems.**
+Diagnosis in one line: **every retention lever the roadmap set out to build now exists —
+depth (prestige/employees), identity (industries), active decisions (events), onboarding
+(D1), and a daily return reason (D7). The remaining work is *polish*: merge the doubled
+return moment, then incremental feel (Task 6). No new systems needed.**
 
 ---
 
@@ -68,7 +69,7 @@ claimable. Not more mid-game systems.**
 | **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
 | **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches | **✅ DONE** (`6d5c394`, 225 tests) — 4 trade-off cards, deterministic, harness byte-identical, modal playtested |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Incremental (ongoing) |
-| **7** | **Daily return hook (D7)** — D1 onboarding polish ✅ done | D7: nothing pulls a lapsed player back tomorrow (all content refreshes on play-time). D1 reveal-cue shipped (`aa4e2b5`) | **⬅ NEXT** — D7 daily claimable is the last real retention lever (de-risked spec below) |
+| **7** | **Daily return hook (D7) + D1 onboarding** | The whole session arc now has hooks: D1 reveal-cue (`aa4e2b5`) + D7 daily bonus w/ streak (`2ceff30`) | **✅ DONE** (231 tests) — ⚠️ daily + welcome-back are two stacked modals; merge (next task below) |
 
 **The original 6-task roadmap is essentially complete** (1–5 done, 6 is ongoing polish).
 Do **not** add a 9th industry / raw content tier. The next retention gains are D1/D7, not
@@ -244,19 +245,29 @@ back tomorrow.** No daily hook exists at all.
 
 **Acceptance criteria**
 - [x] **D1 — reveal cue ✅ DONE (`aa4e2b5`).** A newly-revealed-but-unvisited tab pulses a "new" dot in the nav; opening it clears it (persisted `visitedTabs`, save-migrated so veterans see no false "new", tested + browser-verified at 390px). A lighter touch than a per-reveal hint, but it works alongside the existing card guidance ("💡 Assign an Operator to automate"). D1 onboarding is now solid end-to-end.
-- [ ] **D7 (the remaining lever): a once-per-real-day claimable.** Concrete de-risked spec:
-  - **⚠️ Integrate with the existing Welcome-Back moment — don't stack a 2nd modal.** The return already fires a polished full-screen "Welcome back! Your automated businesses earned {cash}" modal (`WelcomeBackBanner`, the offline catch-up, capped 2h). The daily bonus lands on the *same* return — so **add a "Daily Bonus · Day N 🔥" section to that modal** (one modal, one Collect), *not* a separate stacked "+cash" popup. On a same-day return, show only the offline part.
-  - **Make the daily reward a *distinct* dopamine beat, not a duplicate cash pile.** Offline already hands you a cash number; a second identical cash number is flat. Better options: a **free Golden Deal / Time-Warp** (a burst, reusing existing systems), a **streak** that's the real hook, or a small **choice** (reuse the event-card pattern). Rationale: the 2h offline *cap* deliberately limits passive away-income — the daily is the *active habit reward* that compensates, so it should feel different.
-  - **If it is cash, size it against the offline cap.** Offline already gives up to 2h; a daily *also* giving ~2h means ~4h per daily return — fine if intended, but decide deliberately. A **streak-scaled** reward (small day 1, growing) reads better than a flat 2h stacked on 2h.
-  - **Day-bucketing:** a `dailyClaimDay` integer (local-day index) persisted in the save; claimable when `todayIndex > dailyClaimDay`. The claim function **takes a `now` param** (like `initialGameState(now)`) so it's unit-testable without real time. Track `dailyStreak` (reset if a day is skipped).
-  - **Harness-safe:** *player-triggered* (a claim tap); the sim/bot never advances wall-clock → inert in `harness`/`progressionLoop` (same class as Golden Deals / Welcome-Back). Confirm the bot never claims.
-  - **Anti-abuse:** accept minor clock-change exploitation (no server). Don't grant retroactive/multiple days.
-  - **Mobile:** a claimable badge on the nav (reuse `navBadges`) for when they *don't* return cold; the primary surface is the Welcome-Back modal section.
+- [x] **D7 — daily return hook ✅ DONE (`2ceff30`).** A once-per-real-day **Daily Bonus** worth ~2h of idle income (offline-value math, so it scales across prestige tiers), a `dailyStreak` "🔥 Day N" counter with a streak multiplier, `dailyClaimDay` local-day bucketing, `claimDaily(state, now)` with the `now` param (unit-testable), save-migrated (old saves → claimable next open), **harness byte-identical**. 231 tests. Followed the de-risking spec on reward/streak/testability/harness — **all met except the modal integration** (see follow-up).
 
-**Task 6 (mobile polish / celebrations / sound / haptics)** stays a parallel *incremental*
-track — feel is already strong (playtests confirm clean cues, tap targets, no overflow), so
-it's small ongoing wins (e.g. sound behind the FX toggle, an ascension celebration), not a
-blocking task.
+**Task 7 complete → the whole roadmap (1–7) is delivered.** One concrete UX follow-up and
+Task 6 remain; both are polish, not new systems.
+
+## Next highest-value task → merge the two return-moment modals (UX)
+
+The daily hook shipped as a **separate `DailyBonusModal`**, and `App.tsx` renders it
+*alongside* `WelcomeBackBanner` (both `fixed inset-0 z-50`, no gating between them). So on a
+**daily cold return the player taps through two sequential full-screen overlays** —
+"Welcome back, you earned {cash}" → then "Daily Bonus" — instead of one satisfying beat. The
+mechanic is correct; the return *moment* is doubled. This is the single most-hit retention
+surface, so it's worth fixing.
+
+**Acceptance criteria (small, no mechanic change)**
+- [ ] **One return moment.** Either merge the daily bonus into `WelcomeBackBanner` as a "🔥 Daily Bonus · Day N" section with a single Collect, **or** sequence them so only one shows at a time (daily after welcome-back is dismissed) — never two stacked overlays.
+- [ ] **De-dupe the feel** so it doesn't read as "collect cash" twice: lean on the streak framing / a visually distinct treatment for the daily part.
+- [ ] Keep the claim logic + tests unchanged (this is presentation only); re-verify on a fresh save at 375px once the preview tab is visible.
+
+**Then → Task 6 (mobile polish / celebrations / sound / haptics)** — the last open track,
+purely *incremental*: feel is already strong (playtests confirm clean cues, tap targets, no
+overflow). Small ongoing wins — sound behind the FX toggle, an ascension celebration, an
+optional streak-multiplier tuning pass — not a blocking task.
 
 *Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
 test-guarded) — keep an eye it reads as a signature, not a slot machine.
