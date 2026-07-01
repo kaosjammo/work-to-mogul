@@ -260,22 +260,22 @@ return beat. 231 tests (presentation-only).
 
 ---
 
-## Next highest-value task → Streak long-term payoff (D7 depth)
+## Task: Streak long-term payoff (D7 depth) — 🔨 in progress (uncommitted)
 
-The daily hook works, but the streak (`dailyStreak`) currently **only multiplies cash** — that
-plateaus fast and gives no *reason* to protect a long run. Milestone rewards turn "I opened it
-today" into **"I don't want to break my streak"** — the strongest D7 mechanic in the genre,
-and cheap here because the counter already exists.
+**Design review of the WIP — strong and to-spec.** `dailyMilestones.ts` adds **4 milestones
+(Day 3/7/14/30)** mixing income-scaled cash (6× / 40× the daily) and modest Empire Tokens
+(3 / 12) — **no new currency, no RNG**, with `nextMilestone`/`prevMilestoneDay` helpers for a
+progress cue. Granted inside `claimDaily(state, now)` (player-triggered).
 
-**Acceptance criteria (small, harness-safe, reuse existing systems)**
-- [ ] **Milestone rewards at streak thresholds** — e.g. Day 3 / 7 / 14 / 30: a bigger one-off (a **free Golden Deal / Time-Warp**, a chunk of **Empire Tokens**, or a large cash multiple). **No new currency** — reuse Golden Deals / tokens / cash.
-- [ ] **Make the next milestone *visible*** — on the daily card, "🔥 Day 3 · next reward at Day 7" with a thin progress bar, so the streak is a *goal*, not a hidden counter.
-- [ ] **Deterministic + save-tracked:** reuse `dailyStreak`; track claimed milestones (a small set or a high-water mark) so a reward isn't granted twice. No RNG.
-- [ ] **Harness-safe:** player-triggered on claim, wall-clock only → inert in `harness`/`progressionLoop` (same class as the daily bonus). Confirm the bot never claims.
-- [ ] **Mobile:** the milestone reward + progress read clearly at 375px within the existing daily card / return modal.
+**Status of the acceptance criteria**
+- [x] Milestone rewards at Day 3/7/14/30, reusing cash + Empire Tokens (no new currency). ✅
+- [x] **No double-grant, cleanly** — fires only when `dailyStreak` *exactly* equals a milestone day, and `claimDaily` stamps `dailyClaimDay` (once per real day). No separate claimed-set needed — a simpler correct approach than I suggested. Re-earns on a fresh streak after a break (intended).
+- [x] **Harness-safe** — the token/cash grant is inside `claimDaily`, which only the *player* calls; the bot never claims dailies → `harness`/`progressionLoop` untouched (same class as Golden Deals). ✅
+- [x] **Balance-aware** — token amounts sized "so the daily can't out-earn a prestige run's yield" (≈3 tokens/week ceiling even farming break-rebuild) — doesn't undermine the tuned prestige economy. Good instinct.
+- [ ] ⚠️ **Add a milestone test before commit** — `daily.test.ts` has none yet. Cover: a milestone fires at exactly its day; a token milestone adds to `prestige.totalPoints`; a cash milestone adds N× the daily; re-earn after a streak break; no fire on non-milestone days.
+- [ ] **Visible progress cue** — `buildView.ts` is in the change set; confirm the daily card shows "🔥 Day 3 · next reward at Day 7" + a thin progress bar (the helpers exist for it). Verify at 375px.
 
-Scope guard: 3–4 milestones, reusing existing reward types. Ship the milestone bonus first;
-a "streak insurance" (one free skip) is a fast-follow only if retention data asks for it.
+Scope guard holding: 4 milestones, existing reward types, no new currency. Good.
 
 **Then → Task 6 feel polish** (the last open, incremental track): a **sound layer** behind the
 FX toggle (biggest remaining feel gap), an **ascension celebration**, brand glyphs. Not blocking.
