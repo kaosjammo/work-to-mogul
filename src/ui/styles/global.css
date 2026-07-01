@@ -237,20 +237,19 @@ button {
   font-feature-settings: 'tnum';
 }
 
-/* Shared elevated card surface — one source of truth for the panel treatment used
-   across every screen. Presentation only (no padding/gap) so callers keep full
-   control of their own spacing/layout. Lifts cards off the city backdrop. */
+/* Flat surface for genuine 'objects' only (a business tile, an overlay panel).
+   Deliberately NOT elevated — the redesign groups everything else with whitespace +
+   dividers + section headers, not nested bordered/shadowed boxes. */
 .card {
-  background: var(--surface-card);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-card), var(--hairline-top);
 }
 
-/* Frosted, elevated chrome for the fixed HUD + bottom nav. Progressive enhancement:
-   opaque --surface by default so legibility never regresses; translucent blur only
-   where backdrop-filter is supported, turning the bars into premium glass over the
-   city backdrop. .chrome-hud/.chrome-nav add the directional elevation shadow. */
+/* Frosted chrome for the fixed HUD + bottom nav. Progressive enhancement: opaque
+   --surface by default; translucent blur only where backdrop-filter is supported.
+   The bars separate from content by their own 1px hairline border (set on the
+   component), NOT a heavy drop-shadow — so they read as chrome, not floating panels. */
 .chrome {
   background: var(--surface);
 }
@@ -261,11 +260,93 @@ button {
     backdrop-filter: var(--frost-blur);
   }
 }
-.chrome-hud {
-  box-shadow: var(--shadow-hud);
+
+/* ── One button system ─────────────────────────────────────────────────────────
+   Small, consistent VISUAL heights (--ctrl-*); the ::before expands the TOUCH area
+   to >= --tap (44px) so a 32px button is still fully tappable (#root sets
+   touch-action:manipulation). Intents: primary (gold) / secondary (neutral) / ghost.
+   Full-width is opt-in via .btn-block — reserved for the one hero action per view. */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--ctrl-md);
+  padding: 0 14px;
+  border-radius: var(--ctrl-radius);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    filter 0.12s ease,
+    background 0.12s ease;
 }
-.chrome-nav {
-  box-shadow: var(--shadow-nav);
+.btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--tap));
+  height: max(100%, var(--tap));
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-secondary {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+.btn-sm {
+  height: var(--ctrl-sm);
+  padding: 0 10px;
+  font-size: 0.8125rem;
+}
+.btn-md {
+  height: var(--ctrl-md);
+}
+.btn-lg {
+  height: var(--ctrl-lg);
+}
+.btn-block {
+  width: 100%;
+}
+.btn-icon {
+  width: var(--ctrl-md);
+  padding: 0;
+}
+
+/* ── Flat grouping vocabulary (replaces nested boxes) ───────────────────────────
+   A borderless row; consecutive rows are separated by a single hairline divider. */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.list-row + .list-row {
+  border-top: 1px solid var(--divider);
+}
+/* A section groups content under a lightweight uppercase label — no border. */
+.section > h2 {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 /* Progress-bar fill is GPU-composited via transform: scaleX(). */

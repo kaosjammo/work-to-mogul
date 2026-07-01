@@ -30,12 +30,24 @@
   --industry-quantum: #818cf8;
 
   /* Layout */
-  --tap: 44px; /* minimum tap target */
-  --tap-lg: 56px; /* primary buttons */
+  --tap: 44px; /* immutable minimum TOUCH target (hit area) */
+  --tap-lg: 56px; /* legacy primary height — being retired for --ctrl-* */
   --radius: 16px; /* matches the shipping rounded-2xl on cards */
   --radius-sm: 12px; /* matches rounded-xl on inner controls */
   --radius-pill: 9999px;
   --gap: 12px;
+  --gap-sm: 8px;
+
+  /* Control scale — one button system, small + consistent VISUAL heights. The 44px
+     TOUCH floor is preserved separately via the .btn ::before hit-area (global.css),
+     so a 32px button still has a 44px tap target. */
+  --ctrl-sm: 32px;
+  --ctrl-md: 40px;
+  --ctrl-lg: 48px;
+  --ctrl-radius: 10px;
+
+  /* A hairline divider for flat, borderless list grouping (replaces per-row boxes). */
+  --divider: rgba(255, 255, 255, 0.07);
 
   /* Elevation — a small deliberate shadow scale so surfaces layer over the city
      backdrop instead of reading as one flat plane. Replaces ad-hoc inline shadows. */

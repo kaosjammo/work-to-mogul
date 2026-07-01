@@ -4,6 +4,37 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI REDESIGN Phase 0 — foundation (flat, dense, one button system)
+
+**Context:** user called the UI hectic/boxy with "giant bar" buttons and asked for a real
+redesign (fewer/no boxes, consistent smaller buttons, density, game-like). A multi-agent design
+analysis produced the plan (see [`docs/UI_REDESIGN.md`](docs/UI_REDESIGN.md)); the user picked
+dense ~64px business rows, a slim full-width buy-mode row (Business tab only), and the FULL
+game-world treatment. Presented with a before/after mockup and approved.
+
+**Phase 0 (this commit) — the reusable foundation everything else pulls from:**
+- `tokens.css`: control scale `--ctrl-sm/md/lg` (32/40/48px visual), `--ctrl-radius`, `--gap-sm`,
+  and `--divider`; kept `--tap:44px` as the immutable TOUCH floor.
+- `global.css`: one `.btn` system (`-primary/-secondary/-ghost`, `-sm/-md/-lg`, `-block`,
+  `-icon`) whose `::before` expands the tap area to ≥44px so a 32px button is still fully
+  tappable; plus `.list-row` (hairline-`--divider`-separated, borderless) and `.section`
+  (uppercase label) as the flat grouping vocabulary that replaces nested boxes.
+- **Dialed back the recent elevation/frost pass** (it worked against the goal): `.card` is now
+  FLAT (dropped the shadow-card + top-lit gradient + hairline — reserved for genuine objects
+  only); the frosted HUD/nav kept the cheap blur but **lost the heavy directional shadow**,
+  separating from content by their existing 1px hairline instead of floating.
+
+**Validation:** `tsc -b` + build clean (CSS 27.3→28.8kB from the utilities), oxlint clean, 244
+tests green (presentation-only). **Browser-verified at 375px** via computed styles: `.card`
+box-shadow + gradient now `none`; HUD box-shadow `none` with `backdrop-filter: blur(14px)` kept.
+New `.btn`/`.list-row`/`.section` utilities are latent until Phase 1 adopts them.
+
+**Files:** ~`ui/styles/tokens.css`, `ui/styles/global.css`; +`docs/UI_REDESIGN.md`.
+
+**Next:** Phase 1 — rebuild the Business screen (flat rows + small chips + collapsed cues).
+
+---
+
 ## HOTFIX — cloud-save conflict chooser was un-clickable (deadlock)
 
 **Reported (user, with screenshot):** stuck on the "Which save do you want?" cloud-conflict modal
