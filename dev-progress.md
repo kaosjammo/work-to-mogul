@@ -4,6 +4,42 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mobile QA — 375px overlay audit + two sub-44px tap-target fixes
+
+**Analysed:** the reviewer left two overlays flagged for a 375px device check they couldn't
+pixel-measure earlier (ascension celebration — roadmap "just a 375px device check when
+convenient"; event-card modal — "worth a visible-tab layout check next time the server's up").
+The dev server is up, so I discharged that verification rigorously via DOM measurement (more
+reliable than the flaky rAF screenshots) at 375×812.
+
+**Findings:**
+- **AscensionCelebration** — clean. No horizontal overflow (scrollWidth == 375), card centered
+  at 351px with 12px gutters, fits vertically, "Rise again" 56px, even a large "+1.23M Empire
+  Tokens" line doesn't overflow (0 overflowing elements).
+- **EventCardModal** — otherwise clean (no overflow, card fits, option buttons 68px) **but the
+  "Ignore" dismiss button measured 40px tall — under the project's own 44px tap-target minimum**
+  (the standard enforced in `da223e9`). Real accessibility miss.
+- **Swept the sibling return/decision overlays** for the same pattern: **DailyBonusModal's
+  "Later" button had the identical bug** (`text-xs` + no `minHeight` → ~20px). WelcomeBackBanner's
+  only button already uses `--tap-lg` (fine); MilestoneCelebration is a toast, not a tap target.
+
+**Fixed (presentation-only):** added `minHeight: 'var(--tap)'` (the 44px token) to both secondary
+dismiss buttons — EventCardModal "Ignore" and DailyBonusModal "Later". Primary actions keep
+`--tap-lg` (56px); only the under-sized secondaries were bumped to the 44px floor.
+
+**Validation:** oxlint clean, `tsc -b` + build clean (chunks unchanged — supabase still split at
+51.79 kB gzip, eager 119.10 kB gzip), **236 tests green** (no logic touched). **Browser-verified
+at 375px:** "Ignore" 40 → **44px**, "Later" ~20 → **44px**, every button in all three overlays
+now ≥44px, zero horizontal overflow, cards fit vertically.
+
+**Files:** ~`ui/shared/EventCardModal.tsx`, `ui/shared/DailyBonusModal.tsx`.
+
+**Roadmap status:** discharges the reviewer's outstanding 375px checks on both flagged overlays
+and closes two real (if small) mobile tap-target regressions in the process. No new system —
+mobile-readability polish, exactly the reviewer's "respect mobile portrait readability" bar.
+
+---
+
 ## Perf — code-split `@supabase/supabase-js` (mobile D1 first-load win)
 
 **Analysed:** the roadmap's one concrete *buildable* backlog item that isn't padding or new

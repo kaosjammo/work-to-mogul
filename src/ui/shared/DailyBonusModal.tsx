@@ -54,7 +54,7 @@ export function DailyBonusModal() {
           type="button"
           onClick={() => setDismissed(true)}
           className="text-xs font-semibold"
-          style={{ color: 'var(--text-faint)' }}
+          style={{ color: 'var(--text-faint)', minHeight: 'var(--tap)' }}
         >
           Later
         </button>

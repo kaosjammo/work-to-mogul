@@ -64,7 +64,7 @@ export function EventCardModal() {
           type="button"
           onClick={dismissCard}
           className="mt-0.5 rounded-xl py-2 text-xs font-semibold"
-          style={{ color: 'var(--text-faint)' }}
+          style={{ color: 'var(--text-faint)', minHeight: 'var(--tap)' }}
         >
           Ignore
         </button>
