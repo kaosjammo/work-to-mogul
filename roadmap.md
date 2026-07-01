@@ -292,7 +292,7 @@ more mid-game systems now would be padding (and against the loop's own "don't ex
 meaningfully different" rule).
 
 **So the honest priority order from here:**
-1. **Ascension celebration** — the one remaining *clear* feel gap. Prestige is the game's biggest beat but the run currently resets quietly. A short celebration (reuse the existing milestone/celebration components + the new `prestige` sound + a haptic) would land it. *Acceptance:* on a successful ascend, a brief full-screen "Empire ascended · +N ✦" moment, dismissible, one-tap, 375px-clean, harness-inert (player-triggered). Small.
+1. **Ascension celebration — 🔨 in flight (uncommitted), reviewed ✅ to-spec.** `AscensionCelebration.tsx` shows a brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on a successful ascend, reusing the Welcome-Back pattern + founder mascot, one-tap (44px+), reassuring copy ("your talents, tokens and progress carry over"), harness-inert (UI-only, player-triggered), with the `prestige` sound + haptic firing in the action. 236 tests green. Nothing to fix — verify at 375px on device once the preview tab is visible. **When it lands, the polish backlog is genuinely exhausted.**
 2. **Then it's live signal, not more building.** The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. Ship it; measure; let the data name the next task.
 
 Everything else (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty
