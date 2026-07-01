@@ -11,7 +11,7 @@
 import type { GameState, IndustryId } from '../types/domain'
 import type { AngelDealState } from '../types/domain'
 import { ANGEL_DEAL, SCORE_KEYS, type Scores, type RoleBoost, type DealChoice } from '../content/angelDeal'
-import { getMogulStory } from '../content/mogulStories'
+import { getMogulStory, MOGUL_STORIES, type MogulStory } from '../content/mogulStories'
 import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
 
@@ -56,6 +56,7 @@ export function initialAngelDealState(): AngelDealState {
     payout: 0,
     boostMult: 1,
     boostMsLeft: 0,
+    boostIndustryId: FINANCE_INDUSTRY_ID,
     exitCooldownMs: EXIT_INTERVAL_MS,
     exitCount: 0,
     lastExitAmount: 0,
@@ -153,20 +154,32 @@ export function avoidedBadDeal(s: Scores): boolean {
 }
 
 // ── Trigger (in simulate tick) ───────────────────────────────────────────────
-function ownsIndustry(state: GameState, industryId: IndustryId): boolean {
-  const ids = INDUSTRIES[industryId]?.businessIds ?? []
+function ownsIndustry(state: GameState, industryId: string): boolean {
+  const ids = INDUSTRIES[industryId as IndustryId]?.businessIds ?? []
   for (const id of ids) if ((state.businesses[id]?.owned ?? 0) > 0) return true
   return false
 }
 
+/** A story can be pitched once the player owns its industry + clears a modest cash floor. */
+export function storyEligible(state: GameState, story: MogulStory): boolean {
+  return ownsIndustry(state, story.industryId) && state.cash >= ANGEL_MIN_CASH
+}
+
+/** Registered stories eligible to be pitched right now, in registry order. */
+export function eligibleStories(state: GameState): MogulStory[] {
+  return MOGUL_STORIES.filter((s) => storyEligible(state, s))
+}
+
+/** Back-compat helper: is the Angel story specifically eligible? */
 export function angelEligible(state: GameState): boolean {
-  return ownsIndustry(state, FINANCE_INDUSTRY_ID) && state.cash >= ANGEL_MIN_CASH
+  return storyEligible(state, ANGEL_DEAL)
 }
 
 /**
- * Advance the pitch cooldown + the post-deal timed effect. When eligible and the
- * cooldown elapses, a pitch is "offered" (a floating prompt appears). Deterministic,
- * no RNG. Bot-inert: it only flips flags / decays a boost that's ×1 for the bot.
+ * Advance the pitch cooldown + the post-deal timed effect. When the cooldown elapses and
+ * at least one story is eligible, one is "offered" (a floating prompt appears), rotating
+ * deterministically across whatever's eligible so pitches vary. No RNG. Bot-inert: it only
+ * flips flags / decays a boost that's ×1 for the bot (which never accepts a pitch).
  */
 export function tickAngelDeal(state: GameState, dtMs: number): void {
   const a = state.angelDeal
@@ -176,11 +189,14 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
     if (a.boostMsLeft === 0) a.boostMult = 1
   }
   if (a.active || a.offered) return // a pitch is in flight / waiting
-  if (!angelEligible(state)) return
+  const eligible = eligibleStories(state)
+  if (eligible.length === 0) return
   if (a.cooldownMs > 0) {
     a.cooldownMs = Math.max(0, a.cooldownMs - dtMs)
     if (a.cooldownMs > 0) return // still cooling down
   }
+  // Rotate through the eligible stories by completions so successive pitches vary.
+  a.storyId = eligible[a.completedCount % eligible.length].id
   a.offered = true // cooldown elapsed → a pitch is waiting
 }
 
@@ -228,29 +244,32 @@ export function payoutFor(band: OutcomeBand, disciplined: boolean, cash: number)
   }
 }
 
-/** Apply a resolved band to the run: cash delta, unlocks, timed Finance boost/debuff. */
+/** Apply a resolved band to the run: cash delta, story-specific unlocks, timed industry boost. */
 function applyOutcome(state: GameState, band: OutcomeBand, disciplined: boolean): number {
   const a = state.angelDeal
+  const story = activeStory(a)
   const payout = payoutFor(band, disciplined, state.cash)
   state.cash = Math.max(0, state.cash + payout)
   if (payout > 0) state.lifetimeEarnings += payout
-  if (band === 'great') {
+  if (band === 'great' && a.storyId === ANGEL_DEAL.id) {
     a.combinatorUnlocked = true
     // Found the Startup Combinator: a standalone business you now own (buy more later),
-    // paying steady income + periodic "exit" jackpots.
+    // paying steady income + periodic "exit" jackpots. (Angel-only reward.)
     const b = state.businesses[COMBINATOR_ID]
     if (b) {
       b.unlocked = true
       b.owned = Math.max(1, b.owned)
     }
     a.exitCooldownMs = EXIT_INTERVAL_MS
-  }
-  if (band === 'good') {
+  } else if (band === 'great' || band === 'good') {
+    // A strong finish → a timed profit boost on THIS story's industry.
     a.boostMult = GOOD_BOOST_MULT
     a.boostMsLeft = GOOD_BOOST_MS
+    a.boostIndustryId = story.industryId
   } else if (band === 'bad') {
     a.boostMult = BAD_DEBUFF_MULT
     a.boostMsLeft = BAD_DEBUFF_MS
+    a.boostIndustryId = story.industryId
   }
   return payout
 }
@@ -308,9 +327,10 @@ export function dismissAngelOutcome(state: GameState): void {
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────
-/** Timed post-deal Finance boost (good) or debuff (bad); 1 when none active. */
-export function angelFinanceBoostMult(state: GameState, industryId: IndustryId): number {
+/** Timed post-story profit boost (good/great) or debuff (bad) on the resolved story's
+ *  industry; 1 when none is active. Generalised from Finance-only to any story's industry. */
+export function mogulStoryBoostMult(state: GameState, industryId: IndustryId): number {
   const a = state.angelDeal
-  if (!a || a.boostMsLeft <= 0 || industryId !== FINANCE_INDUSTRY_ID) return 1
+  if (!a || a.boostMsLeft <= 0 || industryId !== a.boostIndustryId) return 1
   return a.boostMult
 }

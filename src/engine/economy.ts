@@ -16,7 +16,7 @@ import { talentEconomy } from './talents'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
 import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
 import { logisticsDispatchProfitMult, LOGISTICS_INDUSTRY_ID } from './logistics'
-import { angelFinanceBoostMult } from './angelDeal'
+import { mogulStoryBoostMult } from './angelDeal'
 import { eventProfitMult, eventSpeedMult } from './eventCards'
 
 // ----- Cost scaling -----
@@ -300,17 +300,17 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // Event cards: a resolved card's timed all-business profit/speed buff (1 when none).
   const evProfit = eventProfitMult(state)
   const evSpeed = eventSpeedMult(state)
-  // Angel Investment: a timed post-deal Finance boost/debuff (×1 until the player
-  // plays a deal → harness-safe). The Startup Combinator is now a standalone business,
-  // not a multiplier.
-  const angel = angelFinanceBoostMult(state, def.industryId)
+  // Mogul Stories: a timed post-deal profit boost/debuff on the resolved story's industry
+  // (×1 until the player plays a story → harness-safe). The Startup Combinator is now a
+  // standalone business, not a multiplier.
+  const mogul = mogulStoryBoostMult(state, def.industryId)
   // Space Salvage Shooter: a Space-only timed run-reward buff × permanent campaign
   // perks (Orbital Yard, AI Pilot). 1 for non-Space and until anything is earned.
   // Opt-in + bot-inert (the harness never plays the shooter) → harness-safe.
   const salvage = def.industryId === SPACE_INDUSTRY_ID ? spaceSalvageProfitMult(state) : 1
   return {
     profit:
-      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * angel * salvage,
+      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * mogul * salvage,
     speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush * evSpeed,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }

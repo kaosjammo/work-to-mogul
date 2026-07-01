@@ -172,8 +172,9 @@ never nagging.
 
 ## Future story ideas
 
+- ✅ **Retail** — a landlord lease showdown at a flagship store. *(Shipped: "The Lease",
+  `lease_thorne_plaza`, a 7-stage `short` story — `content/mogulStories/leaseShowdown.ts`.)*
 - **Tech** — a rival poaching your star engineer (retention negotiation).
-- **Retail** — a landlord lease showdown at a flagship store.
 - **Logistics** — a dockworkers' dispute during peak season.
 - **Energy** — a regulator's inspection with a buried compliance flaw.
 - **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
@@ -181,3 +182,16 @@ never nagging.
 
 Each can pick its own length, score variables, tone, outcome logic, and reward — the
 framework only asks that they conform to the `MogulStory` shape and stay bot-inert.
+
+### Shared "negotiation" resolution (what "The Lease" reuses)
+
+Business-deal stories don't need a bespoke resolver. The Angel runtime's resolution
+generalises: **eligibility** is "owns the story's `industryId` + a modest cash floor"
+(`storyEligible`), the **trigger** rotates deterministically across whatever's eligible
+(`eligibleStories` + `completedCount % n` in `tickAngelDeal`), and the **reward** is a
+bounded cash swing (`payoutFor`) plus a timed profit boost/debuff on the story's own
+industry (`AngelDealState.boostIndustryId` → `mogulStoryBoostMult`). A great non-Angel
+finish gives the strong cash + boost; only the **Angel** story's `great` additionally founds
+the Combinator. So a new negotiation story is often just **content + registration** — reach
+for a bespoke resolver only when the reward genuinely differs (a unique unlock, a
+non-industry effect).

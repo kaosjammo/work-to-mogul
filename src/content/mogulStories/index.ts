@@ -6,12 +6,14 @@
 // ============================================================
 import type { MogulStory } from './types'
 import { ANGEL_DEAL } from './angelInvestment'
+import { LEASE_SHOWDOWN } from './leaseShowdown'
 
 export * from './types'
 export { ANGEL_DEAL } from './angelInvestment'
+export { LEASE_SHOWDOWN } from './leaseShowdown'
 
-/** Every registered Mogul Story (the reference story is Angel Investment). */
-export const MOGUL_STORIES: MogulStory[] = [ANGEL_DEAL]
+/** Every registered Mogul Story (Angel Investment is the reference story). */
+export const MOGUL_STORIES: MogulStory[] = [ANGEL_DEAL, LEASE_SHOWDOWN]
 
 export const MOGUL_STORY_BY_ID: Record<string, MogulStory> = Object.fromEntries(
   MOGUL_STORIES.map((s) => [s.id, s]),

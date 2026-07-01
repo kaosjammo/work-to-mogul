@@ -4,6 +4,40 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #2 — "The Lease" (Retail), the first story on the generic runtime
+
+Authored the second Mogul Story and generalised the resolution just enough to host it — a
+new industry gets a hidden-narrative beat with almost no new engine code.
+
+- **New story** `content/mogulStories/leaseShowdown.ts` — "The Lease" (`lease_thorne_plaza`,
+  Retail): a **7-stage `short`** landlord showdown (vs Angel's 10) with landlord *Bianca
+  Thorne* over the *Thorne Plaza* flagship unit — read the (expiring) footfall, hold terms,
+  spot the demolition-clause / uncapped-percentage-rent trap, sign or walk. Reuses the shared
+  6 negotiation scores; registered in `content/mogulStories/index.ts`.
+- **Generic negotiation resolution** (no bespoke resolver needed): `storyEligible(state,
+  story)` = owns the story's `industryId` + cash floor; `tickAngelDeal` now offers whichever
+  registered story is eligible, **rotating by `completedCount`** so pitches vary; the timed
+  reward boost is generalised from Finance-only to **any industry** via new
+  `AngelDealState.boostIndustryId` (`angelFinanceBoostMult` → `mogulStoryBoostMult`). A great
+  non-Angel finish gives strong cash + a boost on its own industry; only **Angel**'s great
+  still founds the Combinator.
+- **Save:** `boostIndustryId` persisted + tolerantly restored (default finance).
+- **Harness-inert:** still fully player-triggered — the bot never accepts a pitch, so no
+  boost is ever active (`mogulStoryBoostMult` = 1) and income stays byte-identical; the trigger
+  only flips flags. `balance.test` monotonicity untouched (boost is off the base curve).
+- **Docs:** `mogul-stories.md` ticks the Retail idea done + documents the shared negotiation
+  resolution (so future business-deal stories are often "content + registration" only).
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **307 tests** (+4: lease eligibility,
+Retail-only rotation offers the lease, great→Retail-boost-not-Combinator, walk→neutral; the
+framework-integrity test auto-covers the new story's shape; Angel + harness + balance +
+progression unchanged). Browser-verified 375px: Retail-owning state → "💼 …flagship lease"
+offer → modal renders *Thorne Plaza* / *Bianca Thorne* / "The Offer · **1/7**" → choice →
+consequence beat → Continue advances to "· 2/7" with the authored score deltas applied, no
+overflow, no console errors.
+
+---
+
 ## Mogul Stories — enabling refactor: the runtime now drives ANY story by id
 
 Groundwork before authoring a second story: the shared session plumbing no longer hardcodes

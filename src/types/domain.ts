@@ -273,8 +273,9 @@ export interface AngelDealState {
   outcome: AngelOutcomeBand | null // set at the outcome screen; cleared on dismiss
   disciplined: boolean // walked away from a bad deal (tiny discipline bonus)
   payout: number // net cash delta applied at resolve (for the outcome screen)
-  boostMult: number // timed post-deal Finance multiplier (>1 good / <1 bad)
+  boostMult: number // timed post-deal industry multiplier (>1 good / <1 bad)
   boostMsLeft: number
+  boostIndustryId: string // which industry the timed boost applies to (the resolved story's)
   // Startup Combinator business (unlocked by the great outcome): periodic "exit" payouts.
   exitCooldownMs: number // countdown to the next exit lump (while the Combinator is owned)
   exitCount: number // exits fired (drives the deterministic payout sequence + UI celebration)

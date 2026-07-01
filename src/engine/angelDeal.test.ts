@@ -16,7 +16,9 @@ import {
   dismissAngelOutcome,
   activeStory,
   initialAngelDealState,
-  angelFinanceBoostMult,
+  mogulStoryBoostMult,
+  storyEligible,
+  eligibleStories,
   ownsCombinator,
   tickCombinatorExit,
   hiredRoles,
@@ -26,6 +28,7 @@ import {
   EXIT_INTERVAL_MS,
 } from './angelDeal'
 import { COMBINATOR_ID } from '../content/businesses'
+import { LEASE_SHOWDOWN } from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -220,13 +223,17 @@ describe('Angel Deal — trigger + economy folds', () => {
     expect(s.angelDeal.offered).toBe(false)
   })
 
-  it('the timed Finance boost fold is ×1 until a deal is played (harness-safe)', () => {
+  it('the timed boost fold is ×1 until a deal is played, and targets the boost industry', () => {
     const s = eligibleState()
-    expect(angelFinanceBoostMult(s, 'finance')).toBe(1)
+    expect(mogulStoryBoostMult(s, 'finance')).toBe(1)
     s.angelDeal.boostMult = 1.4
     s.angelDeal.boostMsLeft = 5000
-    expect(angelFinanceBoostMult(s, 'finance')).toBeCloseTo(1.4)
-    expect(angelFinanceBoostMult(s, 'food')).toBe(1) // Finance-only
+    s.angelDeal.boostIndustryId = 'finance'
+    expect(mogulStoryBoostMult(s, 'finance')).toBeCloseTo(1.4)
+    expect(mogulStoryBoostMult(s, 'food')).toBe(1) // only the boosted industry
+    s.angelDeal.boostIndustryId = 'retail'
+    expect(mogulStoryBoostMult(s, 'retail')).toBeCloseTo(1.4)
+    expect(mogulStoryBoostMult(s, 'finance')).toBe(1)
   })
 
   it('hiredRoles reflects the roster', () => {
@@ -234,6 +241,54 @@ describe('Angel Deal — trigger + economy folds', () => {
     expect(hiredRoles(s).size).toBe(0)
     s.employees.e1 = { id: 'e1', templateId: 't', name: 'C', role: 'closer', rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null, specialisation2: null }
     expect(hiredRoles(s).has('closer')).toBe(true)
+  })
+})
+
+describe('Mogul Story #2 — The Lease (Retail): shared runtime, generic resolution', () => {
+  function retailState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.corner_shop.owned = 1 // a Retail business
+    s.businesses.corner_shop.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Retail + clears the cash floor', () => {
+    expect(storyEligible(retailState(), LEASE_SHOWDOWN)).toBe(true)
+    const noRetail = initialGameState(0)
+    noRetail.cash = 1e9 // rich, but owns no Retail
+    expect(storyEligible(noRetail, LEASE_SHOWDOWN)).toBe(false)
+  })
+
+  it('a Retail-only player is offered the lease (rotation picks an eligible story)', () => {
+    const s = retailState()
+    expect(eligibleStories(s).map((x) => x.id)).toEqual([LEASE_SHOWDOWN.id])
+    tickAngelDeal(s, ANGEL_FIRST_OFFER_MS + 1)
+    expect(s.angelDeal.offered).toBe(true)
+    expect(s.angelDeal.storyId).toBe(LEASE_SHOWDOWN.id)
+  })
+
+  it('a great lease boosts RETAIL (not Finance) and never unlocks the Combinator', () => {
+    const s = retailState()
+    s.angelDeal.storyId = LEASE_SHOWDOWN.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'dec_sign', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false) // Angel-only reward
+    expect(s.angelDeal.boostIndustryId).toBe('retail')
+    expect(mogulStoryBoostMult(s, 'retail')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'finance')).toBe(1)
+  })
+
+  it('walking away from the lease resolves neutral', () => {
+    const s = retailState()
+    s.angelDeal.storyId = LEASE_SHOWDOWN.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
   })
 })
 

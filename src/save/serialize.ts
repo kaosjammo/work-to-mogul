@@ -248,6 +248,7 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     a.cooldownMs = Math.max(0, num(la.cooldownMs, a.cooldownMs))
     a.boostMult = num(la.boostMult, 1) || 1
     a.boostMsLeft = Math.max(0, num(la.boostMsLeft))
+    if (typeof la.boostIndustryId === 'string') a.boostIndustryId = la.boostIndustryId
     a.exitCooldownMs = Math.max(0, num(la.exitCooldownMs, a.exitCooldownMs))
     a.exitCount = Math.max(0, Math.floor(num(la.exitCount)))
     a.lastExitAmount = Math.max(0, num(la.lastExitAmount))
