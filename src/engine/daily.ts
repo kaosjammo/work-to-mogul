@@ -14,11 +14,13 @@ import { milestoneAt, type DailyMilestone } from '../content/dailyMilestones'
 
 export const DAILY_INCOME_SECONDS = 2 * 3600 // reward ≈ 2h of current idle income
 
-/** Local-day index for a timestamp (two times on the same local day share an index). */
+/** Local-day index for a timestamp (two times on the same local day share an index).
+ *  Derived from CALENDAR components, not the local-midnight epoch: rounding the
+ *  epoch mis-buckets in UTC+13 zones and across DST changes (the index could repeat
+ *  or skip a day, wrongly blocking a claim / breaking a streak). */
 export function localDayIndex(now: number): number {
   const d = new Date(now)
-  d.setHours(0, 0, 0, 0) // local midnight
-  return Math.round(d.getTime() / 86_400_000)
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000)
 }
 
 /** The cash a claim would grant right now (flat: 2h of idle income; streak mult is a fast-follow). */

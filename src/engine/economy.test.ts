@@ -66,6 +66,18 @@ describe('maxAffordable never overspends (rule #11)', () => {
   it('returns 0 when cash cannot afford the next unit', () => {
     expect(maxAffordable(lemonade, 0, 3)).toBe(0)
   })
+
+  it('counts with the discounted price when a cost reduction applies', () => {
+    // purchase() charges totalCost × costMult, so Buy Max must count with the same
+    // discount — at 50% off, the same cash affords strictly more units.
+    const cash = 10_000
+    const full = maxAffordable(lemonade, 0, cash)
+    const discounted = maxAffordable(lemonade, 0, cash, 0.5)
+    expect(discounted).toBeGreaterThan(full)
+    // and it still never overspends at the discounted price
+    expect(totalCost(lemonade, 0, discounted) * 0.5).toBeLessThanOrEqual(cash + 1e-6)
+    expect(totalCost(lemonade, 0, discounted + 1) * 0.5).toBeGreaterThan(cash + 1e-6)
+  })
 })
 
 describe('milestones (derived from owned)', () => {

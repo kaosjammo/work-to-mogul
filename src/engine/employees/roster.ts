@@ -130,8 +130,12 @@ export function fuseEmployees(
 
   keep.rarity = promoted
   keep.level = Math.max(keep.level, consume.level)
-  // Preserve a chosen specialisation from either source (the kept one wins).
-  keep.specialisation = keep.specialisation ?? consume.specialisation
+  // Preserve a chosen specialisation from either source (the kept one wins) —
+  // but never mirror the kept employee's Mastery pick into slot 1: the two slots
+  // must always hold DIFFERENT specs or the effect double-counts.
+  if (keep.specialisation == null && consume.specialisation !== keep.specialisation2) {
+    keep.specialisation = consume.specialisation
+  }
 
   // Drop the consumed id from any slot arrays that still reference it.
   const ids = validIds(state)

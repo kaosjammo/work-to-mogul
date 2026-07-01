@@ -5,6 +5,7 @@
 import type { BusinessId, BuyMode, IndustryId, TabId } from '../types/domain'
 import { getEngineState, resetEngineState } from '../engine/engineState'
 import { purchase, tapBusiness } from '../engine/buy'
+import { resolveBusiness } from '../engine/resolveBusiness'
 import { spendCashBestValue, buyAllAffordableUpgrades } from '../engine/spend'
 import { resolveQuantity } from '../engine/economy'
 import { startShift, claimConsulting } from '../engine/career'
@@ -54,7 +55,8 @@ export function buyBusiness(id: BusinessId): void {
   const def = BUSINESSES[id]
   const bs = s.businesses[id]
   if (!def || !bs) return
-  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash)
+  // Buy Max must count with the same discounted price purchase() charges.
+  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash, resolveBusiness(s, def).buyCostMult)
   const before = [...s.milestonesReached]
   // Entering a new industry (its first owned unit) is a major beat — detect it
   // before the purchase so we can celebrate the expansion.

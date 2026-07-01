@@ -13,10 +13,10 @@ import { ROLE_DEFS, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { TRAIT_DEFS } from '../content/traits'
 import { TALENTS } from '../content/talents'
 import { talentCostAt } from '../engine/talents'
-import { FINANCE_COMPOUND_RAMP_MS } from '../engine/economy'
+import { FINANCE_COMPOUND_RAMP_MS, SUPERPOSITION_CYCLE_MS } from '../engine/economy'
 import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
-import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
+import { CONTRACTS, CONTRACT_BY_ID, CONTRACT_BOARD_SIZE } from '../content/contracts'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
@@ -142,6 +142,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   // Finance's compound accrual — a per-run buildup that survives refresh (old saves
   // default to 0, so they load with a fresh compound; clamped to the ramp cap).
   s.financeCompoundMs = clamp(num(loaded.financeCompoundMs), 0, FINANCE_COMPOUND_RAMP_MS)
+  // Quantum's superposition phase must survive refresh too: phase 0 sits INSIDE the
+  // ×9 collapse window, so resetting on every load let refresh-spam hold the jackpot.
+  s.quantumPhaseMs = clamp(num(loaded.quantumPhaseMs), 0, SUPERPOSITION_CYCLE_MS)
   if (loaded.buyMode) s.buyMode = loaded.buyMode
   if (loaded.activeTab) s.activeTab = loaded.activeTab
   if (loaded.activeIndustryTab) s.activeIndustryTab = loaded.activeIndustryTab
@@ -230,10 +233,21 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   s.purchasedUnlocks = strArray(loaded.purchasedUnlocks)
 
   // Contracts board: keep only known contract ids; clamp the pool pointer.
+  // An EMPTY active list is a valid, meaningful state (the finite pool is exhausted) —
+  // it must restore as empty, or every reload would resurrect the full board and its
+  // already-claimed token rewards.
   if (loaded.contracts && typeof loaded.contracts === 'object') {
-    const active = strArray(loaded.contracts.active).filter((id) => id in CONTRACT_BY_ID)
-    const nextIndex = clamp(Math.floor(num(loaded.contracts.nextIndex)), 0, CONTRACTS.length)
-    if (active.length) s.contracts = { active, nextIndex }
+    if (Array.isArray(loaded.contracts.active)) {
+      const active = strArray(loaded.contracts.active).filter((id) => id in CONTRACT_BY_ID)
+      let nextIndex = clamp(Math.floor(num(loaded.contracts.nextIndex)), 0, CONTRACTS.length)
+      // If a content change removed ids from the board, deal replacements from the
+      // pool (never re-deal something already on the board).
+      while (active.length < CONTRACT_BOARD_SIZE && nextIndex < CONTRACTS.length) {
+        const candidate = CONTRACTS[nextIndex++].id
+        if (!active.includes(candidate)) active.push(candidate)
+      }
+      s.contracts = { active, nextIndex }
+    }
   }
 
   // Angel Investment mini-game: restore durable meta always; the in-progress session

@@ -127,6 +127,18 @@ describe('Space Salvage Shooter — campaign progression', () => {
     expect(s.spaceShooter.cooldownUntil).toBe(3_000 + SHOOTER_ABORT_COOLDOWN_MS)
   })
 
+  it('a replayed/stale submit of an already-cleared stage is a true no-op (no cash, no buff)', () => {
+    const s = spaceState()
+    resolveMission(s, 0, PASS, 0) // clear stage 1 for real
+    const cashAfterFirst = s.cash
+    const r = resolveMission(s, 0, GREAT, 1) // double-submit / replay of the same stage
+    expect(r.advanced).toBe(false)
+    expect(r.cashReward).toBe(0)
+    expect(r.buffMult).toBe(1)
+    expect(s.cash).toBe(cashAfterFirst) // nothing minted
+    expect(s.spaceShooter.stageCompleted).toBe(1) // unchanged
+  })
+
   it('Stage 2 grants a temporary Space profit buff', () => {
     const s = spaceState()
     s.spaceShooter.stageCompleted = 1 // next stage is index 1 (Stage 2)

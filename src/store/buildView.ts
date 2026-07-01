@@ -565,7 +565,7 @@ export function buildView(
     const def = BUSINESSES[id]
     const r = resolveBusiness(state, def)
     const emp = computeEmployeeEffects(state, def, bs)
-    const qty = resolveQuantity(state.buyMode, def, bs.owned, state.cash)
+    const qty = resolveQuantity(state.buyMode, def, bs.owned, state.cash, r.buyCostMult)
     const cost = totalCost(def, bs.owned, Math.max(qty, 1)) * r.buyCostMult
     const nm = nextMilestone(def, bs.owned)
 
@@ -1000,7 +1000,8 @@ export function buildView(
   const cdef = careerLevelDef(c.level)
   const isMaxLevel = c.level >= MAX_CAREER_LEVEL
   const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
-  const passivePerSec = automatedIncomePerSec(state)
+  // HUD shows the LIVE instantaneous rate (buffs included) so frenzies visibly spike.
+  const passivePerSec = automatedIncomePerSec(state, { steady: false })
   const retired = isRetired(state)
   const drawValue = shiftPayout(state, passivePerSec)
   const career: CareerView = {

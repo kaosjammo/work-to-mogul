@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { serialize, deserialize, tolerantLoad } from './serialize'
 import { initialGameState } from '../store/initialState'
+import { CONTRACTS, CONTRACT_BOARD_SIZE } from '../content/contracts'
+import { SUPERPOSITION_CYCLE_MS } from '../engine/economy'
+import type { GameState } from '../types/domain'
 
 describe('save round-trip', () => {
   it('preserves career and business state across serialize/deserialize', () => {
@@ -149,6 +152,107 @@ describe('full-state round-trip', () => {
     expect(loaded.prestige.talents.magnate).toBe(5) // clamped to maxRank
     expect((loaded.prestige.talents as Record<string, number>).bogus_talent).toBeUndefined()
     expect((loaded.prestige.talents as Record<string, number>).efficiency).toBeUndefined() // rank <= 0 dropped
+  })
+})
+
+// ============================================================
+//  Persistence POLICY — the trip-wire for the whole "field exists but never
+//  restores" bug class (quantumPhaseMs, exhausted contracts, …). Every top-level
+//  GameState field must be declared either PERSISTED (survives a reload) or
+//  TRANSIENT (deliberately resets). Adding a new field without declaring its
+//  policy fails this test loudly instead of silently resetting in production.
+// ============================================================
+describe('persistence policy', () => {
+  const PERSISTED: ReadonlySet<keyof GameState> = new Set<keyof GameState>([
+    'cash', 'lifetimeEarnings', 'lastWallClock', 'career', 'angelDeal',
+    'financeCompoundMs', 'quantumPhaseMs', 'buyMode', 'activeTab', 'visitedTabs',
+    'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
+    'employees', 'purchasedUnlocks', 'upgradesPurchased', 'milestonesReached',
+    'achievementsUnlocked', 'prestigeMilestonesClaimed', 'contracts', 'spaceShooter',
+    'prestige', 'onboardingStep', 'nextEmployeeSeq',
+  ])
+  const TRANSIENT: ReadonlySet<keyof GameState> = new Set<keyof GameState>([
+    'golden', 'rushHour', 'logistics', 'eventCards', 'hirePool',
+  ])
+
+  it('every GameState field has a declared persistence policy', () => {
+    for (const k of Object.keys(initialGameState(0)) as (keyof GameState)[]) {
+      expect(
+        PERSISTED.has(k) || TRANSIENT.has(k),
+        `GameState.${k} has no persistence policy — decide whether it must survive a ` +
+          `reload (add to PERSISTED + restore it in tolerantLoad) or reset (add to TRANSIENT)`,
+      ).toBe(true)
+    }
+  })
+
+  it('persisted scalar fields actually survive a round-trip', () => {
+    const s = initialGameState(0)
+    s.cash = 111
+    s.lifetimeEarnings = 222
+    s.financeCompoundMs = 333
+    s.quantumPhaseMs = 44_400 // outside the collapse window — must NOT reset to 0 (= inside it)
+    s.dailyClaimDay = 20_620
+    s.dailyStreak = 6
+    s.onboardingStep = 3
+    s.nextEmployeeSeq = 42
+    const r = deserialize(serialize(s, 100))!
+    expect(r.cash).toBe(111)
+    expect(r.lifetimeEarnings).toBe(222)
+    expect(r.financeCompoundMs).toBe(333)
+    expect(r.quantumPhaseMs).toBe(44_400)
+    expect(r.dailyClaimDay).toBe(20_620)
+    expect(r.dailyStreak).toBe(6)
+    expect(r.onboardingStep).toBe(3)
+    expect(r.nextEmployeeSeq).toBe(42)
+  })
+
+  it('quantum phase is clamped to the cycle on load', () => {
+    const loaded = tolerantLoad({ quantumPhaseMs: SUPERPOSITION_CYCLE_MS * 5 } as never)
+    expect(loaded.quantumPhaseMs).toBeLessThanOrEqual(SUPERPOSITION_CYCLE_MS)
+  })
+
+  it('transient buff systems reset to fresh state on load', () => {
+    const s = initialGameState(0)
+    s.golden.frenzyMsLeft = 999
+    s.rushHour.surgeMsLeft = 999
+    s.logistics.surgeMult = 2
+    s.eventCards.profitMult = 9
+    s.eventCards.profitMsLeft = 999
+    const r = deserialize(serialize(s, 100))!
+    expect(r.golden.frenzyMsLeft).toBe(0)
+    expect(r.rushHour.surgeMsLeft).toBe(0)
+    expect(r.logistics.surgeMult).toBe(1)
+    expect(r.eventCards.profitMsLeft).toBe(0)
+  })
+})
+
+describe('contracts board persistence', () => {
+  it('an EXHAUSTED board stays exhausted on reload (no token resurrection)', () => {
+    const s = initialGameState(0)
+    s.contracts = { active: [], nextIndex: CONTRACTS.length } // whole pool claimed
+    const r = deserialize(serialize(s, 100))!
+    expect(r.contracts.active).toEqual([])
+    expect(r.contracts.nextIndex).toBe(CONTRACTS.length)
+  })
+
+  it('a partially-worked board round-trips exactly', () => {
+    const s = initialGameState(0)
+    const board = CONTRACTS.slice(2, 2 + CONTRACT_BOARD_SIZE).map((c) => c.id)
+    s.contracts = { active: board, nextIndex: 2 + CONTRACT_BOARD_SIZE }
+    const r = deserialize(serialize(s, 100))!
+    expect(r.contracts.active).toEqual(board)
+    expect(r.contracts.nextIndex).toBe(2 + CONTRACT_BOARD_SIZE)
+  })
+
+  it('refills board slots lost to a content change from the pool (no duplicates)', () => {
+    // Simulate a save whose board had ids that no longer exist in content.
+    const survivors = CONTRACTS.slice(0, 2).map((c) => c.id)
+    const loaded = tolerantLoad({
+      contracts: { active: [...survivors, 'removed_a', 'removed_b'], nextIndex: 4 },
+    } as never)
+    expect(loaded.contracts.active.length).toBe(CONTRACT_BOARD_SIZE)
+    expect(new Set(loaded.contracts.active).size).toBe(CONTRACT_BOARD_SIZE) // unique
+    for (const id of survivors) expect(loaded.contracts.active).toContain(id)
   })
 })
 
