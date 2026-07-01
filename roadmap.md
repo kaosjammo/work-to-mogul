@@ -68,7 +68,7 @@ give 2–3 industries a felt, name-matching mechanic before adding any more cont
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
-| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food "Rush Hour" shipped (`ffc8fe5`, 1st of ~3); Finance compounding + Quantum signature next |
+| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food window ✅ (`ffc8fe5`) + Finance compounding (in flight, ⚠️ needs UI cue); Quantum signature next |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
@@ -177,17 +177,33 @@ vestigial. **Exception — keep-the-baseline:** where the flat perk *is* the ide
 "fast-cycle" ×2), layer the active bonus on top but keep it modest, so idle players still
 get the baseline and active players get the spike. Apply this rule consistently.
 
-**Acceptance criteria — remaining**
-- [x] An **active-window** mechanic (Food/`rush_hour`), deterministic + harness-safe + mobile cue. ✅ in flight.
-- [ ] A **mechanically *different*** second one — e.g. Finance/`compound_interest`: income that *actually compounds* (grows the longer Finance runs uninterrupted / auto-reinvests a %). Important that it's a *different shape* from Food's tap-window (a passive-but-dynamic curve), to prove the pattern generalises beyond "another tappable thing".
-- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity.
-- [ ] **Data-driven + tested:** a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
-- [ ] **Harness + balance safe** for each: keep `balance.test.ts` monotonicity, re-run `harness.test.ts` + `progressionLoop`, re-baseline if pps shifts. Deterministic only.
-- [ ] **Mobile-legible:** each signature shown on its banner/entry in one line; active mechanics get an on-screen cue + countdown at 375px (Rush Hour already does).
+**Finance "Compound Interest" — 2nd mechanic, in flight (uncommitted).** The dev took the
+`replace-and-preserve-mean` recommendation exactly: `financeCompoundMult` ramps profit
+**1.0 → ×2 over ~90 min of Finance runtime** (mean ≈ the old flat ×1.5, cap read from
+`SIGNATURE_PERKS`), **replaces** the flat perk (skipped in the flat-perk fold), accrues only
+while Finance is owned, is persisted (`serialize.ts`) + resets on prestige, and is
+deterministic. A genuinely *different shape* from Food's tap-window (passive-dynamic curve).
+**18 guard tests green** (balance monotonicity held, harness landmarks held). Good work.
 
-Scope guard: 2–3 industries as a slice, not all 8 at once. Rush Hour proves the *active*
-shape — make the next one *passive-dynamic* (compounding) so the slice shows two distinct
-mechanic types, then the rest follow.
+**⚠️ Top gap — the compound is invisible (no UI cue).** `financeCompoundMult` isn't
+surfaced anywhere (`buildView`/UI untouched). A *passive* ramp needs a cue **more** than an
+active one: Food's Rush Hour announces itself (a button + countdown appear), but a slow
+background profit ramp the player can't see means Finance still *feels* like "just another
+industry" — which defeats the whole point of Task 4 even though the mechanic works. **Before
+commit: surface it** — e.g. on the Finance banner/entry, `Compound ×1.4 ↗ (→ ×2.0)` with a
+thin progress bar to the cap, at 375px. This is the difference between "differentiated" and
+"differentiated on paper".
+
+**Acceptance criteria — remaining**
+- [x] An **active-window** mechanic (Food/`rush_hour`) — deterministic, harness-safe, with the `FloatingRushHour` cue. ✅ shipped (`ffc8fe5`).
+- [~] A **passive-dynamic** mechanic (Finance/`compound_interest`) — mechanic ✅ (in flight, harness-safe); **UI cue still missing** (see gap above).
+- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity. Use the same replace-and-preserve-mean rule + a visible cue.
+- [ ] **Data-driven + tested:** a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
+- [ ] **Mobile-legible for *every* signature** — not just the active ones. If a player can't see it happening, it isn't differentiation. This is now the recurring risk for the passive mechanics.
+
+Scope guard: 2–3 industries as a slice, not all 8 at once. Food (active) + Finance (passive)
+prove the two mechanic shapes; Quantum's signature completes the slice, then the rest follow
+the pattern (replace-and-preserve-mean + a visible cue).
 
 ---
 
