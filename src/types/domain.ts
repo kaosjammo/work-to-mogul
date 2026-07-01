@@ -246,6 +246,34 @@ export interface ContractsState {
   nextIndex: number // pointer into the ordered CONTRACTS pool for the next deal
 }
 
+// ----- Opportunity Mini-Games: Angel Investment Deal -----
+export type AngelScoreKey =
+  | 'confidence'
+  | 'leverage'
+  | 'dueDiligence'
+  | 'founderTrust'
+  | 'risk'
+  | 'valuationDiscipline'
+export type AngelScores = Record<AngelScoreKey, number>
+export type AngelOutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
+
+/** State for the Angel Investment mini-game. Durable meta (combinatorUnlocked,
+ *  completedCount, cooldown, timed boost) + a validated in-progress session. */
+export interface AngelDealState {
+  combinatorUnlocked: boolean // great outcome once → permanent Finance/Tech bonus (Startup Combinator)
+  completedCount: number // times a deal has resolved (any band)
+  cooldownMs: number // time until a pitch can be offered again (rare)
+  offered: boolean // a pitch is waiting (floating prompt)
+  active: boolean // the mini-game modal is open + in progress
+  stageId: string | null // current stage id (validated on load; cleared if unknown)
+  scores: AngelScores // HIDDEN deal variables (never shown as raw numbers)
+  outcome: AngelOutcomeBand | null // set at the outcome screen; cleared on dismiss
+  disciplined: boolean // walked away from a bad deal (tiny discipline bonus)
+  payout: number // net cash delta applied at resolve (for the outcome screen)
+  boostMult: number // timed post-deal Finance multiplier (>1 good / <1 bad)
+  boostMsLeft: number
+}
+
 export interface GameState {
   cash: Num
   lifetimeEarnings: Num
@@ -255,6 +283,7 @@ export interface GameState {
   rushHour: RushHourState
   logistics: LogisticsState // Logistics' signature: Just-In-Time Dispatch (transient)
   eventCards: EventCardsState // the active-decision layer (transient)
+  angelDeal: AngelDealState // Angel Investment mini-game (opportunity)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode

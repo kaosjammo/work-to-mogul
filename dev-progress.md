@@ -4,6 +4,56 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Opportunity Mini-Game #1 — Angel Investment Deal (FridgeMind)
+
+A full, decently-lengthy visual-novel negotiation built into the Finance industry — the first
+entry in a small, reusable Opportunity Mini-Game framework.
+
+**How it works.** When you own a Finance business and have ≥ $1M, a rare pitch is offered (~4 min
+of eligible time; a long ~30-min cooldown between pitches, so it stays rare). A floating "💼 A
+founder wants to pitch you" prompt appears; tapping opens a 10-stage VN (The Pitch → First
+Impression → Product Demo → Market → Founder Pressure → Financials → Red Flag → Valuation →
+Final Terms → Decision). Each stage types its text out one character at a time (tap to skip),
+offers 2–4 real choices plus a **Walk Away** that’s always available, and shows qualitative
+flavour hints (never raw numbers). Choices move six HIDDEN scores — confidence, leverage,
+dueDiligence, founderTrust, risk, valuationDiscipline — with genuine trade-offs (hype raises trust
+but tanks diligence + raises risk; calling the red flag cuts risk but costs trust; hardball raises
+leverage/discipline but annoys the founder). If the player has matching employees, a choice’s
+effect is lightly amplified (Closer→negotiation, Buyer→valuation, Operator→diligence, Runner→timing).
+
+**Outcome bands** (from `dealQuality = dueDiligence + valuationDiscipline + leverage + conf/2 +
+trust/2 − risk`): **Great** (q≥9, risk≤2, dd≥6) → +3× the cheque **and unlocks the Startup
+Combinator** (a permanent ×1.15 Finance **and** Tech profit fold); **Good** (q≥3, risk≤6) →
++0.75× cheque + a 90s Finance ×1.4 boost; **Neutral** (walk away) → nothing, or a tiny discipline
+bonus if you dodged a clearly bad deal (q<0 or risk≥6); **Bad** → lose the cheque (bounded to 12%
+of cash — never ruinous) + a 60s Finance ×0.75 "bad press" debuff.
+
+**Persistence.** Durable meta (combinatorUnlocked, completedCount, cooldown, timed boost) always
+saves; the in-progress session (stage + hidden scores) restores too, but is **safely cancelled**
+if the stage id is unknown (content changed) — never breaks load. Cloud save unaffected.
+
+**Harness-safe by construction:** the whole mini-game is player-triggered — the greedy sim bot
+never opens or resolves it, so the Combinator/boost economy folds stay ×1 and Finance/Tech income
+is byte-identical in the harness/balance/progression sims.
+
+**Files:** +`content/angelDeal.ts` (framework + FridgeMind script), +`engine/angelDeal.ts`
+(+`.test.ts`, 20 cases), +`ui/opportunities/AngelDealModal.tsx`; ~`types/domain.ts`,
+`store/{initialState,buildView,gameStore,actions}.ts`, `save/serialize.ts`,
+`engine/{simulate,economy}.ts`, `App.tsx`.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **272 tests** (+20). Browser-verified at
+375px: floating offer → accept → typewriter stages → choices (64px option rows + 32px walk-away,
+all ≥44px tap) → decision → invest → GREAT outcome screen (+$360B payout, Combinator unlocked),
+no overflow, no console errors.
+
+**Known limitations / next.** The Startup Combinator is a *permanent multiplier* unlock, not yet a
+standalone business with random "exit payout" bursts (a safe placeholder — the business version is
+a follow-up). Employee amplification is light (any hired role of the type). Next opportunity
+mini-games to consider: a Retail "Franchise Buyout" haggle, a Tech "Acquisition Offer" (sell vs.
+hold), a Logistics "Port Strike" crisis negotiation — all reusing this stage/choice/outcome model.
+
+---
+
 ## UI REDESIGN Phase 3 — FULL game-world juice (cash-burst) — redesign COMPLETE
 
 The last cross-cutting piece of the user-picked "FULL" game-world. Reactive mascot poses were

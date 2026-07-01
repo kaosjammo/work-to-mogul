@@ -344,6 +344,30 @@ covers the gated/no-context no-op. **236 tests green.**
 
 ---
 
+## Opportunity Mini-Games — Angel Investment Deal ✅ (NEW, user-directed)
+
+The first **Opportunity Mini-Game**: a 10-stage visual-novel angel-investing negotiation in the
+Finance industry (fictional startup **FridgeMind**). A reusable framework — author another
+`DealDef` to add more.
+
+- **Trigger:** own a Finance business + ≥ $1M → a rare floating pitch (~4 min eligible, ~30-min
+  re-offer cooldown). Never mandatory (Walk Away at any stage; "Not now" on the offer).
+- **Play:** typewriter narrative (tap to skip), 2–4 branching choices/stage moving 6 HIDDEN scores
+  (confidence/leverage/dueDiligence/founderTrust/risk/valuationDiscipline) with real trade-offs +
+  qualitative hints (no raw numbers). Light employee amplification (Closer/Buyer/Operator/Runner).
+- **Outcome bands:** Great → +3× cheque + **Startup Combinator** (permanent Finance+Tech ×1.15);
+  Good → +0.75× cheque + timed Finance boost; Neutral (walk) → ~nothing (+ tiny discipline bonus
+  if a clearly bad deal was dodged); Bad → lose the cheque (bounded ≤12% cash, non-ruinous) + a
+  short "bad press" debuff.
+- **Safe:** player-triggered → **harness byte-identical** (folds ×1 for the sim bot). Durable meta
+  + in-progress session persist; an unknown stage id on load is cancelled safely (cloud save fine).
+  272 tests (+20), build/lint clean, 375px-verified.
+- **Limitations / next:** Combinator is a permanent multiplier, not yet a standalone
+  exit-payout business (placeholder). Future mini-games: Retail Franchise Buyout, Tech Acquisition
+  Offer, Logistics Port-Strike — all reuse this stage/choice/outcome model.
+
+---
+
 ## The roadmap is delivered — what's actually next
 
 **All 7 prioritised tasks + the D1/D7 depth items are shipped and polished.** There is **no

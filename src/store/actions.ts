@@ -25,6 +25,13 @@ import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks
 import { claimGoldenDeal } from '../engine/golden'
 import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
 import { claimDispatch } from '../engine/logistics'
+import {
+  startAngelDeal,
+  declineAngelDeal,
+  chooseAngelChoice,
+  dismissAngelOutcome,
+  hiredRoles,
+} from '../engine/angelDeal'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
@@ -285,6 +292,47 @@ export function claimDailyBonus(): void {
     useUiStore.getState().pushCelebrations(msgs)
     publishNow()
   }
+}
+
+// ----- Angel Investment mini-game (opportunity) -----
+
+/** Accept the offered pitch → open the mini-game at its first stage. */
+export function acceptAngelDeal(): void {
+  if (startAngelDeal(getEngineState())) {
+    haptic(18)
+    playSound('chime')
+    publishNow()
+  }
+}
+
+/** Decline the offered pitch without starting it. */
+export function declineAngel(): void {
+  declineAngelDeal(getEngineState())
+  publishNow()
+}
+
+/** Pick a choice in the current stage (advances, or resolves the deal). */
+export function chooseAngel(choiceId: string): void {
+  const s = getEngineState()
+  if (chooseAngelChoice(s, choiceId, hiredRoles(s))) {
+    const outcome = s.angelDeal.outcome
+    haptic(outcome ? 30 : 12)
+    if (outcome === 'great') playSound('prestige')
+    else if (outcome) playSound('coin')
+    else playSound('tap')
+    publishNow()
+  }
+}
+
+/** Close the outcome screen (starts the re-offer cooldown). */
+export function closeAngelOutcome(): void {
+  const s = getEngineState()
+  const great = s.angelDeal.outcome === 'great'
+  dismissAngelOutcome(s)
+  if (great) {
+    useUiStore.getState().pushCelebrations(['✦ Startup Combinator unlocked! Finance & Tech ×1.15'])
+  }
+  publishNow()
 }
 
 /** Wipe the save and start a brand-new game (destructive; hold-to-confirm in UI). */

@@ -17,6 +17,7 @@ import { checkAchievements } from './achievements'
 import { tickGolden } from './golden'
 import { tickRushHour } from './rushHour'
 import { tickLogistics } from './logistics'
+import { tickAngelDeal } from './angelDeal'
 import { tickEventCards } from './eventCards'
 
 /** Morale eases toward its equilibrium with ~20s time constant. */
@@ -114,6 +115,7 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   tickRushHour(state, dtMs)
   tickLogistics(state, dtMs)
   tickEventCards(state, dtMs)
+  tickAngelDeal(state, dtMs)
   // Finance's Compound Interest accrues while Finance is owned (capped at the ramp).
   if (ownsFinance(state)) {
     state.financeCompoundMs = Math.min(

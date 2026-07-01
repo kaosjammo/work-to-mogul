@@ -60,6 +60,8 @@ import {
   dispatchMultAt,
 } from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
+import { ANGEL_DEAL } from '../content/angelDeal'
+import type { AngelScores, AngelOutcomeBand } from '../types/domain'
 import { canClaimDaily, dailyReward } from '../engine/daily'
 import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
 import {
@@ -278,6 +280,31 @@ export interface RushHourView {
   speedMult: number // the Food speed multiplier during a surge (for the label)
 }
 
+export interface AngelDealView {
+  offered: boolean // a pitch is waiting (floating prompt)
+  active: boolean // the mini-game modal is open
+  stageId: string | null
+  stageIndex: number // 1-based (0 when not in a stage)
+  stageTotal: number
+  outcome: AngelOutcomeBand | null
+  payout: number
+  disciplined: boolean
+  combinatorUnlocked: boolean
+  hints: string[] // qualitative read on the hidden scores (never raw numbers)
+}
+
+/** Qualitative "read" on the hidden deal scores — flavour, never numbers. */
+function angelHints(s: AngelScores): string[] {
+  const out: string[] = []
+  if (s.risk >= 6) out.push('⚠️ Something here doesn’t add up.')
+  else if (s.risk >= 3) out.push('A few loose threads nag at you.')
+  else if (s.dueDiligence >= 4) out.push('The numbers hold up so far.')
+  if (s.leverage >= 3) out.push('You’re holding the cards.')
+  else if (s.leverage <= -2) out.push('He’s setting the pace, not you.')
+  else if (s.founderTrust >= 4) out.push('You genuinely like this founder.')
+  return out.slice(0, 2)
+}
+
 export interface LogisticsView {
   industryId: string
   owned: boolean // owns any Logistics (only show the cue when relevant)
@@ -325,6 +352,7 @@ export interface ViewSnapshot {
   golden: GoldenView
   rushHour: RushHourView
   logistics: LogisticsView
+  angelDeal: AngelDealView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
@@ -813,6 +841,21 @@ export function buildView(
     surgePct: Math.round(((state.logistics?.surgeMult ?? 1) - 1) * 100),
   }
 
+  // Angel Investment mini-game — offer/active/outcome + qualitative hints.
+  const ad = state.angelDeal
+  const angelDeal: AngelDealView = {
+    offered: ad.offered && !ad.active,
+    active: ad.active,
+    stageId: ad.stageId,
+    stageIndex: ad.stageId ? ANGEL_DEAL.order.indexOf(ad.stageId) + 1 : 0,
+    stageTotal: ANGEL_DEAL.order.length,
+    outcome: ad.outcome,
+    payout: ad.payout,
+    disciplined: ad.disciplined,
+    combinatorUnlocked: ad.combinatorUnlocked,
+    hints: angelHints(ad.scores),
+  }
+
   // Finance's Compound Interest — its current profit bonus (for the industry cue).
   const financeCompound = {
     industryId: FINANCE_INDUSTRY_ID,
@@ -950,6 +993,7 @@ export function buildView(
     golden,
     rushHour,
     logistics,
+    angelDeal,
     financeCompound,
     quantumSuperposition,
     eventCard,

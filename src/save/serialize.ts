@@ -17,6 +17,7 @@ import { FINANCE_COMPOUND_RAMP_MS } from '../engine/economy'
 import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
+import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
 import { reconcileSlots } from '../engine/employees/composition'
@@ -231,6 +232,37 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     const active = strArray(loaded.contracts.active).filter((id) => id in CONTRACT_BY_ID)
     const nextIndex = clamp(Math.floor(num(loaded.contracts.nextIndex)), 0, CONTRACTS.length)
     if (active.length) s.contracts = { active, nextIndex }
+  }
+
+  // Angel Investment mini-game: restore durable meta always; the in-progress session
+  // is kept only if its stage id is still valid (content changes safely cancel it).
+  if (loaded.angelDeal && typeof loaded.angelDeal === 'object') {
+    const la = loaded.angelDeal
+    const a = s.angelDeal
+    a.combinatorUnlocked = !!la.combinatorUnlocked
+    a.completedCount = Math.max(0, Math.floor(num(la.completedCount)))
+    a.cooldownMs = Math.max(0, num(la.cooldownMs, a.cooldownMs))
+    a.boostMult = num(la.boostMult, 1) || 1
+    a.boostMsLeft = Math.max(0, num(la.boostMsLeft))
+    a.payout = num(la.payout)
+    a.disciplined = !!la.disciplined
+    if (la.scores && typeof la.scores === 'object') {
+      const raw = la.scores as Record<string, unknown>
+      for (const k of SCORE_KEYS) a.scores[k] = num(raw[k])
+    }
+    a.offered = !!la.offered
+    if (la.active) {
+      const stageOk = typeof la.stageId === 'string' && !!ANGEL_DEAL.stages[la.stageId]
+      const outcomeOk =
+        typeof la.outcome === 'string' && ['great', 'good', 'neutral', 'bad'].includes(la.outcome)
+      if (stageOk || outcomeOk) {
+        a.active = true
+        a.offered = false
+        a.stageId = stageOk ? (la.stageId as string) : null
+        a.outcome = outcomeOk ? (la.outcome as GameState['angelDeal']['outcome']) : null
+      }
+      // else: unrecoverable session → stays idle (meta preserved above)
+    }
   }
 
   // Industries are always visible/unlocked in the current model.

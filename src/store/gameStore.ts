@@ -75,6 +75,7 @@ export const usePrestigeMilestones = () => useGameStore(useShallow((s) => s.pres
 export const useGolden = () => useGameStore(useShallow((s) => s.golden))
 export const useRushHour = () => useGameStore(useShallow((s) => s.rushHour))
 export const useLogistics = () => useGameStore(useShallow((s) => s.logistics))
+export const useAngelDeal = () => useGameStore(useShallow((s) => s.angelDeal))
 export const useFinanceCompound = () => useGameStore(useShallow((s) => s.financeCompound))
 export const useQuantumSuperposition = () => useGameStore(useShallow((s) => s.quantumSuperposition))
 export const useEventCard = () => useGameStore(useShallow((s) => s.eventCard))
