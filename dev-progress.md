@@ -4,6 +4,46 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Stories — formalised the hidden-narrative framework
+
+Turned the one-off "Opportunity Mini-Game" (Angel Investment) into a **named, reusable,
+documented framework**: *Mogul Stories* — rare, optional, industry-specific mini visual
+novels. Naming/architecture/docs pass, deliberately not overbuilt.
+
+- **Shared vocabulary** (`src/content/mogulStories/types.ts`): `MogulStory`,
+  `MogulStoryStage`, `MogulStoryChoice`, `MogulStoryScores`, `MogulStoryOutcomeBand`,
+  `MogulStoryOutcomeCopy`, `MogulStoryRoleBoost`, `MogulStoryLength`. Only the *shape* is
+  shared — each story owns its hidden score variables, tone, outcome→band logic, and rewards
+  (full creative freedom). **Variable length** is first-class: short 5–7 / standard ~10 /
+  major 15–20+ (a hint, drives no logic; the progress chip renders any `order.length`).
+- **Registry** (`src/content/mogulStories/index.ts`): `MOGUL_STORIES`, `MOGUL_STORY_BY_ID`,
+  `getMogulStory(id)`.
+- **Angel migrated safely** — its content moved to `mogulStories/angelInvestment.ts`
+  (speaker `founder`→`protagonist`, added `hook`/`subject`/`length` + per-band outcome copy;
+  the Combinator reveal is now just the story's `outcome.great.line`, no UI special-case).
+  `content/angelDeal.ts` is now a **one-line re-export shim** so every existing importer
+  (engine/save/buildView/modal) keeps working unchanged. Typed `Scores` (Record<ScoreKey,…>)
+  preserved for the Angel engine.
+- **Reusable UI** (`src/ui/mogulStories/MogulStoryModal.tsx`, renamed from `AngelDealModal`):
+  a generic mobile visual-novel modal that renders ANY `MogulStory` def — floating offer →
+  typewriter narrative → consequence beat → 2–4 choices + Walk Away → per-band outcome
+  screen. **No story-specific logic** remains in the UI. `AngelDealModal.tsx` deleted.
+- **Docs:** new [`docs/mogul-stories.md`](docs/mogul-stories.md) — what they are, naming,
+  the content/runtime/reward split, variable length, hidden scoring, Walk Away rules, outcome
+  bands, trigger/cooldown, save/cloud/harness safety, and a step-by-step "add a new story"
+  guide + future story ideas (one per industry).
+- **Save/cloud/harness unchanged:** ordinary game state in the same versioned envelope
+  (cloud-safe, no secrets); load stays tolerant (an in-progress session on an unknown stage
+  cancels cleanly); the whole system is player-triggered so it's byte-inert for the sim bot.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **277 tests** (+3 framework-integrity
+tests in `mogulStories.test.ts`: registry/unique-ids, every story well-formed + walkable +
+all four outcome bands, registry keying; Angel + balance + harness + progression unchanged).
+Browser-verified 375px: the offer appears, accepting opens the Angel story through the new
+generic modal (stage `pitch`, "Pitch · 1/10", FridgeMind), no console errors, no overflow.
+
+---
+
 ## Startup Combinator — now a real standalone business with "exit" jackpots
 
 Upgraded the Angel Deal great-outcome reward from a permanent ×1.15 multiplier placeholder into an

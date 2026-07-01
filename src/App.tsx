@@ -9,7 +9,7 @@ import { MilestoneCelebration } from './ui/shared/MilestoneCelebration'
 import { FloatingGoldenDeal } from './ui/shared/FloatingGoldenDeal'
 import { FloatingRushHour } from './ui/shared/FloatingRushHour'
 import { EventCardModal } from './ui/shared/EventCardModal'
-import { AngelDealModal } from './ui/opportunities/AngelDealModal'
+import { MogulStoryModal } from './ui/mogulStories/MogulStoryModal'
 import { CombinatorExitWatcher } from './ui/business/CombinatorCard'
 import { DailyBonusModal } from './ui/shared/DailyBonusModal'
 import { AscensionCelebration } from './ui/shared/AscensionCelebration'
@@ -48,7 +48,7 @@ export function App() {
       <AccountModal />
       <MilestoneCelebration />
       <EventCardModal />
-      <AngelDealModal />
+      <MogulStoryModal />
       <CombinatorExitWatcher />
       <AscensionCelebration />
       <DailyBonusModal />
