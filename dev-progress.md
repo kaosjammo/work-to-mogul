@@ -4,6 +4,35 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI REDESIGN Phase 1b-i — collapse the Business-screen cue boxes
+
+Continues the de-boxing on the Business screen (above the list). Before: a fresh industry
+stacked an onboarding box, then the industry-bonus box, then one of the Finance/Quantum/Logistics
+signature boxes, then an entry-cost box, then a full-width Spend-Cash box.
+
+- **4 cue boxes → ONE borderless `IndustrySignatureStrip`.** IndustryBonusCue + FinanceCompoundCue
+  + QuantumSuperpositionCue + LogisticsDispatchCue are deleted; one flat strip (2px accent left
+  stripe + a thin bonus-progress baseline) shows the ⭐ industry specialisation bonus on the left
+  and the *active* signature on the right — Finance "📈 +N%", Quantum "⚛️ ×9!/stable", or the
+  Logistics Dispatch chip (`.btn-sm`, still fully functional). Only one signature is ever active.
+- **Spend-Cash** → a `.btn-secondary .btn-sm` chip inside a new "Businesses" `.section` header
+  (was a full-width bordered box button).
+- **Onboarding hint + entry-cost** → borderless accent-left-stripe callouts (were bordered boxes;
+  dropped the industry-pattern background too).
+
+**Validation:** `tsc -b` + build clean (JS 405→402 kB — 4 components removed), oxlint clean,
+**244 tests green**. **Browser-verified at 375px:** full-border boxes in `main` dropped from ~7 to
+**3** (WorkCard + banner + list — those are the next slices); the strip renders correctly for a
+signature industry (Logistics shows the 32px Dispatch chip) and a plain one (Space shows just the
+bonus, no right chip); Spend-cash + Dispatch chips 32px; no horizontal overflow.
+
+**Files:** ~`ui/business/BusinessesScreen.tsx`; ~`docs/UI_REDESIGN.md`.
+
+**Next (Phase 1b-ii):** WorkCard → accent-stripe strip; IndustryTabs/Banner → pills + borderless
+banner; single-tier HUD + slim Business-tab buy-mode row.
+
+---
+
 ## UI REDESIGN Phase 1a — business list → flat dense rows
 
 **The core visible transformation** of the redesign (the mockup the user approved): the Business
