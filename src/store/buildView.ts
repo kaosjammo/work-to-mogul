@@ -51,6 +51,7 @@ import {
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
+import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import {
   financeCompoundMult,
   FINANCE_INDUSTRY_ID,
@@ -267,6 +268,17 @@ export interface RushHourView {
   speedMult: number // the Food speed multiplier during a surge (for the label)
 }
 
+export interface EventCardView {
+  id: string
+  icon: string
+  title: string
+  prompt: string
+  kind: 'opportunity' | 'crisis' | 'gamble'
+  secondsLeft: number
+  a: { label: string; blurb: string }
+  b: { label: string; blurb: string }
+}
+
 export interface ContractView {
   id: string
   name: string
@@ -292,6 +304,7 @@ export interface ViewSnapshot {
   rushHour: RushHourView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
+  eventCard: EventCardView | null
   contracts: ContractView[]
   contractsClaimable: number
   buyMode: BuyMode
@@ -761,6 +774,23 @@ export function buildView(
     mult: quantumSuperpositionMult(state),
   }
 
+  // Event card currently on offer (null when none) — the active-decision modal reads this.
+  const ec = state.eventCards
+  const offerCard = ec?.offerCardId ? EVENT_CARD_BY_ID[ec.offerCardId] : undefined
+  const eventCard: EventCardView | null =
+    offerCard && (ec?.offerMsLeft ?? 0) > 0
+      ? {
+          id: offerCard.id,
+          icon: offerCard.icon,
+          title: offerCard.title,
+          prompt: offerCard.prompt,
+          kind: offerCard.kind,
+          secondsLeft: Math.ceil((ec?.offerMsLeft ?? 0) / 1000),
+          a: { label: offerCard.a.label, blurb: offerCard.a.blurb },
+          b: { label: offerCard.b.label, blurb: offerCard.b.blurb },
+        }
+      : null
+
   const contracts: ContractView[] = (state.contracts?.active ?? [])
     .map((id) => CONTRACT_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
@@ -851,6 +881,7 @@ export function buildView(
     rushHour,
     financeCompound,
     quantumSuperposition,
+    eventCard,
     contracts,
     contractsClaimable,
     buyMode: state.buyMode,

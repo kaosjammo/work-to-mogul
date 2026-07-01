@@ -15,6 +15,7 @@ import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
 import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
+import { eventProfitMult, eventSpeedMult } from './eventCards'
 
 // ----- Cost scaling -----
 
@@ -259,9 +260,12 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   const lateDampen = lateGameDampen(def.industryId) // slows the higher tiers (≤ 1)
   // Food's "Rush Hour" signature: a claimed surge multiplies Food speed (1 otherwise).
   const rush = def.industryId === FOOD_INDUSTRY_ID ? foodRushSpeedMult(state) : 1
+  // Event cards: a resolved card's timed all-business profit/speed buff (1 when none).
+  const evProfit = eventProfitMult(state)
+  const evSpeed = eventSpeedMult(state)
   return {
-    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen,
-    speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush,
+    profit: ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * evProfit,
+    speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush * evSpeed,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }
 }

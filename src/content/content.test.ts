@@ -7,6 +7,7 @@ import { purchase } from '../engine/buy'
 import { initialGameState } from '../store/initialState'
 import { SIGNATURE_PERKS } from '../engine/economy'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from './employeeTemplates'
+import { EVENT_CARDS } from './eventCards'
 
 describe('content integrity', () => {
   it('passes referential validation with all industries', () => {
@@ -29,6 +30,19 @@ describe('content integrity', () => {
       expect(perk, `${iid}'s perk "${perkId}" must be wired in SIGNATURE_PERKS`).toBeDefined()
       // A perk must actually change profit or speed, else it's a no-op identity.
       expect((perk.profit ?? 1) > 1 || (perk.speed ?? 1) > 1).toBe(true)
+    }
+  })
+
+  it('every event card option has a wired, non-empty effect (no dead options)', () => {
+    for (const card of EVENT_CARDS) {
+      for (const [side, opt] of [['a', card.a], ['b', card.b]] as const) {
+        expect(opt.effects.length, `${card.id}.${side} has no effects`).toBeGreaterThan(0)
+        for (const eff of opt.effects) {
+          if (eff.kind === 'cash') expect(eff.incomeSeconds).not.toBe(0)
+          else expect(eff.mult, `${card.id}.${side} ${eff.kind} mult must differ from 1`).not.toBe(1)
+          if (eff.kind !== 'cash') expect(eff.durationMs).toBeGreaterThan(0)
+        }
+      }
     }
   })
 

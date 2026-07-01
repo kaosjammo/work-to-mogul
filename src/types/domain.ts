@@ -217,6 +217,19 @@ export interface RushHourState {
   surgeMsLeft: number // > 0 while a claimed surge is boosting Food's speed
 }
 
+/** Business event cards — the active-decision layer. Transient (not persisted;
+ *  fresh on load/prestige), deterministic cadence + deck rotation. */
+export interface EventCardsState {
+  cooldownMs: number // time until the next card surfaces
+  offerMsLeft: number // > 0 while a card is on offer (undecided)
+  offerCardId: string | null // the card currently on offer
+  nextIndex: number // deterministic deck rotation pointer
+  profitMult: number // active timed profit multiplier from a resolved card
+  profitMsLeft: number
+  speedMult: number // active timed speed multiplier from a resolved card
+  speedMsLeft: number
+}
+
 /** Contracts board — the currently-offered missions + pool pointer. */
 export interface ContractsState {
   active: string[] // contract ids currently on the board
@@ -230,6 +243,7 @@ export interface GameState {
   career: CareerState
   golden: GoldenState
   rushHour: RushHourState
+  eventCards: EventCardsState // the active-decision layer (transient)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode

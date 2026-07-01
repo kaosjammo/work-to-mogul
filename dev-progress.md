@@ -4,6 +4,39 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 5 — Business event cards (the active-decision layer)
+
+**Analysed:** reviewer pivoted to Task 5 after the Task 4 slice. Diagnosis: the game's
+mechanics are now 2/3 passive — between set-up moments the player mostly watches. Event
+cards add the missing recurring "a decision is waiting" hook across all industries.
+
+**Implemented (finished vertical slice):** a periodic **event card** with a genuine
+2-option trade-off. `content/eventCards.ts` = a data-driven deck of 4 cards (2
+opportunities, 1 crisis, 1 gamble), each option carrying BOUNDED, TRANSIENT effects
+(one-off cash priced in seconds of idle income, or a short timed profit/speed multiplier).
+`engine/eventCards.ts` drives a DETERMINISTIC cadence (golden.ts tick-counter; the deck
+rotates by `nextIndex` like the contract board — no RNG) and applies effects on resolve;
+timed buffs fold into `economyMultipliers` (profit/speed) like the Golden-Deal frenzy —
+nothing touches the base curve. `EventCardModal` is a dismissible mobile modal (two
+full-width option buttons + effect text + Ignore); the idle loop runs behind it. New
+transient `EventCardsState` (fresh on load/prestige → no save migration).
+
+**Validation:** 225 tests (+7: cadence/deck-rotation, no-spawn-without-income, auto-decline,
+resolve applies cash+timed buff then expires, decline is a no-op; + content.test dead-option
+guard), build + lint clean. **Harness byte-identical** ($4.08Qi / 156m / 7 industries) —
+harness-safe by construction: the greedy bot never resolves a card (auto-declines), so no
+effect ever activates and pacing is unmoved. Browser-verified: "Supply Glut" modal → tap
+"Stockpile" → cash cost + ×1.6 profit buff (60s) applied, modal dismissed.
+
+**Files:** +`content/eventCards.ts`, +`engine/eventCards.ts` (+`.test.ts`),
++`ui/shared/EventCardModal.tsx`; ~`types/domain.ts`, `engine/economy.ts`, `engine/simulate.ts`,
+`store/{initialState,actions,buildView,gameStore}.ts`, `content/content.test.ts`, `App.tsx`.
+
+**Next:** tune card cadence/effects to taste (playtest), or extend the deck / add
+industry-scoped cards; per the next roadmap review (Task 6 polish is the remaining backlog).
+
+---
+
 ## Task 4 (industry identity) — Quantum "Superposition" (3rd mechanic; slice complete)
 
 **Analysed:** reviewer confirmed Quantum is the last slice piece — it was still sharing

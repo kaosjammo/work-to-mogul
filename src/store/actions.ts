@@ -24,6 +24,7 @@ import { buyTalent as buyTalentFn } from '../engine/talents'
 import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
 import { claimGoldenDeal } from '../engine/golden'
 import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
+import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
@@ -224,6 +225,22 @@ export function claimRush(): void {
     useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed`])
     publishNow()
   }
+}
+
+/** Resolve the active event card by picking option 'a' or 'b'. */
+export function resolveCard(choice: 'a' | 'b'): void {
+  const opt = resolveEventCard(getEngineState(), choice)
+  if (opt) {
+    haptic(18)
+    useUiStore.getState().pushCelebrations([`📋 ${opt.label}`])
+    publishNow()
+  }
+}
+
+/** Dismiss the active event card with no effect. */
+export function dismissCard(): void {
+  declineEventCard(getEngineState())
+  publishNow()
 }
 
 /** Wipe the save and start a brand-new game (destructive; hold-to-confirm in UI). */
