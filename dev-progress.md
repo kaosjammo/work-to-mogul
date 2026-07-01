@@ -4,6 +4,29 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI REDESIGN Phase 3 — FULL game-world juice (cash-burst) — redesign COMPLETE
+
+The last cross-cutting piece of the user-picked "FULL" game-world. Reactive mascot poses were
+already wired (`WealthStage` swaps founderExcited/Working/Idle by celebrating/earning/idle state),
+so this slice adds the **cash-burst**: the floating "+$" payoff pop now plays the authored 8-frame
+`ART_GENERATED.vfx.cashBurstFrames` sequence (`FloatingProfitLayer` steps the frames ~55ms each,
+then holds the last while the +$ rises) instead of a single static burst image. Same payoff
+moments — nicer punch, so it *concentrates* juice rather than adding more. Reduced-motion-safe (the
+float self-removes near-instantly under `prefers-reduced-motion`, so only the first frame shows).
+
+**Validation:** build + oxlint clean, 252 tests. **Browser-verified at 375px:** spawned floats load
+the real burst frames (`cash_burst_08.png`, complete + naturalWidth 155 — no 404), cycle through the
+sequence, and the "+$" amounts render; no console errors.
+
+**Files:** ~`ui/shared/FloatingProfitLayer.tsx`, `docs/UI_REDESIGN.md`.
+
+**→ The full UI redesign (Phases 0 → 3) is delivered:** one flat/dense/game-like design system, a
+consistent small-button scale (no more giant bars), massively fewer boxes, both audit bugs fixed,
+the cloud-conflict nag fixed, and the reactive-mascot + cash-burst game-world. Optional follow-ups:
+flatten the founder-perk choice cards; Stats still ~5 boxes; retire remaining emoji-as-labels for art.
+
+---
+
 ## UI REDESIGN Phase 1b-ii + 2 + 3-structural — parallel screen rewrites
 
 User asked to "finish the next few phases all in one go." Implemented via a 9-agent parallel
