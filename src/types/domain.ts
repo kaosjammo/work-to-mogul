@@ -262,6 +262,7 @@ export type AngelOutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 /** State for the Angel Investment mini-game. Durable meta (combinatorUnlocked,
  *  completedCount, cooldown, timed boost) + a validated in-progress session. */
 export interface AngelDealState {
+  storyId: string // which Mogul Story this session is running (default: the Angel story)
   combinatorUnlocked: boolean // great outcome once → permanent Finance/Tech bonus (Startup Combinator)
   completedCount: number // times a deal has resolved (any band)
   cooldownMs: number // time until a pitch can be offered again (rare)

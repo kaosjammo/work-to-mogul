@@ -11,6 +11,7 @@
 import type { GameState, IndustryId } from '../types/domain'
 import type { AngelDealState } from '../types/domain'
 import { ANGEL_DEAL, SCORE_KEYS, type Scores, type RoleBoost, type DealChoice } from '../content/angelDeal'
+import { getMogulStory } from '../content/mogulStories'
 import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
 
@@ -42,6 +43,7 @@ export function initialScores(): Scores {
 
 export function initialAngelDealState(): AngelDealState {
   return {
+    storyId: ANGEL_DEAL.id,
     combinatorUnlocked: false,
     completedCount: 0,
     cooldownMs: ANGEL_FIRST_OFFER_MS,
@@ -58,6 +60,16 @@ export function initialAngelDealState(): AngelDealState {
     exitCount: 0,
     lastExitAmount: 0,
   }
+}
+
+/**
+ * The Mogul Story this session is running (looked up from the registry by `storyId`).
+ * Stage navigation + the modal + the view all resolve the story through this — so the
+ * shared runtime drives ANY registered story, not the hardcoded Angel constant. Falls
+ * back to the Angel story if the id is somehow unknown (old/corrupt save).
+ */
+export function activeStory(a: AngelDealState) {
+  return getMogulStory(a.storyId) ?? ANGEL_DEAL
 }
 
 /** Does the player own the Startup Combinator business (great-outcome reward)? */
@@ -178,7 +190,7 @@ export function startAngelDeal(state: GameState): boolean {
   if (!a || !a.offered || a.active) return false
   a.offered = false
   a.active = true
-  a.stageId = ANGEL_DEAL.firstStage
+  a.stageId = activeStory(a).firstStage
   a.scores = initialScores()
   a.outcome = null
   a.disciplined = false
@@ -252,7 +264,8 @@ function applyOutcome(state: GameState, band: OutcomeBand, disciplined: boolean)
 export function chooseAngelChoice(state: GameState, choiceId: string, boosted: Set<RoleBoost>): boolean {
   const a = state.angelDeal
   if (!a || !a.active || !a.stageId) return false
-  const stage = ANGEL_DEAL.stages[a.stageId]
+  const story = activeStory(a)
+  const stage = story.stages[a.stageId]
   if (!stage) return false
   const choice = stage.choices.find((c) => c.id === choiceId)
   if (!choice) return false
@@ -275,7 +288,7 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
     a.completedCount += 1
     return true
   }
-  if (ANGEL_DEAL.stages[choice.next]) {
+  if (story.stages[choice.next]) {
     a.stageId = choice.next
     return true
   }

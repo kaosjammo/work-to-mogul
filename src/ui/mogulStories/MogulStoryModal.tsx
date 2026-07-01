@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useAngelDeal } from '../../store/gameStore'
 import { acceptAngelDeal, declineAngel, chooseAngel, closeAngelOutcome } from '../../store/actions'
 import { money } from '../../engine/num'
-import { ANGEL_DEAL, type MogulStoryChoice, type MogulStoryOutcomeBand } from '../../content/mogulStories'
-
-// The active story. When more than one story exists, the session view will carry the
-// active story id and this looks it up from the registry; for now Angel is the only one.
-const STORY = ANGEL_DEAL
+import {
+  ANGEL_DEAL,
+  getMogulStory,
+  type MogulStoryChoice,
+  type MogulStoryOutcomeBand,
+} from '../../content/mogulStories'
 
 const REDUCED =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -41,6 +42,9 @@ const scrimStyle = { background: 'rgba(0,0,0,0.72)' }
  */
 export function MogulStoryModal() {
   const a = useAngelDeal()
+  // The active story, resolved from the session's story id — the modal renders ANY
+  // registered story's def (stages/speaker/outcome copy), never a hardcoded one.
+  const STORY = getMogulStory(a.storyId) ?? ANGEL_DEAL
 
   // A consequence beat: after picking a choice with a `result`, show it, then continue.
   const [pending, setPending] = useState<MogulStoryChoice | null>(null)

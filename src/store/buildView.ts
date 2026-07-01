@@ -61,6 +61,7 @@ import {
 } from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { ANGEL_DEAL } from '../content/angelDeal'
+import { getMogulStory } from '../content/mogulStories'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -299,6 +300,7 @@ export interface CombinatorView {
 }
 
 export interface AngelDealView {
+  storyId: string // which Mogul Story is active (the modal renders this story's def)
   offered: boolean // a pitch is waiting (floating prompt)
   active: boolean // the mini-game modal is open
   stageId: string | null
@@ -879,14 +881,17 @@ export function buildView(
     surgePct: Math.round(((state.logistics?.surgeMult ?? 1) - 1) * 100),
   }
 
-  // Angel Investment mini-game — offer/active/outcome + qualitative hints.
+  // Mogul Story session (Angel Investment is the reference story) — offer/active/outcome
+  // + qualitative hints. The active story is resolved by id so this drives ANY story.
   const ad = state.angelDeal
+  const story = getMogulStory(ad.storyId) ?? ANGEL_DEAL
   const angelDeal: AngelDealView = {
+    storyId: ad.storyId,
     offered: ad.offered && !ad.active,
     active: ad.active,
     stageId: ad.stageId,
-    stageIndex: ad.stageId ? ANGEL_DEAL.order.indexOf(ad.stageId) + 1 : 0,
-    stageTotal: ANGEL_DEAL.order.length,
+    stageIndex: ad.stageId ? story.order.indexOf(ad.stageId) + 1 : 0,
+    stageTotal: story.order.length,
     outcome: ad.outcome,
     payout: ad.payout,
     disciplined: ad.disciplined,

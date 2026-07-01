@@ -18,6 +18,7 @@ import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
+import { getMogulStory } from '../content/mogulStories'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
@@ -240,6 +241,8 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   if (loaded.angelDeal && typeof loaded.angelDeal === 'object') {
     const la = loaded.angelDeal
     const a = s.angelDeal
+    // Active Mogul Story id — keep it only if the story is still registered (else default).
+    a.storyId = typeof la.storyId === 'string' && getMogulStory(la.storyId) ? la.storyId : a.storyId
     a.combinatorUnlocked = !!la.combinatorUnlocked
     a.completedCount = Math.max(0, Math.floor(num(la.completedCount)))
     a.cooldownMs = Math.max(0, num(la.cooldownMs, a.cooldownMs))
@@ -256,7 +259,8 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     }
     a.offered = !!la.offered
     if (la.active) {
-      const stageOk = typeof la.stageId === 'string' && !!ANGEL_DEAL.stages[la.stageId]
+      const story = getMogulStory(a.storyId) ?? ANGEL_DEAL
+      const stageOk = typeof la.stageId === 'string' && !!story.stages[la.stageId]
       const outcomeOk =
         typeof la.outcome === 'string' && ['great', 'good', 'neutral', 'bad'].includes(la.outcome)
       if (stageOk || outcomeOk) {

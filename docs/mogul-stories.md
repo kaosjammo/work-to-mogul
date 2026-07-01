@@ -56,6 +56,21 @@ This is why the modal is generic: it renders any `MogulStory` def (stages, speak
 branches. The Combinator reveal, for instance, is just the Angel story's `outcome.great.line`
 text — not a special case in the UI.
 
+### The active-story id (shared session seam)
+
+The session state carries a **`storyId`** (`AngelDealState.storyId`, default `ANGEL_DEAL.id`).
+The engine's stage navigation, the built view (`AngelDealView.storyId` + the "Stage N of M"
+counts), and the modal all resolve the running story through `getMogulStory(storyId)` (see
+`activeStory()` in [`engine/angelDeal.ts`](../src/engine/angelDeal.ts)) rather than a
+hardcoded constant — so the **shared runtime drives whichever story the session references**,
+falling back to Angel if the id is ever unknown (old/corrupt save). `storyId` round-trips
+through save and an unregistered id is dropped back to the default on load.
+
+What remains story-specific (by design) is the **resolution** — the score→band mapping and
+the reward side-effects (Angel's `investedBand` / `applyOutcome`, the Combinator, the timed
+Finance buff). A second live story adds its own resolution (and, if it needs bespoke reward
+state, its own state fields); the offer/stage-nav/render plumbing above is already shared.
+
 ### The re-export shim
 
 `src/content/angelDeal.ts` is now a one-line shim:
@@ -148,9 +163,9 @@ never nagging.
    **deterministic** and **player-triggered** so it stays harness-safe.
 4. **Wire state + save** — if the story needs its own session state, add a typed slice to
    `GameState`, initialise it, and restore it tolerantly in `serialize.ts`.
-5. **Reuse the UI** — the generic `MogulStoryModal` renders any registered story. (Until the
-   session view carries an active-story id, the modal points at a single story; generalise
-   that lookup when a second live story ships.)
+5. **Reuse the UI** — the generic `MogulStoryModal` renders any registered story, resolved
+   from the session's `storyId` (the offer/stage-nav/render plumbing is shared; see "The
+   active-story id" above). Set `storyId` when your story is offered so the modal renders it.
 6. **Test** — the framework test (`mogulStories.test.ts`) validates every registered story's
    shape automatically. Add story-specific tests for its scoring→band + reward logic.
 7. **Guard the invariant** — run the harness/balance tests and confirm income is unchanged.

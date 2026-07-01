@@ -14,6 +14,8 @@ import {
   startAngelDeal,
   chooseAngelChoice,
   dismissAngelOutcome,
+  activeStory,
+  initialAngelDealState,
   angelFinanceBoostMult,
   ownsCombinator,
   tickCombinatorExit,
@@ -101,6 +103,38 @@ describe('Angel Deal — payouts are bounded (never ruinous)', () => {
     expect(payoutFor('neutral', false, cash)).toBe(0)
     expect(payoutFor('neutral', true, cash)).toBeGreaterThan(0)
     expect(payoutFor('neutral', true, cash)).toBeLessThan(cash * 0.05)
+  })
+})
+
+describe('Mogul Story seam — active story resolved by id (drives ANY registered story)', () => {
+  it('defaults the session to the Angel story and resolves it from the registry', () => {
+    const a = initialAngelDealState()
+    expect(a.storyId).toBe(ANGEL_DEAL.id)
+    expect(activeStory(a)).toBe(ANGEL_DEAL)
+  })
+
+  it('falls back to the Angel story if the id is unknown (corrupt/old save never crashes)', () => {
+    const a = initialAngelDealState()
+    a.storyId = 'no_such_story'
+    expect(activeStory(a)).toBe(ANGEL_DEAL)
+  })
+
+  it('accepting a pitch opens the ACTIVE story’s first stage (via storyId, not a constant)', () => {
+    const s = eligibleState()
+    s.angelDeal.offered = true
+    startAngelDeal(s)
+    expect(s.angelDeal.stageId).toBe(activeStory(s.angelDeal).firstStage)
+  })
+
+  it('round-trips storyId through save, dropping an unknown id back to the default', () => {
+    const s = eligibleState()
+    const restored = deserialize(serialize(s, 1))!
+    expect(restored.angelDeal.storyId).toBe(ANGEL_DEAL.id)
+
+    const raw = JSON.parse(serialize(s, 1))
+    raw.state.angelDeal.storyId = 'ghost_story'
+    const dropped = deserialize(JSON.stringify(raw))!
+    expect(dropped.angelDeal.storyId).toBe(ANGEL_DEAL.id)
   })
 })
 

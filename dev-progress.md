@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Stories — enabling refactor: the runtime now drives ANY story by id
+
+Groundwork before authoring a second story: the shared session plumbing no longer hardcodes
+the Angel story constant — it resolves whichever story the session references by id.
+
+- **`AngelDealState.storyId`** (default `ANGEL_DEAL.id`) is the active Mogul Story id.
+  `initialAngelDealState()` sets it; it's persisted and **round-trips through save**, with an
+  **unregistered id dropped back to the default** on load (tolerant, never crashes).
+- **`activeStory(a)`** (`engine/angelDeal.ts`) = `getMogulStory(a.storyId) ?? ANGEL_DEAL`.
+  Stage navigation (`startAngelDeal` → `firstStage`, `chooseAngelChoice` → `stages` lookup +
+  advance) now goes through it instead of the `ANGEL_DEAL` constant.
+- **buildView** resolves the story by id for the "Stage N of M" counts and adds
+  `AngelDealView.storyId`; **MogulStoryModal** replaced its module-level `const STORY =
+  ANGEL_DEAL` with a per-render `getMogulStory(a.storyId) ?? ANGEL_DEAL`. No story-specific
+  branch remains in the UI/view/stage-nav.
+- **Behavior-preserving:** only Angel is registered, so `storyId` is always `angel_fridgemind`
+  → identical play. What stays story-specific (by design) is the *resolution* (score→band +
+  reward); a second story adds its own, reusing this shared offer/stage-nav/render plumbing.
+- Docs: `mogul-stories.md` gains a "The active-story id (shared session seam)" section and the
+  "add a story" UI step now points at `storyId`.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **303 tests** (+4: story resolved by id,
+unknown-id fallback, first stage via `activeStory`, `storyId` save round-trip incl. unknown-id
+drop; Angel flow + balance + harness + progression unchanged). Browser-verified 375px: the
+Angel offer → modal still renders from the `storyId` path (stage `pitch`, "Pitch · 1/10",
+FridgeMind), no console errors, no overflow. (Rebased onto the parallel session's Space Salvage
+Shooter commit `d406275` first; staged only my files.)
+
+---
+
 ## Mogul Stories — formalised the hidden-narrative framework
 
 Turned the one-off "Opportunity Mini-Game" (Angel Investment) into a **named, reusable,
