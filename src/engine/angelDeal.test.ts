@@ -34,6 +34,7 @@ import {
   VIRAL_MOMENT,
   DOCK_DISPUTE,
   INSPECTION,
+  LAUNCH,
 } from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
@@ -456,6 +457,62 @@ describe('Mogul Story #6 — The Inspection (Energy): a compliance drama on the 
     s.angelDeal.stageId = 'ruling'
     expect(chooseAngelChoice(s, 'rul_lawyer', new Set())).toBe(true)
     expect(s.angelDeal.outcome).toBe('neutral')
+  })
+})
+
+describe('Mogul Story #7 — Scrub or Fly (Space): the finale, with a bespoke empire-wide reward', () => {
+  function spaceState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.satellite.owned = 1 // a Space business
+    s.businesses.satellite.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Space + clears the cash floor', () => {
+    expect(storyEligible(spaceState(), LAUNCH)).toBe(true)
+    const noSpace = initialGameState(0)
+    noSpace.cash = 1e9
+    expect(storyEligible(noSpace, LAUNCH)).toBe(false)
+  })
+
+  it('a flawless launch grants an EMPIRE-WIDE boost (every industry) and no Combinator', () => {
+    const s = spaceState()
+    s.angelDeal.storyId = LAUNCH.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'dec_fly', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false)
+    // The launch halo lifts EVERY industry, not just Space — the one cross-industry reward.
+    expect(s.angelDeal.boostIndustryId).toBe('*')
+    expect(mogulStoryBoostMult(s, 'space')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'food')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'finance')).toBeGreaterThan(1)
+  })
+
+  it('scrubbing the launch resolves neutral', () => {
+    const s = spaceState()
+    s.angelDeal.storyId = LAUNCH.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    expect(chooseAngelChoice(s, 'dec_scrub', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
+  })
+
+  it('a good (non-great) launch boosts only Space, not the whole empire', () => {
+    const s = spaceState()
+    s.angelDeal.storyId = LAUNCH.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    // Middling scores → good, not great.
+    s.angelDeal.scores = scores({ dueDiligence: 3, valuationDiscipline: 2, leverage: 1, risk: 3 })
+    chooseAngelChoice(s, 'dec_fly', new Set())
+    expect(s.angelDeal.outcome).toBe('good')
+    expect(s.angelDeal.boostIndustryId).toBe('space')
+    expect(mogulStoryBoostMult(s, 'space')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'food')).toBe(1)
   })
 })
 

@@ -182,13 +182,28 @@ never nagging.
 - ✅ **Energy** — a regulator's inspection with a buried compliance flaw. *(Shipped: "The
   Inspection", `inspection_voss`, an 8-stage `standard` compliance drama —
   `content/mogulStories/inspection.ts`.)*
-- **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
+- ✅ **Space** — a launch-window gamble with a flaky supplier ("scrub or fly"). *(Shipped:
+  "Scrub or Fly", `launch_meridian`, a 9-stage `standard` launch drama with a **bespoke
+  cross-industry reward** — `content/mogulStories/launchGamble.ts`.)*
 - ✅ **Food** — a viral-review moment that can make or sink a location. *(Shipped: "Gone
   Viral", `viral_copper_spoon`, a 5-stage `short` crisis-opportunity —
   `content/mogulStories/viralMoment.ts`.)*
 
+**🏁 All 7 industries covered** (Finance / Retail / Tech / Food / Logistics / Energy / Space).
+
 Each can pick its own length, score variables, tone, outcome logic, and reward — the
 framework only asks that they conform to the `MogulStory` shape and stay bot-inert.
+
+### The empire-wide reward (bespoke resolver example)
+
+The Space finale is the reference for a **bespoke** reward. A `great` "fly" doesn't just boost
+Space — it applies a bigger, longer profit halo to **every** industry, via an `EMPIRE_WIDE`
+(`'*'`) sentinel on `AngelDealState.boostIndustryId` that `mogulStoryBoostMult` treats as
+matching all industries (`engine/angelDeal.ts`). It's gated on `storyId === LAUNCH.id` in
+`applyOutcome`, exactly like Angel's `great` founds the Combinator — the two examples of a
+per-story reward that departs from the generic single-industry boost. Still deterministic,
+player-triggered, and bot-inert (income byte-identical in the harness; the boost is off the
+base curve so `balance.test` monotonicity holds).
 
 ### Shared "negotiation" resolution (what "The Lease" reuses)
 

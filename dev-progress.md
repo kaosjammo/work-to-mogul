@@ -4,6 +4,48 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #7 — "Scrub or Fly" (Space), the finale + a bespoke reward 🏁
+
+The seventh and final industry story — and the first to use a **bespoke reward** beyond the
+generic per-industry boost. **All 7 industries now have a Mogul Story.**
+
+- **New story** `content/mogulStories/launchGamble.ts` — "Scrub or Fly" (`launch_meridian`,
+  Space): a **9-stage `standard`** mission-control drama. A closing launch window, a twitchy
+  valve sensor from a corner-cutting supplier (fictional *Halcyon Components*), a customer
+  screaming to fly, and a young engineer brave enough to dissent. Read the telemetry the
+  honest way (try to *disprove* your own GO case), resist the schedule pressure, honour the
+  dissent — then make the GO/NO-GO call. FLY = commit (`invest`), SCRUB = walk (`walkaway`).
+  Fictional flight director *Renn Okafor*. Registered in `index.ts`.
+- **Bespoke cross-industry reward** (the framework's per-story freedom, finally exercised
+  beyond Angel's Combinator): a **`great`** launch is a historic success whose halo lifts the
+  **whole empire** — a bigger (×1.5), longer (120s) profit boost on **every** industry, not
+  just Space. Wired via a new `EMPIRE_WIDE` (`'*'`) sentinel on `boostIndustryId` that
+  `mogulStoryBoostMult` treats as matching all industries, gated on `storyId === LAUNCH.id` in
+  `applyOutcome` (mirrors the Angel-Combinator gate). A `good` launch → the normal Space-only
+  boost; a `bad` "fly on a hunch" → a Space dip; SCRUB → neutral.
+- **Save-compatible** (`boostIndustryId` already persisted; `'*'` is just a value) and
+  **harness-inert** (player-triggered; bot never accepts → boost always ×1 → income
+  byte-identical; the boost is off the base curve so `balance.test` monotonicity holds).
+- Length range across all 7: Angel 10 / **Launch 9** / Poach 8 / Walkout 8 / Inspection 8 /
+  Lease 7 / Viral 5.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **323 tests** (+4: Space eligibility,
+great→EMPIRE-WIDE-boost-not-Combinator, scrub→neutral, and good→Space-only-not-empire; the
+framework-integrity test auto-covers the new story; all prior stories + harness + balance +
+progression unchanged). Browser-verified 375px: the decision stage renders "Scrub or Fly ·
+**9/9**"; clicking FLY on great-tier scores → outcome `great`, `boostIndustryId === '*'`,
+`boostMult 1.5`, the "Liftoff — Flawless / the whole empire is flying" outcome screen; a
+clean-slice re-run confirms the Combinator stays locked; no overflow, no console errors.
+
+> **🏁 Mogul Stories content-complete: all 7 industries covered.** The loop should now stop
+> manufacturing stories; further Mogul-Stories work needs a real signal (a major/cross-industry
+> flagship, a framework polish, or a UI nit) — not another per-industry story.
+> _(Note: the main JS chunk is now >500 kB pre-gzip — cumulative story prose; ~152 kB gzip. A
+> future optimisation could lazy-load story content, which is only needed when a rare story
+> fires. Not a blocker.)_
+
+---
+
 ## Mogul Story #6 — "The Inspection" (Energy), a compliance drama
 
 Sixth story, content + registration only. **6 of 7 industry ideas shipped — only the Space

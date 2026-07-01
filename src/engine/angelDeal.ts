@@ -11,7 +11,7 @@
 import type { GameState, IndustryId } from '../types/domain'
 import type { AngelDealState } from '../types/domain'
 import { ANGEL_DEAL, SCORE_KEYS, type Scores, type RoleBoost, type DealChoice } from '../content/angelDeal'
-import { getMogulStory, MOGUL_STORIES, type MogulStory } from '../content/mogulStories'
+import { getMogulStory, MOGUL_STORIES, LAUNCH, type MogulStory } from '../content/mogulStories'
 import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
 
@@ -31,11 +31,19 @@ export const ANGEL_REOFFER_MS = 30 * 60_000 // long cooldown between pitches (ra
 export const ANGEL_MIN_CASH = 1_000_000 // "enough to plausibly invest" — a modest floor (Finance is already mid-late)
 export const ANGEL_INVEST_FRACTION = 0.12 // the cheque = 12% of current cash (bounded, never ruinous)
 
-// Post-deal timed Finance effects.
+// Post-deal timed industry effects.
 export const GOOD_BOOST_MULT = 1.4
 export const GOOD_BOOST_MS = 90_000
 export const BAD_DEBUFF_MULT = 0.75
 export const BAD_DEBUFF_MS = 60_000
+
+// Space finale ("Meridian-1" launch) — a GREAT "fly" is a historic success whose halo lifts
+// the WHOLE empire, not just Space: a bigger, longer boost applied to EVERY industry via the
+// `EMPIRE_WIDE` sentinel on boostIndustryId. The story's bespoke reward (mirrors the way
+// Angel's great founds the Combinator) — the one non-single-industry outcome in the system.
+export const EMPIRE_WIDE = '*'
+export const LAUNCH_HALO_MULT = 1.5
+export const LAUNCH_HALO_MS = 120_000
 
 export function initialScores(): Scores {
   return { confidence: 0, leverage: 0, dueDiligence: 0, founderTrust: 0, risk: 0, valuationDiscipline: 0 }
@@ -261,6 +269,12 @@ function applyOutcome(state: GameState, band: OutcomeBand, disciplined: boolean)
       b.owned = Math.max(1, b.owned)
     }
     a.exitCooldownMs = EXIT_INTERVAL_MS
+  } else if (band === 'great' && a.storyId === LAUNCH.id) {
+    // Space finale: a flawless launch lifts the whole empire — a bigger, longer boost on
+    // EVERY industry (the launch halo), not just Space. The system's one cross-industry reward.
+    a.boostMult = LAUNCH_HALO_MULT
+    a.boostMsLeft = LAUNCH_HALO_MS
+    a.boostIndustryId = EMPIRE_WIDE
   } else if (band === 'great' || band === 'good') {
     // A strong finish → a timed profit boost on THIS story's industry.
     a.boostMult = GOOD_BOOST_MULT
@@ -327,10 +341,12 @@ export function dismissAngelOutcome(state: GameState): void {
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────
-/** Timed post-story profit boost (good/great) or debuff (bad) on the resolved story's
- *  industry; 1 when none is active. Generalised from Finance-only to any story's industry. */
+/** Timed post-story profit boost (good/great) or debuff (bad); 1 when none is active.
+ *  Targets the resolved story's industry — or EVERY industry when the boost is empire-wide
+ *  (the Space finale's launch halo, `boostIndustryId === EMPIRE_WIDE`). */
 export function mogulStoryBoostMult(state: GameState, industryId: IndustryId): number {
   const a = state.angelDeal
-  if (!a || a.boostMsLeft <= 0 || industryId !== a.boostIndustryId) return 1
-  return a.boostMult
+  if (!a || a.boostMsLeft <= 0) return 1
+  if (a.boostIndustryId === EMPIRE_WIDE || a.boostIndustryId === industryId) return a.boostMult
+  return 1
 }

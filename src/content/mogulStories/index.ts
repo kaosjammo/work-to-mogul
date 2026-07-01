@@ -11,6 +11,7 @@ import { ENGINE_POACH } from './enginePoach'
 import { VIRAL_MOMENT } from './viralMoment'
 import { DOCK_DISPUTE } from './dockDispute'
 import { INSPECTION } from './inspection'
+import { LAUNCH } from './launchGamble'
 
 export * from './types'
 export { ANGEL_DEAL } from './angelInvestment'
@@ -19,6 +20,7 @@ export { ENGINE_POACH } from './enginePoach'
 export { VIRAL_MOMENT } from './viralMoment'
 export { DOCK_DISPUTE } from './dockDispute'
 export { INSPECTION } from './inspection'
+export { LAUNCH } from './launchGamble'
 
 /** Every registered Mogul Story (Angel Investment is the reference story). */
 export const MOGUL_STORIES: MogulStory[] = [
@@ -28,6 +30,7 @@ export const MOGUL_STORIES: MogulStory[] = [
   VIRAL_MOMENT,
   DOCK_DISPUTE,
   INSPECTION,
+  LAUNCH,
 ]
 
 export const MOGUL_STORY_BY_ID: Record<string, MogulStory> = Object.fromEntries(
