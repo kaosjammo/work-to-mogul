@@ -255,9 +255,14 @@ async function reconcile(userId: string): Promise<void> {
         return
       }
       // Both exist and differ → ask the player; never overwrite silently.
+      // Status must NOT be 'syncing' here: the conflict chooser disables its two
+      // choice buttons while busy (status === 'syncing'), which would deadlock the
+      // modal — the player could never pick. 'local' is accurate (not yet synced;
+      // local play continues) and the autosave upload already no-ops while a
+      // conflict is pending (it guards on s.conflict), so nothing uploads meanwhile.
       store.setState({
         conflict: { local: ls, cloud: cs, cloudEnvelope: cloud.envelope, cloudUpdatedAt: cloud.updatedAt },
-        status: 'syncing',
+        status: 'local',
       })
     } else if (cloud && !local) {
       if (!applyEnvelope(cloud.envelope)) {

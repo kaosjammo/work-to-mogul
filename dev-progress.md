@@ -4,6 +4,41 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## HOTFIX — cloud-save conflict chooser was un-clickable (deadlock)
+
+**Reported (user, with screenshot):** stuck on the "Which save do you want?" cloud-conflict modal
+— *neither* "Use This device" nor "Use Cloud save" could be clicked.
+
+**Root cause (pre-existing, not from recent work):** `accountStore.reconcile()` set
+`status: 'syncing'` at the *same time* it surfaced the conflict. The `ConflictChooser` passes
+`busy={status === 'syncing'}` to both `SaveOption` buttons as their `disabled` prop — so both
+choice buttons were **disabled the instant the modal appeared**, with no path out (the modal also
+blocks escape/outside-click while a conflict is pending). A hard deadlock.
+
+**Fix (one line + rationale comment):** when surfacing the conflict, set `status: 'local'`
+instead of `'syncing'`. `'local'` is accurate (not yet synced; local play continues), and the
+autosave-upload callback already no-ops while a conflict is pending (it guards on `s.conflict`),
+so nothing uploads meanwhile. `resolveConflict` still sets `'syncing'` once the player actually
+picks (by then the chooser has unmounted).
+
+**Verified live at 375px** (dev preview, forcing the conflict via a new dev-only `__game.account`
+bridge): with the old `status:'syncing'` both buttons read `disabled:[true,true]` (reproduces the
+bug); with the fix `disabled:[false,false]`; clicking "Use This device" fired `resolveConflict`,
+cleared the conflict, and closed the modal. `tsc`+build clean, oxlint clean, **244 tests green**.
+
+**Also added:** `import.meta.env.DEV`-only `window.__game.account` (the account store) to the debug
+bridge — stripped from production; used to verify this and to debug future sync/conflict flows.
+
+**Follow-up noted (not in this hotfix):** `sameSave()` requires **exact** cash/lifetime equality,
+so an idle game (cash ticks every 100ms) surfaces a spurious conflict on almost every login even
+when the saves are effectively identical (the screenshot's two saves were 1s apart, same displayed
+figures). Widen it to a small relative tolerance within the savedAt window — queued as a considered
+follow-up (a conflict-detection behavior change deserves its own careful pass + a `sameSave` unit test).
+
+**Files:** ~`store/accountStore.ts`, `main.tsx`.
+
+---
+
 ## UI uplift #2 — frosted + elevated shell chrome (HUD + NavBar)
 
 **Slice #2 from [`docs/UI_UPLIFT_BACKLOG.md`](docs/UI_UPLIFT_BACKLOG.md)** — a reusable lever

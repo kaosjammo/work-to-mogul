@@ -51,11 +51,13 @@ if (import.meta.env.DEV) {
     import('./engine/simulate'),
     import('./store/uiStore'),
     import('./loop/offline'),
-  ]).then(([m, p, sim, ui, off]) => {
+    import('./store/accountStore'),
+  ]).then(([m, p, sim, ui, off, acc]) => {
     ;(window as unknown as { __game: unknown }).__game = {
       state: m.getEngineState,
       publish: p.publishNow,
       ui: () => ui.useUiStore.getState(),
+      account: acc.useAccountStore, // the account/cloud store — for debugging sync/conflict flows
       offline: () => off.runOfflineCatchUp(),
       grantCash: (amount: number) => {
         m.getEngineState().cash += amount
