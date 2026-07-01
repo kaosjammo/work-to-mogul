@@ -15,7 +15,8 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **236 tests / 36 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **⬅ ACTIVE (user feedback):** buttons look **oversized on desktop** — the 44px tap-target audit applied touch minimums *unconditionally* (`--tap`/`--tap-lg`/`--nav-h` in `tokens.css` have no pointer/breakpoint override). Fix scoped as the **Next highest-value task** below (compact desktop via a `pointer:fine` token override; keep mobile 44px).
+- **236 tests / 36 files green** (`npx vitest run`), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -68,12 +69,73 @@ remains; the next real priorities come from *live player signal*, not more build
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
 | **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
 | **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches | **✅ DONE** (`6d5c394`, 225 tests) — 4 trade-off cards, deterministic, harness byte-identical, modal playtested |
-| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Incremental (ongoing) |
-| **7** | **Daily return hook (D7) + D1 onboarding** | The whole session arc now has hooks: D1 reveal-cue (`aa4e2b5`) + D7 daily bonus w/ streak (`2ceff30`) | **✅ DONE** (231 tests) — ⚠️ daily + welcome-back are two stacked modals; merge (next task below) |
+| **6** | **Mobile polish / sizing, celebrations, sound/haptics** | Feel *and fit* — sound (`2908bee`) + ascension celebration (`86ff4c7`) done; **now: buttons look oversized on *desktop*** (user feedback) | **🔨 ACTIVE — desktop-compact button sizing (next task below)** |
+| **7** | **Daily return hook (D7) + D1 onboarding** | The whole session arc now has hooks: D1 reveal-cue (`aa4e2b5`) + D7 daily bonus w/ streak (`2ceff30`) | **✅ DONE** (231 tests) |
 
-**The original 6-task roadmap is essentially complete** (1–5 done, 6 is ongoing polish).
-Do **not** add a 9th industry / raw content tier. The next retention gains are D1/D7, not
-more mid-game systems — see the new "Next highest-value task".
+**All 7 retention tasks shipped — the game is feature-complete.** The active work is a
+**mobile/desktop sizing polish** raised by user feedback (buttons look oversized on desktop) —
+see the Next highest-value task below. Do **not** add new mid-game systems or a 9th industry tier.
+
+---
+
+## Next highest-value task → Desktop-compact button sizing (keep mobile 44px)
+
+**From user feedback:** buttons look "overly large / ugly" — specifically on **desktop**.
+**Do not regress desktop, and do not regress mobile touch targets.** This is sizing/spacing
+polish, not a redesign.
+
+**Root cause (verified in-repo):** the tap-target tokens are defined once and applied
+*unconditionally* — `--tap: 44px` and `--tap-lg: 56px` (`src/ui/styles/tokens.css:33-34`), plus
+`--nav-h: 60px` (`:46`) — with **no `pointer:` or breakpoint override anywhere**. The recent
+app-wide 44px audit (`da223e9`/`9ecf504`/`1107e93`) correctly enforced these for *touch*, but
+every primary button pulls `minHeight: var(--tap-lg)` (56px) via inline style (BuyButton,
+WorkCard, BusinessCard, all modals), so a mouse-driven **desktop** sees the same finger-sized
+56px controls. Compounded by the shell widening from `max-width: 720px` (phone) to `1080px` on
+desktop (`global.css:34` and `:107-109`, `@media (min-width:1024px)`) while the 56px buttons +
+60px nav never scale down — the layout gets wider but never more compact, and `w-full` buttons
+stretch across it.
+
+**Fix — lowest-risk single lever:** the tap sizes are CSS custom properties consumed everywhere
+via `var(--tap*)`. Override the *variables themselves* behind a desktop / precise-pointer media
+query in `tokens.css` — one place, **no component edits, no inline-style churn**. Leave the base
+`:root` values untouched so touch/mobile keeps 44 / 56 / 60.
+
+```css
+/* tokens.css — after the :root{} block */
+@media (pointer: fine) and (min-width: 1024px) {
+  :root {
+    --tap: 36px;      /* was 44px — mouse precision */
+    --tap-lg: 44px;   /* was 56px — compact primary buttons */
+    --nav-h: 52px;    /* was 60px — trim the tall footer */
+  }
+}
+```
+
+Gate on `(pointer: fine)` (mouse ⇒ compact) **AND** `(min-width: 1024px)` — the AND bounds the
+blast radius so a touchscreen laptop/phone that misreports pointer type never drops below 44px.
+
+**Acceptance criteria**
+- [ ] Base `:root` `--tap` / `--tap-lg` / `--nav-h` (`tokens.css:33-34,46`) **unchanged** (44 / 56 / 60). No component / inline-style edits for the primary lever.
+- [ ] A desktop-only `@media (pointer: fine) and (min-width: 1024px)` override in `tokens.css` reduces `--tap`→~36, `--tap-lg`→~44, `--nav-h`→~52.
+- [ ] **Mobile a11y invariant (hard):** at 375px (and any coarse-pointer device) every button still resolves ≥ 44px (primary ≥ 56px). Re-confirm the buttons fixed in `da223e9`/`9ecf504` (Auto-Assign, Buy-all, Hire, EventCard "Ignore", DailyBonus "Later") stay ≥ 44px on mobile.
+- [ ] **Desktop-compact target:** at ≥ 1280px, BuyButton / WorkCard / modal primary buttons render ~44px tall (not 56) and NavBar ~52px (not 60). Verify via computed style or screenshot.
+- [ ] Verify at **both** 375px (unchanged) **and** ≥ 1280px (compact) — screenshot both. A wrong media query can silently shrink mobile, so check both before shipping.
+- [ ] `npm run build` + `npm test` + lint stay green. If a test asserts a literal 44/56px min-height, scope it to the base/touch case — don't weaken the assertion.
+- [ ] **No structural change:** grid columns (`lg:grid-cols-2`), `#root` max-width (720/1080), HUD, nav order, modal centering all identical — only sizing tokens differ.
+
+**Optional fast-follow (only if buttons still read too *wide* on desktop):** cap the stretched
+primary buttons (e.g. add `lg:max-w-[280px]` to the `w-full` primaries in BuyButton / WorkCard /
+modals). Keep it out of the first pass to minimise risk — the min-height token change alone
+should resolve the "overly large" complaint.
+
+**Out of scope (note, don't chase):** a few controls hard-code px instead of the tokens
+(StatsScreen toggle track 44×26, BusinessCard staff chip ~94×30) — they won't shrink via the
+token override; leave them for a later pass rather than making them silently inconsistent.
+
+**Risks / guardrails:** ⚠️ do **not** drop below 44px on touch (WCAG 2.5.5 / iOS HIG — the entire
+point of the recent audit); ⚠️ do **not** restructure the desktop layout (sizing only); the
+`(pointer: fine) AND (min-width: 1024px)` pairing is deliberate (pointer alone misreports on
+hybrid/touchscreen laptops).
 
 ---
 
@@ -292,8 +354,9 @@ more mid-game systems now would be padding (and against the loop's own "don't ex
 meaningfully different" rule).
 
 **So the honest priority order from here:**
-1. **Ascension celebration ✅ DONE (`86ff4c7`).** `AscensionCelebration.tsx` shows a brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on a successful ascend, reusing the Welcome-Back pattern + founder mascot, one-tap (44px+), reassuring copy ("your talents, tokens and progress carry over"), harness-inert (UI-only, player-triggered), with the `prestige` sound + haptic in the action. 236 tests green. Reviewed to-spec — just a 375px device check when convenient. **The polish backlog is now exhausted.**
-2. **From here it's live signal, not building.** The roadmap *and* every clear polish item are delivered. Inventing more would be padding. The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. **Ship it; measure; let the data name the next task.**
+0. **⬅ Desktop-compact button sizing** — the active task (user feedback: oversized desktop buttons). Fully scoped at the top of this doc. A one-file token-override polish; do this first.
+1. **Ascension celebration ✅ DONE (`86ff4c7`).** A brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on ascend (reuses Welcome-Back + mascot, harness-inert). 236 tests green.
+2. **After the sizing polish, it's live signal, not building.** The retention roadmap *and* every clear feature/polish item are delivered. The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — beyond this docs-only loop. **Ship it; measure; let the data name the next task** (use the observation agenda below).
 
 Everything else (brand glyphs, late-tier industry mechanics, active-duty XP) stays optional in
 the backlog — do only if a playtest or metric asks for it.
