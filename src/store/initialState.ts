@@ -54,6 +54,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     quantumPhaseMs: 0,
     buyMode: 'x1',
     activeTab: 'business',
+    visitedTabs: ['business'],
     activeIndustryTab: 'food',
     industries,
     businesses,

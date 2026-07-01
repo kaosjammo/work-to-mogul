@@ -248,6 +248,7 @@ export interface GameState {
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode
   activeTab: TabId
+  visitedTabs: TabId[] // tabs the player has opened — a freshly-revealed, unvisited tab pulses "new"
   activeIndustryTab: IndustryId
   industries: Record<IndustryId, IndustryState>
   businesses: Record<BusinessId, BusinessState>

@@ -30,6 +30,16 @@ describe('tolerant load', () => {
     expect(loaded.businesses.lemonade.owned).toBe(0)
   })
 
+  it('defaults visitedTabs to all tabs on an old save (no false "new" pulse for veterans)', () => {
+    const loaded = tolerantLoad({ cash: 0 } as never) // pre-feature save, no field
+    expect(loaded.visitedTabs).toEqual(['business', 'employees', 'upgrades', 'prestige', 'stats'])
+  })
+
+  it('round-trips visitedTabs and drops unknown tab ids', () => {
+    const loaded = tolerantLoad({ cash: 0, visitedTabs: ['business', 'employees', 'bogus'] } as never)
+    expect(loaded.visitedTabs).toEqual(['business', 'employees'])
+  })
+
   it('normalizes old saves: every industry ends up unlocked', () => {
     const loaded = tolerantLoad({
       cash: 0,

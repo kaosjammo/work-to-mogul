@@ -5,7 +5,7 @@
 //  normalized to the current "always visible" model; orphaned references are
 //  dropped. Never throws to the caller — returns null on unrecoverable input.
 // ============================================================
-import type { EmployeeInstance, GameState, Rarity, RoleId } from '../types/domain'
+import type { EmployeeInstance, GameState, Rarity, RoleId, TabId } from '../types/domain'
 import { initialGameState } from '../store/initialState'
 import { BUSINESSES } from '../content/businesses'
 import { MAX_CAREER_LEVEL } from '../content/career'
@@ -65,6 +65,7 @@ function migrate(fromVersion: number, state: Partial<GameState>): Partial<GameSt
   return st
 }
 
+const ALL_TAB_IDS: TabId[] = ['business', 'employees', 'upgrades', 'prestige', 'stats']
 const RARITIES = new Set<Rarity>(['common', 'uncommon', 'rare', 'epic'])
 const VALID_INDUSTRIES = new Set<string>(INDUSTRY_ORDER)
 
@@ -141,6 +142,11 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   if (loaded.buyMode) s.buyMode = loaded.buyMode
   if (loaded.activeTab) s.activeTab = loaded.activeTab
   if (loaded.activeIndustryTab) s.activeIndustryTab = loaded.activeIndustryTab
+  // Visited tabs drive the "new" nav pulse. Old saves (no field) default to ALL tabs so
+  // an existing player never sees a false "new" on tabs they've long since used.
+  s.visitedTabs = Array.isArray(loaded.visitedTabs)
+    ? (loaded.visitedTabs.filter((t): t is TabId => ALL_TAB_IDS.includes(t as TabId)))
+    : [...ALL_TAB_IDS]
   s.onboardingStep = num(loaded.onboardingStep)
   s.nextEmployeeSeq = Math.max(1, num(loaded.nextEmployeeSeq, 1))
 

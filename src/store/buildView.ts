@@ -300,6 +300,7 @@ export interface ViewSnapshot {
   totalPps: number
   career: CareerView
   revealedTabs: RevealedTabs
+  newTabs: RevealedTabs
   golden: GoldenView
   rushHour: RushHourView
   financeCompound: { industryId: string; pct: number }
@@ -740,6 +741,15 @@ export function buildView(
     prestige: veteran || prestigeUnlocked,
     stats: veteran || totalOwned >= 1,
   }
+  // A tab that just revealed but the player hasn't opened yet pulses "new" in the nav —
+  // makes the staged onboarding legible (a section unlocked → tap to discover it).
+  const visited = state.visitedTabs ?? []
+  const newTabs: RevealedTabs = {
+    employees: revealedTabs.employees && !visited.includes('employees'),
+    upgrades: revealedTabs.upgrades && !visited.includes('upgrades'),
+    prestige: revealedTabs.prestige && !visited.includes('prestige'),
+    stats: revealedTabs.stats && !visited.includes('stats'),
+  }
 
   const goldenMega = state.golden?.offerMega ?? false
   const frenzyMs = state.golden?.frenzyMsLeft ?? 0
@@ -877,6 +887,7 @@ export function buildView(
     totalPps,
     career,
     revealedTabs,
+    newTabs,
     golden,
     rushHour,
     financeCompound,

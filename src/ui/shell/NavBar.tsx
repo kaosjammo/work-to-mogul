@@ -1,5 +1,5 @@
 import type { TabId } from '../../types/domain'
-import { useActiveTab, useRevealedTabs, useNavBadges } from '../../store/gameStore'
+import { useActiveTab, useRevealedTabs, useNavBadges, useNewTabs } from '../../store/gameStore'
 import { setActiveTab } from '../../store/actions'
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
@@ -14,6 +14,7 @@ export function NavBar() {
   const active = useActiveTab()
   const revealed = useRevealedTabs()
   const badges = useNavBadges()
+  const newTabs = useNewTabs()
   // Business is always shown; others reveal as the player progresses (onboarding).
   const visibleTabs = TABS.filter(
     (t) => t.id === 'business' || revealed[t.id as 'employees' | 'upgrades' | 'prestige' | 'stats'],
@@ -30,6 +31,8 @@ export function NavBar() {
       {visibleTabs.map((tab) => {
         const isActive = tab.id === active
         const badge = badges[tab.id] ?? 0
+        const isNew =
+          tab.id !== 'business' && newTabs[tab.id as 'employees' | 'upgrades' | 'prestige' | 'stats']
         return (
           <button
             key={tab.id}
@@ -47,6 +50,21 @@ export function NavBar() {
           >
             <span className="relative text-lg leading-none">
               {tab.icon}
+              {isNew && badge === 0 && (
+                <span
+                  className="absolute animate-pulse rounded-full"
+                  aria-label="new"
+                  style={{
+                    top: -3,
+                    left: '100%',
+                    marginLeft: -7,
+                    width: 9,
+                    height: 9,
+                    background: 'var(--good)',
+                    border: '1.5px solid var(--surface)',
+                  }}
+                />
+              )}
               {badge > 0 && (
                 <span
                   className="tnum absolute flex items-center justify-center rounded-full px-1 text-[10px] font-bold"

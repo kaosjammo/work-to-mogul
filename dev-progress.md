@@ -4,6 +4,38 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 7 (D1 onboarding) — "new tab" reveal cue
+
+**Analysed:** reviewer pivoted to Task 7 (D1 first-session + D7 daily hook), do D1 first.
+Playtested a FRESH-save first 5 minutes on 390px via `__game`: the arc is actually
+well-guided — the "👋 New here? Tap Work Shift → buy a business" hint, a clear Work card,
+industry tabs with entry costs, only the Business tab shown, then buying Lemonade reveals
+the Staff tab and the card shows "▶ RUN STORE" + "💡 Assign an Operator ⚙️ to automate" +
+staff chip. The one real gap: when Staff/Upgrades/Ascend **reveal**, the nav gave **no
+attention cue** — a new player may not notice a section unlocked ("introduced when
+relevant, but not *noticed*").
+
+**Implemented (finished vertical slice):** a freshly-revealed but unvisited tab now pulses
+a "new" dot in the nav; opening it clears the dot. New persisted `visitedTabs` (set in
+`initialGameState` to `['business']`; `setActiveTab` appends the opened tab). `buildView`
+derives `newTabs = revealed && !visited`; `NavBar` renders an `animate-pulse` dot.
+**Save-safe:** old saves (no field) default `visitedTabs` to ALL tabs, so an existing
+player never sees a false "new" (tested); unknown ids filtered.
+
+**Validation:** 227 tests (+2 serialize: old-save default + unknown-id drop), build + lint
+clean. **Harness byte-identical** ($4.08Qi / 156m) — UI/state-only, no economy touch.
+Browser-verified on 390px: buying the first business shows "new" dots on Staff + Stats;
+tapping Staff clears only its dot.
+
+**Next (Task 7 remainder):** D7 daily return hook — a once-per-real-day claimable using
+`Date`-based day-bucketing persisted in the save, harness-safe (bot never advances
+wall-clock). Per the next roadmap review.
+
+**Files:** ~`types/domain.ts`, `store/{initialState,actions,buildView,gameStore}.ts`,
+`save/serialize.ts` (+`serialize.test.ts`), `ui/shell/NavBar.tsx`.
+
+---
+
 ## Task 5 — Business event cards (the active-decision layer)
 
 **Analysed:** reviewer pivoted to Task 5 after the Task 4 slice. Diagnosis: the game's

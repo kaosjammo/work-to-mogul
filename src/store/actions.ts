@@ -262,7 +262,9 @@ export function setBuyMode(mode: BuyMode): void {
 }
 
 export function setActiveTab(tab: TabId): void {
-  getEngineState().activeTab = tab
+  const s = getEngineState()
+  s.activeTab = tab
+  if (!s.visitedTabs?.includes(tab)) s.visitedTabs = [...(s.visitedTabs ?? []), tab] // clears its "new" pulse
   publishNow()
 }
 
