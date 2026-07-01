@@ -28,7 +28,7 @@ import {
   EXIT_INTERVAL_MS,
 } from './angelDeal'
 import { COMBINATOR_ID } from '../content/businesses'
-import { LEASE_SHOWDOWN } from '../content/mogulStories'
+import { LEASE_SHOWDOWN, ENGINE_POACH } from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -285,6 +285,46 @@ describe('Mogul Story #2 — The Lease (Retail): shared runtime, generic resolut
   it('walking away from the lease resolves neutral', () => {
     const s = retailState()
     s.angelDeal.storyId = LEASE_SHOWDOWN.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
+  })
+})
+
+describe('Mogul Story #3 — The Poach (Tech): another story, zero new resolution code', () => {
+  function techState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.mobile_app.owned = 1 // a Tech business
+    s.businesses.mobile_app.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Tech + clears the cash floor', () => {
+    expect(storyEligible(techState(), ENGINE_POACH)).toBe(true)
+    const noTech = initialGameState(0)
+    noTech.cash = 1e9 // rich, but owns no Tech
+    expect(storyEligible(noTech, ENGINE_POACH)).toBe(false)
+  })
+
+  it('a great retention boosts TECH only and never unlocks the Combinator', () => {
+    const s = techState()
+    s.angelDeal.storyId = ENGINE_POACH.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'dec_commit', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false)
+    expect(s.angelDeal.boostIndustryId).toBe('tech')
+    expect(mogulStoryBoostMult(s, 'tech')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'retail')).toBe(1)
+  })
+
+  it('letting the engineer go resolves neutral', () => {
+    const s = techState()
+    s.angelDeal.storyId = ENGINE_POACH.id
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)

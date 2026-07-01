@@ -4,6 +4,34 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #3 — "The Poach" (Tech), zero new resolution code
+
+Proof that the generic runtime pays off: a third story shipped as **content + registration
+only** — no engine changes at all.
+
+- **New story** `content/mogulStories/enginePoach.ts` — "The Poach" (`poach_nakamura`, Tech):
+  an **8-stage `standard`** retention drama. A rival lab (fictional "Vireo Labs") is poaching
+  your star engineer *Kit Nakamura*; you have one conversation to keep them — by digging into
+  *why* they're really leaving (growth, recognition) instead of just out-bidding into a
+  ruinous war. Reuses the shared negotiation scores; registered in `index.ts`.
+- **No new engine code:** it auto-triggers via the generic `storyEligible` (owns Tech + cash
+  floor), rotates into the offer queue, and resolves through the shared negotiation
+  resolution — a strong finish grants cash + a timed **Tech** profit boost (via
+  `boostIndustryId`); a bidding-war blunder dips Tech; letting them go is a graceful neutral.
+  Only Angel's `great` still founds the Combinator.
+- **Harness-inert** (player-triggered; bot never accepts → income byte-identical). Demonstrates
+  the intended length range: Angel 10 / Lease 7 / Poach 8.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **310 tests** (+3: Tech eligibility,
+great→Tech-boost-not-Combinator, walk→neutral; the framework-integrity test auto-covers the
+new story; Angel/Lease + harness + balance + progression unchanged). Browser-verified 375px:
+Tech-owning state → "💼 …poach your star engineer" offer → modal renders *The Counter-Offer* /
+"The Rumour · **1/8**" → narrative (Kit / Vireo) → choice → consequence beat → Continue
+advances to "· 2/8" with authored score deltas (+ operator roleBoost amplifying correctly),
+no overflow, no console errors.
+
+---
+
 ## Mogul Story #2 — "The Lease" (Retail), the first story on the generic runtime
 
 Authored the second Mogul Story and generalised the resolution just enough to host it — a

@@ -174,7 +174,8 @@ never nagging.
 
 - ✅ **Retail** — a landlord lease showdown at a flagship store. *(Shipped: "The Lease",
   `lease_thorne_plaza`, a 7-stage `short` story — `content/mogulStories/leaseShowdown.ts`.)*
-- **Tech** — a rival poaching your star engineer (retention negotiation).
+- ✅ **Tech** — a rival poaching your star engineer (retention negotiation). *(Shipped: "The
+  Poach", `poach_nakamura`, an 8-stage `standard` story — `content/mogulStories/enginePoach.ts`.)*
 - **Logistics** — a dockworkers' dispute during peak season.
 - **Energy** — a regulator's inspection with a buried compliance flaw.
 - **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
