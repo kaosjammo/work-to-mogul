@@ -4,12 +4,14 @@ import {
   useFinanceCompound,
   useQuantumSuperposition,
   useLogistics,
+  useBuyMode,
 } from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money, formatEta } from '../../engine/num'
-import { spendCash, dispatchCargo } from '../../store/actions'
+import { spendCash, dispatchCargo, setBuyMode } from '../../store/actions'
 import type { LogisticsView } from '../../store/buildView'
+import type { BuyMode } from '../../types/domain'
 import { WorkCard } from '../work/WorkCard'
 import { IndustryTabs } from './IndustryTabs'
 import { IndustryBanner } from './IndustryBanner'
@@ -23,6 +25,8 @@ const INDUSTRY_TIERS = [
   { at: 250, label: '×2 profit' },
   { at: 500, label: '×2 profit + perk' },
 ]
+
+const BUY_MODES: BuyMode[] = ['x1', 'x10', 'x100', 'max']
 
 /**
  * One flat, borderless signature strip under the banner — replaces the stack of separate
@@ -125,6 +129,7 @@ export function BusinessesScreen() {
   const financeCompound = useFinanceCompound()
   const quantumSuperposition = useQuantumSuperposition()
   const logistics = useLogistics()
+  const buyMode = useBuyMode()
 
   if (!ind || !industryView) return null
 
@@ -172,6 +177,25 @@ export function BusinessesScreen() {
                 : 'Earn more capital to buy into this industry.'}
             </div>
           )}
+        </div>
+      )}
+
+      {hasAnyBusiness && (
+        <div className="mb-2 flex gap-1" role="group" aria-label="Buy amount">
+          {BUY_MODES.map((mode) => {
+            const active = mode === buyMode
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setBuyMode(mode)}
+                aria-pressed={active}
+                className={`btn btn-sm btn-block capitalize ${active ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {mode}
+              </button>
+            )
+          })}
         </div>
       )}
 

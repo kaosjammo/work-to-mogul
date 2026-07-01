@@ -75,7 +75,7 @@
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
 
-  --hud-h: 120px; /* two-tier HUD: cash row + full-width buy-mode row */
+  --hud-h: 80px; /* single-tier HUD: cash row only (buy-mode moved to the Business screen) */
   --nav-h: 60px;
 
   color-scheme: dark;

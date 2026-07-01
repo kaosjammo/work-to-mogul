@@ -27,68 +27,58 @@ export function UpgradesScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          UPGRADES
-        </h2>
+    <div>
+      <div className="section mb-2 flex items-center justify-between">
+        <h2>Upgrades</h2>
         {affordableCount > 0 && (
-          <button
-            type="button"
-            onClick={buyAllUpgrades}
-            className="rounded-full px-3 text-xs font-bold transition active:scale-[0.98]"
-            style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
-          >
+          <button type="button" onClick={buyAllUpgrades} className="btn btn-secondary btn-sm" style={{ color: 'var(--accent)' }}>
             Buy all affordable ({affordableCount})
           </button>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+
+      <div className="card overflow-hidden">
         {sorted.map((u) => (
-        <div
-          key={u.id}
-          className="flex items-center gap-3 rounded-2xl p-3"
-          style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            opacity: u.purchased ? 0.7 : 1,
-          }}
-        >
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-            style={{ background: 'var(--surface-2)' }}
-          >
-            <Icon art={{ src: u.iconSrc }} size={32} alt="" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-semibold">{u.name}</div>
-            <div className="flex flex-wrap items-center gap-x-1.5 text-xs">
-              <span className="font-bold" style={{ color: 'var(--good)' }}>{u.effectLabel}</span>
-              <span style={{ color: 'var(--text-faint)' }}>· {u.scopeLabel}</span>
-            </div>
-          </div>
-          {u.purchased ? (
-            <span className="px-3 text-sm font-bold" style={{ color: 'var(--good)' }}>
-              ✓ Owned
-            </span>
-          ) : (
-            <button
-              type="button"
-              disabled={!u.affordable}
-              onClick={() => buyUpgrade(u.id)}
-              className="flex flex-col items-center justify-center rounded-xl px-3 font-bold"
-              style={{
-                minHeight: 'var(--tap-lg)',
-                minWidth: '96px',
-                background: u.affordable ? 'var(--accent)' : 'var(--surface-3)',
-                color: u.affordable ? 'var(--accent-ink)' : 'var(--text-faint)',
-              }}
+          <div key={u.id} className="list-row py-2.5 pl-3 pr-3" style={{ opacity: u.purchased ? 0.6 : 1 }}>
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+              style={{ background: 'var(--surface-2)' }}
             >
-              <span className="text-sm">Buy</span>
-              <span className="tnum text-xs opacity-90">{money(u.cost)}</span>
-            </button>
-          )}
-        </div>
+              <Icon art={{ src: u.iconSrc }} size={34} alt="" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold">{u.name}</div>
+              <div className="truncate text-xs">
+                <span className="font-bold" style={{ color: 'var(--good)' }}>
+                  {u.effectLabel}
+                </span>
+                <span style={{ color: 'var(--text-faint)' }}> · {u.scopeLabel}</span>
+              </div>
+            </div>
+
+            {u.purchased ? (
+              <span
+                className="shrink-0 text-right text-xs font-bold"
+                style={{ color: 'var(--text-faint)', minWidth: '72px' }}
+              >
+                ✓ Owned
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={!u.affordable}
+                onClick={() => buyUpgrade(u.id)}
+                className={`btn btn-md shrink-0 ${u.affordable ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ minWidth: '72px' }}
+              >
+                <span>Buy</span>
+                <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+                  {money(u.cost)}
+                </span>
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>

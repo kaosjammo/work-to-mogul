@@ -12,14 +12,14 @@ const WORK_ACCENT = '#6aa9ff'
 export function WorkCard() {
   const c = useCareer()
 
-  // Board Advisor — the retired end-state. A compact strip with an optional
-  // over-time advisory bonus you collect when you like (never required).
+  // Board Advisor — the retired end-state. A borderless accent strip with an
+  // optional over-time advisory bonus you collect when you like (never required).
   if (c.retired) {
     const canCollect = c.consultingValue > 0
     return (
       <div
-        className="card mb-3 flex items-center gap-3 p-3"
-        style={{ border: `1px solid ${WORK_ACCENT}55` }}
+        className="mb-3 flex items-center gap-3 py-2.5 pr-3"
+        style={{ borderLeft: `2px solid ${WORK_ACCENT}`, paddingLeft: '10px' }}
       >
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
@@ -37,22 +37,19 @@ export function WorkCard() {
           <div className="mt-1.5">
             <ProgressBar fraction={c.consultingFraction} color={WORK_ACCENT} />
           </div>
-          <div className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>
-            Advisory fees build up while your empire runs — collect them anytime.
-          </div>
         </div>
         <button
           type="button"
           onClick={consult}
           disabled={!canCollect}
-          className="tnum shrink-0 rounded-xl px-3 font-bold"
-          style={{
-            minHeight: 'var(--tap-lg)',
-            background: canCollect ? WORK_ACCENT : 'var(--surface-3)',
-            color: canCollect ? '#06122b' : 'var(--text-dim)',
-          }}
+          className={`btn btn-md shrink-0 ${canCollect ? 'btn-primary' : 'btn-secondary'}`}
         >
-          {canCollect ? `Collect ${money(c.consultingValue)}` : 'Collect'}
+          <span>Collect</span>
+          {canCollect && (
+            <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+              {money(c.consultingValue)}
+            </span>
+          )}
         </button>
       </div>
     )
@@ -60,23 +57,20 @@ export function WorkCard() {
 
   return (
     <div
-      className="card mb-3 flex flex-col gap-2 p-3"
-      style={{ border: `1px solid ${WORK_ACCENT}55` }}
+      className="mb-3 flex flex-col gap-2 py-2.5 pr-3"
+      style={{ borderLeft: `2px solid ${WORK_ACCENT}`, paddingLeft: '10px' }}
     >
       <div className="flex items-center gap-3">
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
           style={{ background: 'var(--surface-2)' }}
         >
-          <Icon art={{ src: ART_WORK.shift }} size={40} alt="Work" />
+          <Icon art={{ src: ART_WORK.shift }} size={36} alt="Work" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <span className="truncate font-semibold">{c.title}</span>
-            <span
-              className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
-              style={{ background: 'var(--surface-3)', color: WORK_ACCENT }}
-            >
+            <span className="shrink-0 text-xs font-bold" style={{ color: WORK_ACCENT }}>
               Lv {c.level + 1}
             </span>
           </div>
@@ -99,33 +93,31 @@ export function WorkCard() {
               </span>
             )}
           </div>
+          <div className="mt-1.5">
+            <ProgressBar fraction={c.shiftProgressFraction} color={WORK_ACCENT} />
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            // Immediate payoff on the game's very first action: pop the shift's pay.
+            if (!c.working && c.salaryDrawValue > 0) {
+              useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(c.salaryDrawValue)}`)
+            }
+            haptic(12)
+            workShift()
+          }}
+          disabled={c.working}
+          className={`btn btn-lg shrink-0 ${c.working ? 'btn-secondary' : 'btn-primary'}`}
+        >
+          {c.working ? 'Working…' : 'Work Shift'}
+        </button>
       </div>
 
-      <ProgressBar fraction={c.shiftProgressFraction} color={WORK_ACCENT} />
-
-      <button
-        type="button"
-        onClick={(e) => {
-          // Immediate payoff on the game's very first action: pop the shift's pay.
-          if (!c.working && c.salaryDrawValue > 0) {
-            useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(c.salaryDrawValue)}`)
-          }
-          haptic(12)
-          workShift()
-        }}
-        disabled={c.working}
-        className="rounded-xl font-bold transition active:scale-[0.98]"
-        style={{
-          minHeight: 'var(--tap-lg)',
-          background: c.working ? 'var(--surface-3)' : WORK_ACCENT,
-          color: c.working ? 'var(--text-dim)' : '#06122b',
-        }}
+      <div
+        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-xs"
+        style={{ color: 'var(--text-faint)' }}
       >
-        {c.working ? 'Working…' : 'Work Shift'}
-      </button>
-
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-faint)' }}>
         {c.isMaxLevel ? (
           <span>Top of the career ladder</span>
         ) : (

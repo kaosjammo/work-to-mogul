@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useEventCard } from '../../store/gameStore'
 import { resolveCard, dismissCard } from '../../store/actions'
 import { haptic } from '../../lib/haptics'
+import { Overlay } from './Overlay'
 
 const KIND_ACCENT: Record<string, string> = {
   opportunity: '#46d369',
@@ -12,7 +13,8 @@ const KIND_ACCENT: Record<string, string> = {
 /**
  * The active-decision layer: a periodic event card with a genuine 2-option trade-off.
  * A dismissible modal overlay — the idle loop keeps running behind it (the game isn't
- * paused). Mobile: two full-width tap targets with plain-language effect text.
+ * paused). Mobile: two dense option rows (accent LEFT stripe by kind) with plain-language
+ * effect text, then a ghost "Ignore".
  */
 export function EventCardModal() {
   const card = useEventCard()
@@ -29,46 +31,31 @@ export function EventCardModal() {
     <button
       type="button"
       onClick={() => resolveCard(choice)}
-      className="flex w-full flex-col items-start gap-0.5 rounded-2xl p-3 text-left transition active:scale-[0.99]"
-      style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', minHeight: 'var(--tap-lg)' }}
+      className="flex w-full flex-col items-start justify-center gap-0.5 rounded-[var(--ctrl-radius)] py-2 pr-3 text-left transition active:scale-[0.99]"
+      style={{ minHeight: 'var(--tap)', background: 'var(--surface-2)', borderLeft: `2px solid ${accent}`, paddingLeft: '10px' }}
     >
-      <span className="font-bold">{opt.label}</span>
+      <span className="text-sm font-bold">{opt.label}</span>
       <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{opt.blurb}</span>
     </button>
   )
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      style={{ background: 'rgba(0,0,0,0.55)' }}
-      onClick={dismissCard}
-    >
-      <div
-        className="m-3 flex w-full max-w-sm flex-col gap-3 rounded-2xl p-5"
-        style={{ background: 'var(--surface)', border: `1px solid ${accent}` }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{card.icon}</span>
-          <div className="min-w-0 flex-1">
-            <div className="font-bold">{card.title}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: accent }}>
-              {card.kind} · {card.secondsLeft}s
-            </div>
+    <Overlay accent={accent} onBackdropClick={dismissCard}>
+      <div className="flex items-center gap-2">
+        <span className="text-2xl">{card.icon}</span>
+        <div className="min-w-0 flex-1">
+          <div className="font-bold">{card.title}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: accent }}>
+            {card.kind} · {card.secondsLeft}s
           </div>
         </div>
-        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{card.prompt}</p>
-        <Option choice="a" opt={card.a} />
-        <Option choice="b" opt={card.b} />
-        <button
-          type="button"
-          onClick={dismissCard}
-          className="mt-0.5 rounded-xl py-2 text-xs font-semibold"
-          style={{ color: 'var(--text-faint)', minHeight: 'var(--tap)' }}
-        >
-          Ignore
-        </button>
       </div>
-    </div>
+      <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{card.prompt}</p>
+      <Option choice="a" opt={card.a} />
+      <Option choice="b" opt={card.b} />
+      <button type="button" onClick={dismissCard} className="btn btn-ghost btn-sm self-center">
+        Ignore
+      </button>
+    </Overlay>
   )
 }

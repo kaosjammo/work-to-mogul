@@ -4,6 +4,7 @@ import { useDaily } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
 import { claimDailyBonus } from '../../store/actions'
 import { DailyStreakProgress } from './DailyStreakProgress'
+import { Overlay } from './Overlay'
 
 /**
  * The daily return hook (D7): a "Daily Bonus" card that appears on open when a new
@@ -19,46 +20,26 @@ export function DailyBonusModal() {
   if (welcomeBack || !daily.available || dismissed) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      style={{ background: 'rgba(0,0,0,0.55)' }}
-      onClick={() => setDismissed(true)}
-    >
-      <div
-        className="m-3 flex w-full max-w-sm flex-col items-center gap-3 rounded-2xl p-6 text-center"
-        style={{ background: 'var(--surface)', border: '1px solid var(--accent)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span className="text-5xl">🎁</span>
-        <h2 className="text-lg font-bold">Daily Bonus</h2>
-        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-          About 2 hours of your empire's income — come back each day to keep it going.
-        </p>
-        <p className="tnum text-3xl font-extrabold" style={{ color: 'var(--accent)' }}>
-          +{money(daily.reward)}
-        </p>
-        <DailyStreakProgress
-          streak={daily.streak}
-          nextMilestone={daily.nextMilestone}
-          milestoneProgress={daily.milestoneProgress}
-        />
-        <button
-          type="button"
-          onClick={claimDailyBonus}
-          className="mt-1 w-full rounded-xl font-bold transition active:scale-[0.98]"
-          style={{ minHeight: 'var(--tap-lg)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
-        >
-          Claim
-        </button>
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          className="text-xs font-semibold"
-          style={{ color: 'var(--text-faint)', minHeight: 'var(--tap)' }}
-        >
-          Later
-        </button>
-      </div>
-    </div>
+    <Overlay accent="var(--accent)" onBackdropClick={() => setDismissed(true)} panelClassName="items-center text-center">
+      <span className="text-5xl">🎁</span>
+      <h2 className="text-lg font-bold">Daily Bonus</h2>
+      <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
+        About 2 hours of your empire's income — come back each day to keep it going.
+      </p>
+      <p className="tnum text-3xl font-extrabold" style={{ color: 'var(--accent)' }}>
+        +{money(daily.reward)}
+      </p>
+      <DailyStreakProgress
+        streak={daily.streak}
+        nextMilestone={daily.nextMilestone}
+        milestoneProgress={daily.milestoneProgress}
+      />
+      <button type="button" onClick={claimDailyBonus} className="btn btn-primary btn-lg btn-block mt-1">
+        Claim
+      </button>
+      <button type="button" onClick={() => setDismissed(true)} className="btn btn-ghost btn-sm">
+        Later
+      </button>
+    </Overlay>
   )
 }

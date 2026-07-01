@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { Rarity } from '../../types/domain'
 import type { EmployeeView } from '../../store/buildView'
 import { money } from '../../engine/num'
@@ -15,22 +14,12 @@ const RARITY_COLOR: Record<Rarity, string> = {
   epic: '#c084fc',
 }
 
-function RarityDot({ rarity }: { rarity: Rarity }) {
-  return (
-    <span
-      className="inline-block h-2 w-2 rounded-full"
-      style={{ background: RARITY_COLOR[rarity] }}
-      title={rarity}
-    />
-  )
-}
-
 // Self-documenting trait chips: icon + name + plain-language effect, with a
 // fuller tooltip. So "what does Workaholic do?" is answered at a glance.
 function TraitChips({ names }: { names: string[] }) {
   if (names.length === 0) return null
   return (
-    <div className="mt-0.5 flex flex-wrap gap-1">
+    <div className="mt-1 flex flex-wrap gap-1">
       {names.map((n) => {
         const info = TRAIT_BY_NAME[n]
         return (
@@ -79,16 +68,13 @@ function SpecPicker({
             type="button"
             onClick={() => onPick(sp.id)}
             title={sp.blurb}
-            className="rounded-lg px-2 py-1 text-[11px] font-semibold transition active:scale-[0.98]"
-            style={{
-              minHeight: '32px',
-              background: sp.chosen ? 'var(--accent)' : 'var(--surface-3)',
-              color: sp.chosen ? 'var(--accent-ink)' : 'var(--text-dim)',
-              border: sp.chosen ? '1px solid var(--accent)' : '1px solid var(--border)',
-            }}
+            className={`btn btn-sm ${sp.chosen ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ fontWeight: 600 }}
           >
-            {sp.icon} {sp.name}
-            <span className="ml-1 font-normal opacity-80">· {sp.blurb}</span>
+            <span>
+              {sp.icon} {sp.name}
+              <span className="ml-1 font-normal opacity-80">· {sp.blurb}</span>
+            </span>
           </button>
         ))}
       </div>
@@ -99,36 +85,43 @@ function SpecPicker({
 export function EmployeesScreen() {
   const employees = useEmployees()
   const hireOptions = useHireOptions()
-  const benchedCount = employees.filter((e) => e.assignedToBusinessId == null).length
+  const benched = employees.filter((e) => e.assignedToBusinessId == null)
+  const working = employees.filter((e) => e.assignedToBusinessId != null)
+  const benchedCount = benched.length
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* HIRE first: hiring adds to YOUR TEAM below, so the hire buttons keep a
           stable position — you can recruit repeatedly without the list shifting
           out from under your finger. */}
-      <section>
-        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          HIRE
-        </h2>
-        <div className="flex flex-col gap-2">
+      <section className="section">
+        <div className="mb-2">
+          <h2>Hire</h2>
+        </div>
+        <div className="card overflow-hidden">
           {hireOptions.map((o) => (
             <div
               key={o.templateId}
-              className="flex items-center gap-3 rounded-2xl p-3"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+              className="list-row py-2.5 pr-3"
+              style={{ paddingLeft: '9px', borderLeft: `2px solid ${RARITY_COLOR[o.rarity]}` }}
             >
               <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
                 style={{ background: 'var(--surface-2)' }}
               >
-                <Icon art={employeeArt(o.templateId)} size={40} alt={o.name} />
+                <Icon art={employeeArt(o.templateId)} size={38} alt={o.name} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <RarityDot rarity={o.rarity} />
-                  <span className="truncate font-semibold">{o.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold">{o.name}</span>
+                  <span
+                    className="shrink-0 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ color: RARITY_COLOR[o.rarity] }}
+                  >
+                    {o.rarity}
+                  </span>
                 </div>
-                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                <div className="truncate text-xs" style={{ color: 'var(--text-dim)' }}>
                   {o.roleName}
                   {o.affinityName ? ` · ${o.affinityName} ⭐` : ''}
                 </div>
@@ -138,42 +131,31 @@ export function EmployeesScreen() {
                 type="button"
                 disabled={!o.affordable}
                 onClick={() => hire(o.templateId)}
-                className="flex flex-col items-center justify-center rounded-xl px-3 font-bold transition active:scale-[0.98]"
-                style={{
-                  minHeight: 'var(--tap-lg)',
-                  minWidth: '92px',
-                  background: o.affordable ? 'var(--accent)' : 'var(--surface-3)',
-                  color: o.affordable ? 'var(--accent-ink)' : 'var(--text-faint)',
-                }}
+                className={`btn btn-md shrink-0 ${o.affordable ? 'btn-primary' : 'btn-secondary'}`}
               >
-                <span className="text-sm">Hire</span>
-                <span className="tnum text-xs opacity-90">{money(o.cost)}</span>
+                <span>Hire</span>
+                <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+                  {money(o.cost)}
+                </span>
               </button>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
+      <section className="section">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-            YOUR TEAM
-          </h2>
+          <h2>Your Team</h2>
           {benchedCount > 0 && (
-            <button
-              type="button"
-              onClick={autoAssign}
-              className="rounded-full px-3 text-xs font-bold"
-              style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
-            >
+            <button type="button" onClick={autoAssign} className="btn btn-sm btn-primary shrink-0">
               ✨ Auto-Assign ({benchedCount})
             </button>
           )}
         </div>
         {employees.length === 0 ? (
           <div
-            className="flex flex-col items-center gap-3 rounded-2xl p-6 text-center text-sm"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
+            className="card flex flex-col items-center gap-3 p-6 text-center text-sm"
+            style={{ color: 'var(--text-dim)' }}
           >
             <img
               src="/assets/states/state_empty_staff.svg"
@@ -193,7 +175,7 @@ export function EmployeesScreen() {
             </span>
           </div>
         ) : (
-          <RosterGroups employees={employees} />
+          <RosterGroups benched={benched} working={working} />
         )}
       </section>
     </div>
@@ -203,38 +185,32 @@ export function EmployeesScreen() {
 // The roster can grow past 20 staff (the harness ends a long run with ~24), so a
 // flat list becomes a wall. When some staff are idle, split into "Benched" (the
 // call-to-action — they're earning nothing) and "On the job"; otherwise keep one
-// clean grid. Grouping is by current state, so assigning a benched employee simply
+// clean list. Grouping is by current state, so assigning a benched employee simply
 // moves it to the working group — an expected, legible transition.
-function RosterGroups({ employees }: { employees: EmployeeView[] }) {
-  const benched = employees.filter((e) => e.assignedToBusinessId == null)
-  const working = employees.filter((e) => e.assignedToBusinessId != null)
-  const grid = (list: EmployeeView[]) => (
-    <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-      {list.map((e) => (
+function RosterGroups({ benched, working }: { benched: EmployeeView[]; working: EmployeeView[] }) {
+  const list = (rows: EmployeeView[]) => (
+    <div className="card overflow-hidden">
+      {rows.map((e) => (
         <EmployeeRow key={e.id} e={e} />
       ))}
     </div>
   )
-  // Only sub-group when it actually helps (both states present); otherwise one grid.
-  if (benched.length === 0 || working.length === 0) return grid(employees)
+  // Only sub-group when it actually helps (both states present); otherwise one list.
+  if (benched.length === 0 || working.length === 0) return list([...benched, ...working])
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <GroupLabel>🪑 BENCHED · {benched.length}</GroupLabel>
-        {grid(benched)}
+    <div className="flex flex-col gap-4">
+      <div className="section">
+        <div className="mb-2">
+          <h2>🪑 Benched · {benched.length}</h2>
+        </div>
+        {list(benched)}
       </div>
-      <div>
-        <GroupLabel>⚙️ ON THE JOB · {working.length}</GroupLabel>
-        {grid(working)}
+      <div className="section">
+        <div className="mb-2">
+          <h2>⚙️ On the Job · {working.length}</h2>
+        </div>
+        {list(working)}
       </div>
-    </div>
-  )
-}
-
-function GroupLabel({ children }: { children: ReactNode }) {
-  return (
-    <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
-      {children}
     </div>
   )
 }
@@ -242,34 +218,39 @@ function GroupLabel({ children }: { children: ReactNode }) {
 function EmployeeRow({ e }: { e: EmployeeView }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-2xl p-3"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      className="list-row items-start py-2.5 pr-3"
+      style={{ paddingLeft: '9px', borderLeft: `2px solid ${RARITY_COLOR[e.rarity]}` }}
     >
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
         style={{ background: 'var(--surface-2)' }}
       >
-        <Icon art={employeeArt(e.templateId)} size={40} alt={e.name} />
+        <Icon art={employeeArt(e.templateId)} size={38} alt={e.name} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <RarityDot rarity={e.rarity} />
-          <span className="truncate font-semibold">{e.name}</span>
-          <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-semibold">{e.name}</span>
+          <span
+            className="shrink-0 text-[10px] font-bold uppercase tracking-wide"
+            style={{ color: RARITY_COLOR[e.rarity] }}
+          >
+            {e.rarity}
+          </span>
+          <span className="tnum shrink-0 text-xs" style={{ color: 'var(--text-faint)' }}>
             Lv {e.level}
           </span>
         </div>
-        <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+        <div className="truncate text-xs" style={{ color: 'var(--text-dim)' }}>
           {e.roleName} · {e.effectLabel}
           {e.nextEffectLabel && e.nextEffectLabel !== e.effectLabel && (
             <span style={{ color: 'var(--text-faint)' }}> → {e.nextEffectLabel} next lvl</span>
           )}
           {e.affinityName ? ` · ${e.affinityName} ⭐` : ''}
         </div>
-        <TraitChips names={e.traitNames} />
         <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
           {e.assignedToName ? `Working: ${e.assignedToName}` : 'On the bench'}
         </div>
+        <TraitChips names={e.traitNames} />
         {e.canSpecialise && (
           <SpecPicker
             label={e.specialisationName ? 'Specialisation' : '🎓 Pick a specialisation'}
@@ -292,12 +273,9 @@ function EmployeeRow({ e }: { e: EmployeeView }) {
           </div>
         )}
       </div>
-      <div className="flex shrink-0 flex-col items-stretch gap-1">
+      <div className="flex shrink-0 flex-col items-end gap-1">
         {e.atMaxLevel ? (
-          <span
-            className="rounded-lg px-3 py-1 text-center text-xs font-bold"
-            style={{ color: 'var(--accent)' }}
-          >
+          <span className="px-2 text-xs font-bold" style={{ color: 'var(--accent)' }}>
             MAX
           </span>
         ) : (
@@ -305,24 +283,16 @@ function EmployeeRow({ e }: { e: EmployeeView }) {
             type="button"
             disabled={!e.levelUpAffordable}
             onClick={() => levelUp(e.id)}
-            className="flex flex-col items-center rounded-lg px-3 py-1 text-xs font-bold"
-            style={{
-              minHeight: 'var(--tap)',
-              background: e.levelUpAffordable ? 'var(--accent)' : 'var(--surface-3)',
-              color: e.levelUpAffordable ? 'var(--accent-ink)' : 'var(--text-faint)',
-            }}
+            className={`btn btn-sm shrink-0 ${e.levelUpAffordable ? 'btn-primary' : 'btn-secondary'}`}
           >
             <span>Lv up</span>
-            <span className="tnum opacity-90">{money(e.levelUpCost)}</span>
+            <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+              {money(e.levelUpCost)}
+            </span>
           </button>
         )}
         {e.assignedToBusinessId && (
-          <button
-            type="button"
-            onClick={() => unassign(e.id)}
-            className="rounded-lg px-3 text-xs font-semibold"
-            style={{ background: 'var(--surface-3)', color: 'var(--text-dim)' }}
-          >
+          <button type="button" onClick={() => unassign(e.id)} className="btn btn-sm btn-ghost shrink-0">
             Bench
           </button>
         )}
@@ -331,8 +301,7 @@ function EmployeeRow({ e }: { e: EmployeeView }) {
             type="button"
             onClick={() => fuse(e.id, e.fuseWithId!)}
             title={`Consume a duplicate to promote this ${e.rarity} to ${e.fuseToRarity}`}
-            className="rounded-lg px-3 text-xs font-bold"
-            style={{ minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
+            className="btn btn-sm btn-primary shrink-0"
           >
             ✨ Fuse → {e.fuseToRarity}
           </button>

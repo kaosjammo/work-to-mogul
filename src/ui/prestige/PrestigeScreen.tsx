@@ -17,105 +17,114 @@ export function PrestigeScreen() {
   const progress = Math.min(1, lifetime / PRESTIGE_UNLOCK_LIFETIME)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        className="flex flex-col items-center gap-2 rounded-2xl p-6 text-center"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-      >
-        <span className="text-4xl">✦</span>
-        <h2 className="text-lg font-bold">Ascend</h2>
-        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-          Reset your cash, career, businesses and staff in exchange for
-          <span className="font-semibold" style={{ color: 'var(--accent)' }}> Empire Tokens</span>.
-          Spend them on permanent <span className="font-semibold">talents</span> below.
-        </p>
-        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-          ✓ Kept forever: your talents, tokens, achievements &amp; ascension milestones.
-        </p>
-
-        <div className="my-2 flex w-full justify-around">
-          <Stat label="Profit bonus" value={`+${profitBonusPct}%`} />
-          <Stat label="Tokens to spend" value={format(talents.available)} />
-          <Stat label="Ascensions" value={String(p.resets)} />
+    <div className="flex flex-col gap-5">
+      {/* ---- Hero: borderless header + inline stat pills, then ONE flat surface around Ascend ---- */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl leading-none">✦</span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold leading-tight">Ascend</h2>
+            <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+              Reset cash, career, businesses &amp; staff for <span style={{ color: 'var(--accent)' }}>Empire Tokens</span> — spend on permanent talents.
+            </p>
+          </div>
         </div>
 
-        {unlocked ? (
-          <div className="flex w-full flex-col gap-2">
-            <p className="text-sm">
-              Ascend now to bank <span className="font-bold" style={{ color: 'var(--accent)' }}>+{format(pending)} {pending === 1 ? 'token' : 'tokens'}</span>
-            </p>
-            <HoldToConfirmButton
-              label="Hold to Ascend"
-              holdingLabel="Ascending…"
-              onConfirm={prestige}
-              disabled={pending < 1}
-              color="var(--accent)"
-            />
-            {pending < 1 && (
-              <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-                Earn more to bank at least 1 token.
+        <div className="flex flex-wrap gap-2">
+          <Pill label="Profit bonus" value={`+${profitBonusPct}%`} />
+          <Pill label="Tokens" value={format(talents.available)} />
+          <Pill label="Ascensions" value={String(p.resets)} />
+        </div>
+
+        <div className="card p-4">
+          {unlocked ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm">
+                Ascend now to bank{' '}
+                <span className="font-bold" style={{ color: 'var(--accent)' }}>
+                  +{format(pending)} {pending === 1 ? 'token' : 'tokens'}
+                </span>
               </p>
-            )}
-            {/* "Wait or ascend?" — how close the next token is. */}
-            <div className="mt-1 flex flex-col gap-1">
-              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+              <HoldToConfirmButton
+                label="Hold to Ascend"
+                holdingLabel="Ascending…"
+                onConfirm={prestige}
+                disabled={pending < 1}
+                color="var(--accent)"
+              />
+              {pending < 1 && (
+                <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+                  Earn more to bank at least 1 token.
+                </p>
+              )}
+              {/* "Wait or ascend?" — how close the next token is. */}
+              <div className="flex flex-col gap-1">
+                <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ background: 'var(--accent)', width: `${Math.round(nextTokenProgress * 100)}%` }}
+                  />
+                </div>
+                <p className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
+                  Next ✦ at {money(nextTokenAt)} lifetime
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
+                Unlocks at {money(PRESTIGE_UNLOCK_LIFETIME)} lifetime earnings.
+              </p>
+              <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
                 <div
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--accent)', width: `${Math.round(nextTokenProgress * 100)}%` }}
+                  className="progress-fill h-full rounded-full"
+                  style={{
+                    background: 'var(--accent)',
+                    transform: `scaleX(${progress})`,
+                    transition: 'transform 0.2s linear',
+                  }}
                 />
               </div>
               <p className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
-                Next ✦ at {money(nextTokenAt)} lifetime
+                {money(lifetime)} / {money(PRESTIGE_UNLOCK_LIFETIME)}
               </p>
             </div>
-          </div>
-        ) : (
-          <div className="flex w-full flex-col gap-2">
-            <p className="text-sm" style={{ color: 'var(--text-faint)' }}>
-              Unlocks at {money(PRESTIGE_UNLOCK_LIFETIME)} lifetime earnings.
-            </p>
-            <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
-              <div
-                className="progress-fill h-full rounded-full"
-                style={{
-                  background: 'var(--accent)',
-                  transform: `scaleX(${progress})`,
-                  transition: 'transform 0.2s linear',
-                }}
-              />
-            </div>
-            <p className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
-              {money(lifetime)} / {money(PRESTIGE_UNLOCK_LIFETIME)}
-            </p>
-          </div>
-        )}
+          )}
+        </div>
+        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+          ✓ Kept forever: talents, tokens, achievements &amp; ascension milestones.
+        </p>
       </div>
 
       {/* ---- Founder Perk: the per-run flavour choice ---- */}
-      <section>
-        <h2 className="mb-1 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          FOUNDER PERK
-        </h2>
-        <p className="mb-2 text-xs" style={{ color: 'var(--text-faint)' }}>
-          Pick a style for this run — each is a trade-off, so every empire plays differently.
-        </p>
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+      <section className="section">
+        <div className="mb-2">
+          <h2>Founder Perk</h2>
+          <p className="mt-0.5 text-xs" style={{ color: 'var(--text-faint)' }}>
+            Pick a style for this run — each is a trade-off.
+          </p>
+        </div>
+        <div className="card overflow-hidden">
           {founderPerks.map((fp) => (
             <button
               key={fp.id}
               type="button"
               onClick={() => chooseFounderPerk(fp.chosen ? null : fp.id)}
-              className="flex items-start gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+              className="list-row w-full py-2.5 pr-3 text-left transition active:scale-[0.99]"
               style={{
-                background: fp.chosen ? 'rgba(245,197,24,0.12)' : 'var(--surface)',
-                border: `1px solid ${fp.chosen ? 'var(--accent)' : 'var(--border)'}`,
+                paddingLeft: fp.chosen ? '10px' : '12px',
+                borderLeft: fp.chosen ? '2px solid var(--accent)' : undefined,
               }}
             >
               <span className="text-2xl leading-none">{fp.icon}</span>
               <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">{fp.name}</span>
-                  {fp.chosen && <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>✓ Active</span>}
+                <span className="flex items-center gap-2">
+                  <span className="truncate font-semibold">{fp.name}</span>
+                  {fp.chosen && (
+                    <span className="shrink-0 text-xs font-bold" style={{ color: 'var(--accent)' }}>
+                      ✓ Active
+                    </span>
+                  )}
                 </span>
                 <span className="block text-xs" style={{ color: 'var(--text-dim)' }}>{fp.blurb}</span>
                 <span className="mt-0.5 block text-xs font-semibold" style={{ color: 'var(--good)' }}>{fp.effectLabel}</span>
@@ -126,53 +135,50 @@ export function PrestigeScreen() {
       </section>
 
       {/* ---- Talent tree ---- */}
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-            TALENTS
-          </h2>
-          <span className="tnum text-xs" style={{ color: 'var(--accent)' }}>
-            ✦ {format(talents.available)} available · {format(talents.spent)} spent
+      <section className="section">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2>Talents</h2>
+          <span className="tnum shrink-0 text-xs" style={{ color: 'var(--accent)' }}>
+            ✦ {format(talents.available)} · {format(talents.spent)} spent
           </span>
         </div>
         {talents.total === 0 ? (
-          <p
-            className="rounded-xl p-3 text-center text-xs"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-faint)' }}
-          >
+          <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
             Ascend at least once to earn Empire Tokens, then spend them here on permanent upgrades.
           </p>
         ) : (
-          TALENT_THEMES.map((theme) => {
-            const group = talents.list.filter((t) => t.theme === theme)
-            if (!group.length) return null
-            return (
-              <div key={theme} className="mb-3">
-                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
-                  {theme}
-                </h3>
-                <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                  {group.map((t) => (
-                    <TalentCard key={t.id} t={t} />
-                  ))}
+          <div className="flex flex-col gap-3">
+            {TALENT_THEMES.map((theme) => {
+              const group = talents.list.filter((t) => t.theme === theme)
+              if (!group.length) return null
+              return (
+                <div key={theme}>
+                  <h3 className="mb-1 text-[0.6875rem] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
+                    {theme}
+                  </h3>
+                  <div className="card overflow-hidden">
+                    {group.map((t) => (
+                      <TalentRow key={t.id} t={t} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+          </div>
         )}
       </section>
 
       {/* ---- Prestige milestones (ascension-count token rewards) ---- */}
-      <CollapsibleSection title="ASCENSION MILESTONES" badge={`${milestonesReached}/${milestones.length}`}>
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+      <CollapsibleSection title="Ascension Milestones" badge={`${milestonesReached}/${milestones.length}`}>
+        <div className="card overflow-hidden">
           {milestones.map((m) => (
             <div
               key={m.id}
-              className="flex items-center gap-3 rounded-xl p-2"
+              className="list-row py-2.5 pr-3"
               style={{
-                background: 'var(--surface)',
-                border: `1px solid ${m.reached ? 'var(--accent)' : 'var(--border)'}`,
-                opacity: m.reached ? 1 : 0.7,
+                paddingLeft: m.reached ? '10px' : '12px',
+                borderLeft: m.reached ? '2px solid var(--accent)' : undefined,
+                opacity: m.reached ? 1 : 0.72,
               }}
             >
               <div
@@ -195,22 +201,22 @@ export function PrestigeScreen() {
                   </div>
                 )}
               </div>
-              {m.reached && <span style={{ color: 'var(--good)' }}>✓</span>}
+              {m.reached && <span className="shrink-0" style={{ color: 'var(--good)' }}>✓</span>}
             </div>
           ))}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="ACHIEVEMENTS" badge={`${achievements.unlocked}/${achievements.list.length}`}>
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+      <CollapsibleSection title="Achievements" badge={`${achievements.unlocked}/${achievements.list.length}`}>
+        <div className="card overflow-hidden">
           {achievements.list.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 rounded-xl p-2"
+              className="list-row py-2.5 pr-3"
               style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                opacity: a.unlocked ? 1 : 0.55,
+                paddingLeft: a.unlocked ? '10px' : '12px',
+                borderLeft: a.unlocked ? '2px solid var(--good)' : undefined,
+                opacity: a.unlocked ? 1 : 0.6,
               }}
             >
               <div
@@ -252,10 +258,8 @@ export function PrestigeScreen() {
         </div>
       </CollapsibleSection>
 
-      <section className="mt-2">
-        <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-          DANGER ZONE
-        </h2>
+      <section className="section">
+        <h2 className="mb-1" style={{ color: 'var(--bad)' }}>Danger Zone</h2>
         <p className="mb-2 text-xs" style={{ color: 'var(--text-faint)' }}>
           Permanently wipe this save and start a brand-new game — including prestige tokens
           and achievements. This cannot be undone.
@@ -288,7 +292,7 @@ function CollapsibleSection({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <section>
+    <section className="section">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -296,7 +300,7 @@ function CollapsibleSection({
         className="mb-2 flex w-full items-center justify-between gap-2"
         style={{ minHeight: 'var(--tap)' }}
       >
-        <h2 className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+        <h2>
           {title}
           {badge ? <span style={{ color: 'var(--text-faint)' }}> · {badge}</span> : null}
         </h2>
@@ -309,66 +313,66 @@ function CollapsibleSection({
   )
 }
 
-function TalentCard({ t }: { t: TalentView }) {
+function TalentRow({ t }: { t: TalentView }) {
+  const owned = t.rank > 0
   return (
     <div
-      className="flex flex-col gap-2 rounded-xl p-3"
+      className="list-row py-2.5 pr-3"
       style={{
-        background: 'var(--surface)',
-        border: `1px solid ${t.rank > 0 ? 'var(--accent)' : 'var(--border)'}`,
+        paddingLeft: owned ? '10px' : '12px',
+        borderLeft: owned ? '2px solid var(--accent)' : undefined,
       }}
     >
-      <div className="flex items-start gap-2">
-        <span className="text-xl leading-none">{t.icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-semibold">{t.name}</span>
-            <span className="tnum shrink-0 text-xs" style={{ color: 'var(--text-faint)' }}>
-              {t.rank}/{t.maxRank}
-            </span>
-          </div>
-          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
-            {t.blurb}
-          </p>
+      <span className="text-xl leading-none">{t.icon}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-semibold">{t.name}</span>
+          <span className="tnum shrink-0 text-xs" style={{ color: 'var(--text-faint)' }}>
+            {t.rank}/{t.maxRank}
+          </span>
         </div>
+        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+          {t.blurb}
+        </p>
+        {owned && (
+          <p className="tnum text-xs font-medium" style={{ color: 'var(--accent)' }}>
+            Now: {t.currentLabel}
+          </p>
+        )}
+        {!t.maxed && t.nextLabel != null && (
+          <p className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
+            {owned ? 'Next' : 'Unlock'}: {t.nextLabel}
+          </p>
+        )}
       </div>
 
-      {t.rank > 0 && (
-        <div className="tnum text-xs font-medium" style={{ color: 'var(--accent)' }}>
-          Now: {t.currentLabel}
-        </div>
-      )}
-
       {t.maxed ? (
-        <div
-          className="rounded-lg py-1.5 text-center text-xs font-semibold"
-          style={{ background: 'var(--surface-2)', color: 'var(--text-faint)' }}
-        >
+        <span className="shrink-0 text-xs font-semibold" style={{ color: 'var(--text-faint)' }}>
           MAXED
-        </div>
+        </span>
       ) : (
         <button
           type="button"
           onClick={() => buyTalent(t.id)}
           disabled={!t.affordable}
-          className="rounded-lg py-1.5 text-center text-xs font-semibold transition active:scale-[0.98]"
-          style={{
-            background: t.affordable ? 'var(--accent)' : 'var(--surface-2)',
-            color: t.affordable ? 'var(--bg)' : 'var(--text-faint)',
-            cursor: t.affordable ? 'pointer' : 'not-allowed',
-          }}
+          className={`btn btn-md shrink-0 ${t.affordable ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ flexDirection: 'column', gap: 0, height: 'auto', paddingTop: 5, paddingBottom: 5, lineHeight: 1.15 }}
         >
-          {t.rank > 0 ? 'Next' : 'Unlock'}: {t.nextLabel} · ✦{t.nextCost != null ? format(t.nextCost) : ''}
+          <span>{owned ? 'Next' : 'Unlock'}</span>
+          <span className="tnum text-[0.6875rem]" style={{ fontWeight: 400, opacity: 0.75 }}>✦{t.nextCost != null ? format(t.nextCost) : ''}</span>
         </button>
       )}
     </div>
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Pill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="tnum text-lg font-bold" style={{ color: 'var(--accent)' }}>
+    <div
+      className="flex items-baseline gap-1.5 rounded-lg px-2.5 py-1"
+      style={{ background: 'var(--surface-2)' }}
+    >
+      <span className="tnum text-sm font-bold" style={{ color: 'var(--accent)' }}>
         {value}
       </span>
       <span className="text-xs" style={{ color: 'var(--text-faint)' }}>

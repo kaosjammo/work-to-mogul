@@ -4,6 +4,52 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI REDESIGN Phase 1b-ii + 2 + 3-structural — parallel screen rewrites
+
+User asked to "finish the next few phases all in one go." Implemented via a 9-agent parallel
+workflow (one agent per screen, disjoint files, all following the Phase-0 design system + the
+shipped Phase-1 row/chip patterns), then integrated + verified + fixed by hand.
+
+- **Phase 1b-ii:** WorkCard → borderless accent-stripe strip + a content-hug 48px Work Shift (was
+  a full-width 56px slab); IndustryTabs → theme-filled pills (44px tap); IndustryBanner →
+  borderless; TopHUD collapsed to a **single tier** (120→**73px**), the buy-mode segmented control
+  **moved to a slim `.btn-sm` row on the Business tab** (freeing the HUD); `--hud-h` 120→80.
+- **Phase 2:** StatsScreen / UpgradesScreen / EmployeesScreen → flat divider-separated lists with
+  the small `.btn` scale (no per-row boxes). **Fixed both audit bugs:** AssignmentSheet passed an
+  industry *id string* as a CSS border color (affinity highlight was dead) → now
+  `var(--industry-${id})`; the Bench button lacked a 44px min → now `.btn-ghost`.
+- **Phase 3 (structural):** PrestigeScreen → slim borderless hero + accent-stripe talent/milestone/
+  achievement rows; **one shared `Overlay` shell** (`ui/shared/Overlay.tsx`) now backs EventCard /
+  DailyBonus / Ascension / WelcomeBack (confirms `.btn-lg .btn-block`, dismiss `.btn-ghost`;
+  EventCard options → accent-stripe rows).
+- **Hand fixes after integration:** IndustryTabs pills 40→44px tap; EventCard option rows given a
+  44px min; `--hud-h` set to 80.
+
+**Validation:** `tsc -b` + build clean (JS 402→**398 kB**), oxlint clean, **252 tests** (+8 from
+the new `sameSave` test). **Browser-verified at 375px on every tab:** no horizontal overflow,
+**zero ≥54px "bar" buttons** (hero actions 48px; only the 4 founder-perk *choice cards* + the
+Ascend hero remain tall), **all interactive controls ≥44px tap**, bordered boxes down to ~1–5 per
+screen (was many). No console errors.
+
+**Files:** ~13 `ui/` components + `tokens.css`; +`ui/shared/Overlay.tsx`.
+
+**Follow-ups (queued):** the cross-cutting **FULL game-world juice** (reactive mascot poses +
+`cash_burst` on hero actions) — I'm doing that next as its own slice; flatten the founder-perk
+choice cards; Stats still has ~5 boxes.
+
+---
+
+## Fix — spurious cloud-save conflicts (widen sameSave tolerance)
+
+`sameSave()` in accountStore required EXACT cash/lifetime equality, so the idle game (cash ticks
+every 100ms) surfaced a spurious cloud-save conflict on nearly every login. Now exported and
+widened: two saves match if `savedAt` within 3s AND cash/lifetime within a 2% relative tolerance
+(0===0); genuine cross-device divergence still surfaces a conflict. Added `store/accountStore.test.ts`
+(identical → same; 1s/+0.5% idle drift → same; 2× cash → not same; far-apart savedAt → not same).
+**252 tests green** (+8). Independent of the UI redesign.
+
+---
+
 ## UI REDESIGN Phase 1b-i — collapse the Business-screen cue boxes
 
 Continues the de-boxing on the Business screen (above the list). Before: a fresh industry

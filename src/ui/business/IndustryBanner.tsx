@@ -21,7 +21,6 @@ export function IndustryBanner({ industryId, name, totalOwned }: Props) {
       className="relative mb-3 overflow-hidden rounded-2xl"
       style={{
         height: 64,
-        border: '1px solid var(--border)',
         backgroundImage: `url(${src})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',

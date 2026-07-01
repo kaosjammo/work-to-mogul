@@ -7,6 +7,19 @@ import type { ContractView } from '../../store/buildView'
 import { claimContract, claimDailyBonus } from '../../store/actions'
 import { DailyStreakProgress } from '../shared/DailyStreakProgress'
 
+/** A flat stat row: dim label left, bold value right. Sits inside a shared .card list. */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="list-row justify-between px-3 py-2">
+      <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
+        {label}
+      </span>
+      <span className="tnum text-sm font-bold">{value}</span>
+    </div>
+  )
+}
+
+/** A flat settings row: label + hint left, the pill toggle right. Keeps role=switch. */
 function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string; on: boolean; onToggle: () => void }) {
   return (
     <button
@@ -14,8 +27,7 @@ function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string;
       onClick={onToggle}
       role="switch"
       aria-checked={on}
-      className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)', minHeight: 'var(--tap)' }}
+      className="list-row w-full justify-between px-3 py-2 text-left"
     >
       <span className="min-w-0">
         <span className="block text-sm font-semibold">{label}</span>
@@ -36,29 +48,16 @@ function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string;
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      className="flex items-center justify-between gap-3 rounded-xl px-3 py-2"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-    >
-      <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
-        {label}
-      </span>
-      <span className="tnum text-sm font-bold">{value}</span>
-    </div>
-  )
-}
-
+/** A flat contract row: complete contracts get a 2px accent left stripe + a Claim chip. */
 function ContractRow({ c }: { c: ContractView }) {
   const progressLabel =
     c.target >= 1e6 ? `${money(c.progress)} / ${money(c.target)}` : `${Math.floor(c.progress)} / ${c.target}`
   return (
     <div
-      className="flex items-center gap-3 rounded-xl p-2.5"
+      className="list-row py-2.5 pr-3"
       style={{
-        background: 'var(--surface)',
-        border: `1px solid ${c.complete ? 'var(--accent)' : 'var(--border)'}`,
+        paddingLeft: c.complete ? '10px' : '12px',
+        borderLeft: c.complete ? '2px solid var(--accent)' : undefined,
       }}
     >
       <div
@@ -74,7 +73,7 @@ function ContractRow({ c }: { c: ContractView }) {
             +{c.rewardTokens} ✦
           </span>
         </div>
-        <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+        <div className="truncate text-xs" style={{ color: 'var(--text-dim)' }}>
           {c.description}
         </div>
         <div className="mt-1 flex items-center gap-2">
@@ -89,31 +88,21 @@ function ContractRow({ c }: { c: ContractView }) {
           </span>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => claimContract(c.id)}
-        disabled={!c.complete}
-        className="shrink-0 rounded-lg px-3 text-xs font-bold transition active:scale-[0.98]"
-        style={{
-          minHeight: 'var(--tap)',
-          background: c.complete ? 'var(--accent)' : 'var(--surface-3)',
-          color: c.complete ? 'var(--accent-ink)' : 'var(--text-faint)',
-          cursor: c.complete ? 'pointer' : 'not-allowed',
-        }}
-      >
-        {c.complete ? 'Claim' : '…'}
-      </button>
+      {c.complete && (
+        <button type="button" onClick={() => claimContract(c.id)} className="btn btn-primary btn-md shrink-0">
+          Claim
+        </button>
+      )}
     </div>
   )
 }
 
+/** A lightweight section: uppercase label header + a single flat .card list of rows. */
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section>
-      <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
-        {title}
-      </h2>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{children}</div>
+    <section className="section">
+      <h2 className="mb-2">{title}</h2>
+      <div className="card overflow-hidden">{children}</div>
     </section>
   )
 }
@@ -161,11 +150,11 @@ export function StatsScreen() {
       )}
 
       {contracts.list.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>
+        <section className="section">
+          <h2 className="mb-2">
             CONTRACTS{contracts.claimable > 0 ? ` · ${contracts.claimable} ready ✓` : ''}
           </h2>
-          <div className="flex flex-col gap-2">
+          <div className="card overflow-hidden">
             {contracts.list.map((c) => (
               <ContractRow key={c.id} c={c} />
             ))}
