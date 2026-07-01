@@ -280,6 +280,25 @@ export interface AngelDealState {
   lastExitAmount: number // the most recent exit payout (for the celebration)
 }
 
+/** Space Salvage Shooter — the rare 5-stage arcade opportunity campaign.
+ *  Campaign PROGRESS is persisted (survives save/load/cloud); the in-mission
+ *  simulation (ship/enemy/projectile positions) is NEVER persisted — it lives in
+ *  the canvas component and is discarded when a mission ends. The timed buff +
+ *  AI-salvage timers are transient (reset on load, like golden/eventCards). */
+export interface SpaceShooterState {
+  // --- persisted campaign progress (overlaid by serialize.tolerantLoad) ---
+  stageCompleted: number // highest stage passed (0..5); the offer targets this index
+  cooldownUntil: number // wall-clock ms; the next stage/offer is gated until now >= this
+  aiPilotUnlocked: boolean // Stage 5 reward: automation — manual stages stop after this
+  orbitalYardUnlocked: boolean // Stage 4 reward: a permanent Space perk flag
+  bestScores: number[] // best raw score per stage index (length 5)
+  missionsPlayed: number // lifetime missions launched (a stat)
+  // --- transient (NOT persisted; fresh on load, like golden/eventCards) ---
+  buffMult: number // Space-only timed profit multiplier from a run reward (>= 1)
+  buffMsLeft: number // countdown for the buff (0 = inactive)
+  aiSalvageCooldownMs: number // countdown to the AI pilot's next automatic salvage payout
+}
+
 export interface GameState {
   cash: Num
   lifetimeEarnings: Num
@@ -308,6 +327,7 @@ export interface GameState {
   achievementsUnlocked: string[] // meta-progression; persists through prestige
   prestigeMilestonesClaimed: string[] // ascension-count rewards already granted
   contracts: ContractsState // claimable missions board (persists through prestige)
+  spaceShooter: SpaceShooterState // Space Salvage Shooter campaign (persists through prestige)
   prestige: PrestigeState
   onboardingStep: number
   nextEmployeeSeq: number // for generating unique employee ids deterministically

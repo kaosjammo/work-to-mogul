@@ -37,6 +37,11 @@ interface UiStore {
   accountOpen: boolean
   openAccount: () => void
   closeAccount: () => void
+  // Space Salvage Shooter — is the fullscreen mini-game modal open? (UI-only; the
+  // campaign PROGRESS lives in engine state, this is just the open/closed flag.)
+  spaceShooterOpen: boolean
+  openSpaceShooter: () => void
+  closeSpaceShooter: () => void
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -65,4 +70,7 @@ export const useUiStore = create<UiStore>((set) => ({
   accountOpen: false,
   openAccount: () => set({ accountOpen: true }),
   closeAccount: () => set({ accountOpen: false }),
+  spaceShooterOpen: false,
+  openSpaceShooter: () => set({ spaceShooterOpen: true }),
+  closeSpaceShooter: () => set({ spaceShooterOpen: false }),
 }))

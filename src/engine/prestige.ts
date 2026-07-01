@@ -57,6 +57,19 @@ export function prestigeReset(state: GameState): boolean {
   const contracts = state.contracts
     ? { active: [...state.contracts.active], nextIndex: state.contracts.nextIndex }
     : undefined
+  // The Space Salvage campaign is meta-progression (permanent unlocks like the AI
+  // pilot) — its PROGRESS survives ascension; the transient run-reward buff resets
+  // with the fresh state (initialGameState seeds a clean buff/AI-salvage timer).
+  const salvageCampaign = state.spaceShooter
+    ? {
+        stageCompleted: state.spaceShooter.stageCompleted,
+        cooldownUntil: state.spaceShooter.cooldownUntil,
+        aiPilotUnlocked: state.spaceShooter.aiPilotUnlocked,
+        orbitalYardUnlocked: state.spaceShooter.orbitalYardUnlocked,
+        bestScores: [...(state.spaceShooter.bestScores ?? [])],
+        missionsPlayed: state.spaceShooter.missionsPlayed,
+      }
+    : undefined
 
   // Replace all run state with a fresh game, preserving the engineState object
   // reference (the loop holds it) by assigning fresh fields onto it.
@@ -73,6 +86,7 @@ export function prestigeReset(state: GameState): boolean {
   state.achievementsUnlocked = achievements
   state.prestigeMilestonesClaimed = prestigeMilestones
   if (contracts) state.contracts = contracts // the missions board persists too
+  if (salvageCampaign) state.spaceShooter = { ...state.spaceShooter, ...salvageCampaign }
   // Reaching an ascension-count milestone banks bonus tokens (one-time).
   checkPrestigeMilestones(state)
   // Seed Capital talent grants a starting bankroll for the new empire.

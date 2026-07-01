@@ -80,6 +80,7 @@ export const useCombinator = () => useGameStore(useShallow((s) => s.combinator))
 export const useFinanceCompound = () => useGameStore(useShallow((s) => s.financeCompound))
 export const useQuantumSuperposition = () => useGameStore(useShallow((s) => s.quantumSuperposition))
 export const useEventCard = () => useGameStore(useShallow((s) => s.eventCard))
+export const useSpaceShooter = () => useGameStore(useShallow((s) => s.spaceShooter))
 export const useDaily = () => useGameStore(useShallow((s) => s.daily))
 export const useContracts = () =>
   useGameStore(useShallow((s) => ({ list: s.contracts, claimable: s.contractsClaimable })))

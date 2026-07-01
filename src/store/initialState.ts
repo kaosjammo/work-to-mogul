@@ -16,6 +16,7 @@ import { initialLogisticsState } from '../engine/logistics'
 import { initialAngelDealState } from '../engine/angelDeal'
 import { initialEventCardsState } from '../engine/eventCards'
 import { initialContractsState } from '../engine/contracts'
+import { initialSpaceShooterState } from '../engine/spaceShooter'
 
 // Players now start broke and earn their first capital from Work (the career
 // system), not by buying a business. No required Lemonade Stand purchase.
@@ -75,6 +76,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     achievementsUnlocked: [],
     prestigeMilestonesClaimed: [],
     contracts: initialContractsState(),
+    spaceShooter: initialSpaceShooterState(),
     prestige: { totalPoints: 0, spentPoints: 0, talents: {}, multiplier: 1, resets: 0, founderPerk: null },
     onboardingStep: 0,
     nextEmployeeSeq: 1,

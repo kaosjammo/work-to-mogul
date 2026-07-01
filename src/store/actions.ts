@@ -33,6 +33,7 @@ import {
   hiredRoles,
 } from '../engine/angelDeal'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
+import { resolveMission, abortMission, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
@@ -278,6 +279,34 @@ export function resolveCard(choice: 'a' | 'b'): void {
 /** Dismiss the active event card with no effect. */
 export function dismissCard(): void {
   declineEventCard(getEngineState())
+  publishNow()
+}
+
+/**
+ * Resolve a finished Space Salvage Shooter mission: applies BOUNDED rewards,
+ * advances the campaign on a pass (else re-arms the same stage), and surfaces a
+ * reward toast. Returns the outcome so the mini-game can render the debrief screen.
+ */
+export function completeSpaceMission(stageIndex: number, metrics: MissionMetrics): MissionResult {
+  const result = resolveMission(getEngineState(), stageIndex, metrics, Date.now())
+  const passed = result.band !== 'failed'
+  haptic(passed ? 40 : 12)
+  playSound(passed ? 'chime' : 'tap')
+  const msgs: string[] = []
+  if (result.cashReward > 0) msgs.push(`🛰️ Salvage banked · +${money(result.cashReward)}`)
+  if (result.buffMult > 1) {
+    msgs.push(`🚀 Space profit +${Math.round((result.buffMult - 1) * 100)}% for ${Math.round(result.buffMs / 1000)}s`)
+  }
+  if (result.unlockedYard) msgs.push('🏗️ Orbital Salvage Yard unlocked!')
+  if (result.unlockedAiPilot) msgs.push('🤖 AI Salvage Pilot online — salvage runs are now automatic')
+  if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
+  publishNow()
+  return result
+}
+
+/** Walk away from a salvage signal before launch — re-arms later, no progress, no penalty. */
+export function abortSpaceMission(): void {
+  abortMission(getEngineState(), Date.now())
   publishNow()
 }
 

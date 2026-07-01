@@ -124,6 +124,61 @@ hold), a Logistics "Port Strike" crisis negotiation — all reusing this stage/c
 
 ---
 
+## Space Salvage Shooter — a 5-stage arcade Easter-egg campaign (NEW)
+
+A rare **Space-industry opportunity mini-game**: an old-school vertical scrolling shooter hidden
+inside the idle loop. Manually pilot a salvage ship through alien fleets + debris, shoot, collect
+salvage, survive to extraction, earn bounded rewards. It is a **5-stage recurring campaign** with
+over-the-top Central Command dialogue, not a one-off.
+
+**Stages** (only the next incomplete one triggers; a cooldown gates the next): 1 *Strange Signal* →
+2 *The Debris Has Opinions* → 3 *Hostile Acquisition* → 4 *Board Meeting In Orbit* → 5 *The Pilot Is
+Obsolete*. Difficulty ramps (more debris → more enemies → faster hazards → boss dreadnoughts → chaos).
+Passing **Stage 5 unlocks the AI Salvage Pilot**: manual stages stop triggering and salvage resolves
+automatically (a modest bounded cash drip).
+
+**Assets:** Foozle **Void** packs (CC0), copied OUT of the throwaway `dist/` into
+`public/assets/arcade/foozle/` (25 PNGs) — player hull (4 damage states), 3 enemy fleets
+(Kla'ed/Nairan/Nautolan) + dreadnought bosses, enemy bullet, spinning salvage/shield pickups,
+asteroid. Every sprite falls back to a drawn shape if it fails to load. See `arcade-assets.md` +
+`CREDITS.md`. Manifest + on-disk test in `src/content/arcadeManifest*.ts`.
+
+**Architecture (clean seams, no idle-loop interference):**
+- `content/spaceShooter.ts` — stage defs, difficulty, rewards, all dialogue (pure data).
+- `engine/spaceShooter.ts` — pure campaign engine: offer gating, timed-buff + AI-salvage tick,
+  outcome bands (great/good/pass/failed), **bounded** reward application (cash = idle-income-seconds ×
+  band, like event cards; a Space-only timed profit buff; permanent Yard/AI-pilot perks). Harness-safe
+  (the bot never plays → never advances → AI branch never fires).
+- Persisted campaign progress added to `GameState.spaceShooter` (additive → **no migration, no save-
+  version bump**); `serialize.tolerantLoad` overlays only the progress subset (transient buff stays
+  fresh, like golden/eventCards); **survives prestige** (`prestige.ts`, like achievements/contracts);
+  rides the cloud envelope untouched (`sameSave` only compares cash/lifetime → no spurious conflicts).
+- Economy hook: `spaceSalvageProfitMult` folded into `economyMultipliers` for Space only (mirrors
+  the `dispatch`/`rush` industry-scoped buffs).
+- UI: `FloatingSalvageSignal` chip (mirrors the Golden Deal chip) + fullscreen `SpaceSalvageShooter`
+  modal with its **own rAF loop** (briefing → canvas play → outcome). Desktop arrows/WASD + Space;
+  mobile drag + auto-fire. Mid-mission state is **never persisted** (a refresh just closes the modal,
+  UI-only flag; the signal remains). Walking away / ejecting = re-arm, no progress.
+
+**Validation:** `tsc` + build clean, **oxlint clean, 274 tests** (40 files) incl. 18 engine +
+3 manifest tests (progression, failure-no-advance, cooldown, AI-pilot unlock, reward bounds,
+save round-trip + old-save defaults, prestige survival). **Browser-verified @375px (dev2):** signal
+chip appears when Space is owned → briefing dialogue → live canvas (Foozle sprites rendering, auto-fire,
+scrolling starfield, HUD) → GOOD/GREAT outcome → **+$ reward banked, campaign advanced 0→1**, modal
+closes and idle game resumes; no console errors. Fixed a live bug where the outcome pinned to the next
+stage instead of the played stage (now pins to `playIndex`, captured at launch).
+
+**Files:** +`content/spaceShooter.ts`, +`content/arcadeManifest.ts`(+test), +`engine/spaceShooter.ts`
+(+test), +`ui/shared/SpaceSalvageShooter.tsx`, +`ui/shared/FloatingSalvageSignal.tsx`, +`arcade-assets.md`,
++`CREDITS.md`; ~`types/domain.ts`, `store/{initialState,buildView,gameStore,uiStore,actions}.ts`,
+`engine/{economy,simulate,prestige}.ts`, `save/serialize.ts`, `App.tsx`, `public/assets/arcade/foozle/*`.
+
+**Known limits / future polish:** desktop layout stretches full-width (mobile-first; could cap
+content max-width); explosions use particles (the `asteroid-explode` sheet is copied + reserved);
+player projectiles are drawn shapes (Void projectile art ships as wide anim strips).
+
+---
+
 ## UI REDESIGN Phase 3 — FULL game-world juice (cash-burst) — redesign COMPLETE
 
 The last cross-cutting piece of the user-picked "FULL" game-world. Reactive mascot poses were

@@ -72,7 +72,14 @@ import {
   quantumCollapsing,
   quantumSuperpositionMult,
   QUANTUM_INDUSTRY_ID,
+  ownsSpace,
 } from '../engine/economy'
+import { SPACE_SHOOTER_STAGE_BY_INDEX, SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
+import {
+  spaceShooterOfferAvailable,
+  nextStageIndex,
+  campaignComplete,
+} from '../engine/spaceShooter'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
 import type { EffectChannel, EmployeeInstance } from '../types/domain'
@@ -350,6 +357,24 @@ export interface ContractView {
   complete: boolean
 }
 
+export interface SpaceShooterView {
+  offerAvailable: boolean // a salvage signal is on offer now (the floating chip shows)
+  stageIndex: number // next incomplete stage (0..4), or -1 when the campaign is done
+  stageNumber: number // 1..5 for display
+  stageTitle: string
+  stageCodename: string
+  stagesCompleted: number
+  totalStages: number
+  campaignComplete: boolean
+  aiPilotUnlocked: boolean
+  orbitalYardUnlocked: boolean
+  buffActive: boolean // a Space profit buff from a run reward is running
+  buffSecondsLeft: number
+  buffPct: number // e.g. 50 for a ×1.5 buff
+  bestScore: number // best score for the current next stage
+  ownsSpace: boolean
+}
+
 /** Reveal thresholds for the onboarding staged reveal (lifetime earnings). */
 export const REVEAL_UPGRADES_LIFETIME = 10_000
 
@@ -368,6 +393,7 @@ export interface ViewSnapshot {
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
+  spaceShooter: SpaceShooterView
   daily: {
     available: boolean
     reward: number
@@ -923,6 +949,29 @@ export function buildView(
         }
       : null
 
+  // Space Salvage Shooter — the rare opportunity mini-game. Offer availability is a
+  // wall-clock (Date.now()) gate, harmless in sims (the harness never reads buildView).
+  const ssState = state.spaceShooter
+  const ssNextIdx = nextStageIndex(state)
+  const ssStageDef = ssNextIdx >= 0 ? SPACE_SHOOTER_STAGE_BY_INDEX[ssNextIdx] : null
+  const spaceShooter: SpaceShooterView = {
+    offerAvailable: spaceShooterOfferAvailable(state, Date.now()),
+    stageIndex: ssNextIdx,
+    stageNumber: ssStageDef?.number ?? SPACE_SHOOTER_TOTAL_STAGES,
+    stageTitle: ssStageDef?.title ?? 'Campaign Complete',
+    stageCodename: ssStageDef?.codename ?? '',
+    stagesCompleted: ssState?.stageCompleted ?? 0,
+    totalStages: SPACE_SHOOTER_TOTAL_STAGES,
+    campaignComplete: campaignComplete(state),
+    aiPilotUnlocked: ssState?.aiPilotUnlocked ?? false,
+    orbitalYardUnlocked: ssState?.orbitalYardUnlocked ?? false,
+    buffActive: (ssState?.buffMsLeft ?? 0) > 0,
+    buffSecondsLeft: Math.ceil((ssState?.buffMsLeft ?? 0) / 1000),
+    buffPct: Math.round(((ssState?.buffMult ?? 1) - 1) * 100),
+    bestScore: ssNextIdx >= 0 ? (ssState?.bestScores?.[ssNextIdx] ?? 0) : 0,
+    ownsSpace: ownsSpace(state),
+  }
+
   const contracts: ContractView[] = (state.contracts?.active ?? [])
     .map((id) => CONTRACT_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
@@ -1020,6 +1069,7 @@ export function buildView(
     financeCompound,
     quantumSuperposition,
     eventCard,
+    spaceShooter,
     daily,
     contracts,
     contractsClaimable,

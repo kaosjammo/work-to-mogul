@@ -11,6 +11,8 @@ import { FloatingRushHour } from './ui/shared/FloatingRushHour'
 import { EventCardModal } from './ui/shared/EventCardModal'
 import { MogulStoryModal } from './ui/mogulStories/MogulStoryModal'
 import { CombinatorExitWatcher } from './ui/business/CombinatorCard'
+import { FloatingSalvageSignal } from './ui/shared/FloatingSalvageSignal'
+import { SpaceSalvageShooter } from './ui/shared/SpaceSalvageShooter'
 import { DailyBonusModal } from './ui/shared/DailyBonusModal'
 import { AscensionCelebration } from './ui/shared/AscensionCelebration'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
@@ -44,6 +46,8 @@ export function App() {
       <FloatingProfitLayer />
       <FloatingGoldenDeal />
       <FloatingRushHour />
+      <FloatingSalvageSignal />
+      <SpaceSalvageShooter />
       <AssignmentSheet />
       <AccountModal />
       <MilestoneCelebration />

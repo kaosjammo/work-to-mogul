@@ -186,6 +186,38 @@ export function ownsQuantum(state: GameState): boolean {
   return false
 }
 
+// ----- Space's signature bolt-on: the Salvage Shooter campaign -----
+// The rare 5-stage arcade mini-game (engine/spaceShooter.ts) feeds back into the
+// idle economy through Space-only profit: a short TIMED run-reward buff, plus two
+// small PERMANENT perks earned late in the campaign. Read-only helpers live here
+// (next to the other industry-signature reads) so economy.ts never imports the
+// shooter engine — the shooter engine imports these, keeping the graph acyclic.
+export const SPACE_INDUSTRY_ID = 'space'
+/** Stage 4 reward — the Orbital Salvage Yard: a small permanent Space profit perk. */
+export const SALVAGE_YARD_SPACE_PROFIT = 1.05
+/** Stage 5 reward — the AI Salvage Pilot: a small permanent Space profit perk. */
+export const AI_PILOT_SPACE_PROFIT = 1.1
+
+/** Does the player own any Space business? (Gate for salvage offers + AI pilot.) */
+export function ownsSpace(state: GameState): boolean {
+  const ids = INDUSTRIES[SPACE_INDUSTRY_ID]?.businessIds ?? []
+  for (const id of ids) if ((state.businesses[id]?.owned ?? 0) > 0) return true
+  return false
+}
+
+/** Space-only profit multiplier from the Salvage campaign: a timed run-reward buff
+ *  × the permanent Orbital-Yard / AI-Pilot perks. 1 when nothing is active/unlocked.
+ *  Pure (no `now`) — the buff runs on a countdown decremented by tickSpaceShooter. */
+export function spaceSalvageProfitMult(state: GameState): number {
+  const s = state.spaceShooter
+  if (!s) return 1
+  let m = 1
+  if ((s.buffMsLeft ?? 0) > 0) m *= s.buffMult || 1
+  if (s.orbitalYardUnlocked) m *= SALVAGE_YARD_SPACE_PROFIT
+  if (s.aiPilotUnlocked) m *= AI_PILOT_SPACE_PROFIT
+  return m
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
 export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
@@ -272,9 +304,13 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // plays a deal → harness-safe). The Startup Combinator is now a standalone business,
   // not a multiplier.
   const angel = angelFinanceBoostMult(state, def.industryId)
+  // Space Salvage Shooter: a Space-only timed run-reward buff × permanent campaign
+  // perks (Orbital Yard, AI Pilot). 1 for non-Space and until anything is earned.
+  // Opt-in + bot-inert (the harness never plays the shooter) → harness-safe.
+  const salvage = def.industryId === SPACE_INDUSTRY_ID ? spaceSalvageProfitMult(state) : 1
   return {
     profit:
-      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * angel,
+      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * angel * salvage,
     speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush * evSpeed,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }

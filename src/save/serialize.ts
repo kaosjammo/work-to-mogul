@@ -18,6 +18,7 @@ import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
+import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
 import { reconcileSlots } from '../engine/employees/composition'
@@ -266,6 +267,28 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
       }
       // else: unrecoverable session → stays idle (meta preserved above)
     }
+  }
+
+  // Space Salvage Shooter — persist ONLY the campaign progress (the transient buff +
+  // AI-salvage timers stay at their fresh initial defaults, like golden/eventCards;
+  // the in-mission simulation is never persisted). Old saves (no field) keep the
+  // fresh baseline. cooldownUntil is a wall-clock epoch, capped so a corrupt value
+  // can't lock the offer forever.
+  if (loaded.spaceShooter && typeof loaded.spaceShooter === 'object') {
+    const ss = loaded.spaceShooter
+    const target = s.spaceShooter
+    target.stageCompleted = clamp(Math.floor(num(ss.stageCompleted)), 0, SPACE_SHOOTER_TOTAL_STAGES)
+    target.cooldownUntil = clamp(num(ss.cooldownUntil), 0, now + 24 * 60 * 60 * 1000)
+    target.aiPilotUnlocked = ss.aiPilotUnlocked === true
+    target.orbitalYardUnlocked = ss.orbitalYardUnlocked === true
+    target.missionsPlayed = Math.max(0, Math.floor(num(ss.missionsPlayed)))
+    if (Array.isArray(ss.bestScores)) {
+      for (let i = 0; i < target.bestScores.length; i++) {
+        target.bestScores[i] = Math.max(0, Math.floor(num(ss.bestScores[i])))
+      }
+    }
+    // A finished campaign implies both unlocks (defends against a partial/edited save).
+    if (target.stageCompleted >= SPACE_SHOOTER_TOTAL_STAGES) target.aiPilotUnlocked = true
   }
 
   // Industries are always visible/unlocked in the current model.
