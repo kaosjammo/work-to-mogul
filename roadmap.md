@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **233 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **236 tests / 36 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -52,11 +52,10 @@ decision-rich** — the earlier gaps are closed:
 - **D1 (first session): solid now.** Clear first-moment hint (tap Work Shift → buy a business), a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige), and — new this iteration — a "new" pulse dot so those reveals get *noticed* (`aa4e2b5`). The onboarding arc is guided end-to-end.
 - **D7 (return reason): built + polished (`2ceff30` + `8e0a762`).** A once-per-real-day Daily Bonus (~2h idle income) with a "🔥 Day N" streak, folded into a single clean return moment. Gives a wall-clock reason to return. **The one thing that would deepen it: streak *milestones* (Day 7/30 rewards)** so the streak is a goal, not just a multiplier (see Next task).
 
-Diagnosis in one line: **every retention lever the roadmap set out to build now exists and is
-polished — depth (prestige/employees), identity (industries), active decisions (events),
-onboarding (D1), a daily return reason with streak *milestones* (D7). The net-new work is
-done; what's left is one feel gap (a sound layer, Task 6) and then *live player signal* to
-find the next real priorities.**
+Diagnosis in one line: **the retention machine is complete and polished — depth
+(prestige/employees), identity (industries), active decisions (events), onboarding (D1), a
+daily return reason with streak milestones (D7), and feel (haptics/FX/sound). No feature gap
+remains; the next real priorities come from *live player signal*, not more building.**
 
 ---
 
@@ -272,25 +271,32 @@ surfaces. **233 tests green.** The streak is now a goal, not just a multiplier.
 
 ---
 
-## Task 6: Sound layer — 🔨 in progress (uncommitted)
+## Task 6: Sound layer ✅ DONE (`2908bee`)
 
-**Infrastructure done + to-spec (excellent).** `src/lib/sound.ts` is a synthesized Web-Audio
-SFX engine — **zero assets, zero deps** (tiny oscillator envelopes: coin/buy/chime/tap/prestige),
-gated on a `sound` setting that **defaults OFF** + persists (`settingsStore`), **unlock-aware**
-(`unlockAudio` resumes the `AudioContext` on the first `pointerdown` in `App.tsx`), **throttled**
-(50 ms, mass-buy-safe), and a **silent no-op** before unlock / when unsupported (no console
-noise). Suite green at 233.
+A synthesized Web-Audio SFX engine (`sound.ts`, zero assets/deps, default-OFF toggle,
+unlock-aware, 50ms-throttled, safe no-op) **wired correctly**: all `playSound` calls live in
+`actions.ts` + the Welcome-Back collect — **none in the economy/income fold** (verified), so
+the #1 idle-audio mistake (per-cycle blips) is avoided. Meaningful beats only: buy (purchase),
+chime (golden/milestone), prestige (ascend), coin (collect/daily), tap (rush/work). `sound.test.ts`
+covers the gated/no-context no-op. **236 tests green.**
 
-**Status of the acceptance criteria**
-- [x] Default-OFF persisted toggle; Web-Audio-unlock aware; lightweight (synth, no dep); throttled; safe no-op. ✅ All met.
-- [ ] ⚠️ **The remaining half — wire the call sites (this is where the #1 mistake lives).** `playSound` is defined but **not called anywhere yet**. Hook it into the **existing `haptic()` call sites** — those already fire on *meaningful beats only* (collect/claim, Golden Deal, Rush-Hour tap, milestone, purchase, prestige) and **never per automated cycle**. Reusing that exact trigger set guarantees no machine-gun income blips — do **NOT** add a `playSound` in the income/economy fold.
-- [ ] **Add the Settings row + first-run nudge** — `StatsScreen` is in the change set; confirm the toggle is labelled and a one-time "🔊 Enable sound?" prompt (optional) reads well at 375px.
-- [ ] **Mobile-verified:** after enabling + first tap, the meaningful beats play; silent when off. (A quick on-device pass once the preview tab is visible.)
+---
 
-**Then — the game is retention-feature-complete.** Remaining backlog (ascension celebration,
-brand glyphs, late-tier industry mechanics, supabase code-split) is all optional. The real
-next lever after sound is **live signal** — put it in front of players and watch D1/D7/session
-length — which is beyond this docs-only loop but is where the next *real* priorities come from.
+## The roadmap is delivered — what's actually next
+
+**All 7 prioritised tasks + the D1/D7 depth items are shipped and polished.** There is **no
+substantive feature gap left** — the retention machine is complete: harness-guarded economy,
+prestige loop with perk choices, employee build decisions, differentiated industries, active
+event cards, staged onboarding, a daily hook with streak milestones, and now sound. Inventing
+more mid-game systems now would be padding (and against the loop's own "don't expand unless
+meaningfully different" rule).
+
+**So the honest priority order from here:**
+1. **Ascension celebration** — the one remaining *clear* feel gap. Prestige is the game's biggest beat but the run currently resets quietly. A short celebration (reuse the existing milestone/celebration components + the new `prestige` sound + a haptic) would land it. *Acceptance:* on a successful ascend, a brief full-screen "Empire ascended · +N ✦" moment, dismissible, one-tap, 375px-clean, harness-inert (player-triggered). Small.
+2. **Then it's live signal, not more building.** The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. Ship it; measure; let the data name the next task.
+
+Everything else (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty
+XP) stays optional in the backlog — do only if a playtest or metric asks for it.
 
 *Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
 test-guarded) — keep an eye it reads as a signature, not a slot machine.
@@ -326,11 +332,10 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 
 ## Backlog (the roadmap is feature-complete — these are polish + marginal gains)
 
-*Ordered by retention value. The **next task** (Task 6 sound layer) is above; after that all of
-these are optional:*
+*The roadmap is delivered. The one remaining clear polish (**ascension celebration**) is
+called out above; everything below is optional — do only if a playtest or metric asks:*
 
-- **Sound layer** — now the **Next highest-value task** (promoted; see above).
-- **Ascension celebration moment:** prestige is a big beat but resets quietly; a short celebration (reuse the milestone/celebration components) would mark it.
+- **Ascension celebration** — promoted to the top of "what's next" above (prestige currently resets quietly).
 - **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty. **Watch for bloat** — they already carry cash-levels + 2 specs + capstone; only if it's a *light* touch (feeds the existing level, not a parallel track).
 - **Extend industry mechanics to the dampened late tiers** (Logistics→Space) *if* a playtest shows the mid/late game still feels flat — else leave the 5 flat industries (the 3-mechanic slice already broke the worst sameness).
 - **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
