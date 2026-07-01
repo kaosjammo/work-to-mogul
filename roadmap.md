@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **215 tests / 33 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **218 tests / 33 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
 - **Late-game pacing dampener — landed (`722c386`, `economy.ts`):** a runtime profit multiplier (`lateGameDampen`, ×0.85 compounding from tier 3 / Logistics onward) that slows the mid/late game per a "slow it down significantly" steer. Cleanly layered on top (base curve untouched, so `balance.test` monotonicity holds). **Verified harness-safe this pass:** first-run landmarks still in-band (7 industries, prestige unlock ~3h) and the prestige slope still climbs ($10.2Qi at run #6, no plateau) with the Mastery sink still reachable; full suite green at 208. ⚠️ But it shrank the token margin over that sink (cum 67 → 54 at #6) — see Risks.
@@ -48,16 +48,21 @@ The prestige loop and employee depth — the two big gaps from earlier passes �
    harness. The "thin second run" is no longer thin. Stay vigilant via `progressionLoop`.
 2. ✅ **Employees — now a decision.** The L10 second-spec "which two?" build with an
    opportunity cost (`3b2daf4`) turns "hire & forget" into an ongoing choice.
-3. ⬅ **Industries are still "same-but-numbers" — the new top gap.** All 8 share just two
-   reskinned multipliers (speed ×2 / profit ×1.5 — see Next task). The mid-late game is
-   a long stretch through industries that *look* distinct (rush hour, compound interest,
-   moonshot) but *play* identically. That flatness is what now caps replayability — a
-   prestige run feels the same not because the meta is shallow (it isn't anymore) but
-   because the *businesses you climb through* don't differ in how they play.
+3. ✅ **Industry sameness — addressed by a 3-mechanic slice.** Food (active window),
+   Finance (passive ramp), and Quantum (passive spike) now *play* differently, not just
+   read differently (`ffc8fe5`/`f09ef29`/`5cea210`). 5 industries still have flat perks,
+   but the pattern is proven and the worst flatness is broken.
+4. ⬅ **The game is light on *active decisions* — the new top gap.** Look at what's now
+   in place: prestige (a per-run perk choice, then idle), employees (a build choice, then
+   idle), industries (mostly *passive* mechanics — only Food's Rush Hour asks for a tap).
+   Between those set-up moments, the player mostly *watches*. There's no recurring "a
+   decision is waiting" hook that makes opening the app rewarding on its own. **Business
+   event cards (Task 5)** fill exactly this — a periodic opportunity/crisis choice across
+   all industries.
 
-Diagnosis in one line: **the vertical depth (prestige, employees) is now solid; the
-horizontal flatness (8 interchangeable industries) is the next retention ceiling —
-give 2–3 industries a felt, name-matching mechanic before adding any more content.**
+Diagnosis in one line: **vertical depth (prestige, employees) and horizontal identity
+(industry slice) are now solid; what's thin is *moment-to-moment active decisions* — add
+recurring event-card choices (Task 5) so idle stretches have a reason to check in.**
 
 ---
 
@@ -68,8 +73,8 @@ give 2–3 industries a felt, name-matching mechanic before adding any more cont
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
-| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food window ✅ (`ffc8fe5`) + Finance compounding ✅ (`f09ef29`, cued); Quantum signature = last slice mechanic |
-| 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
+| **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
+| **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches — the game's mechanics are now 2/3 *passive*, so this adds the missing active-decision layer across all industries | **NEXT — build now** (criteria below) |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
 Do **not** add a 9th industry / raw content tier — the existing systems aren't yet
@@ -131,9 +136,9 @@ rule. Only add it if a *cheap* attachment hook is wanted — differentiating the
 
 ---
 
-## Next highest-value task → Task 4: Industry identity & unique mechanics
+## Task 4 ✅ SLICE DONE — Industry identity & unique mechanics
 
-**Concrete finding this pass — the 8 industries are not meaningfully differentiated.**
+**Original finding — the 8 industries were not meaningfully differentiated.**
 Their flavourful "signature perks" are really just **two multipliers reskinned**
 (`SIGNATURE_PERKS` in `economy.ts`):
 
@@ -187,20 +192,50 @@ tap-window. **And they closed the legibility gap I flagged**: a `FinanceCompound
 Shipped with mechanic + save-migration tests; full suite green at **215**. Two mechanic
 shapes (active window, passive ramp) now proven, both visible.
 
-**Next → the 3rd and final slice mechanic: Quantum's own signature.**
-- [x] Active-window (Food/`rush_hour`) — `FloatingRushHour` cue. ✅ (`ffc8fe5`).
-- [x] Passive-dynamic (Finance/`compound_interest`) — `FinanceCompoundCue`. ✅ (`f09ef29`).
-- [ ] **Quantum — a high-variance "superposition" signature** (stop sharing Space's `moonshot`), a **third distinct shape** (volatility, vs window / ramp), same *mean* as the old ×2. ⚠️ **Determinism caveat:** "high-variance" must NOT be RNG in the income fold (breaks harness/`balance`).
-  - **Concrete pattern (de-risks the "variance without RNG" trap):** accumulate a `quantumPhaseMs` per tick and derive the multiplier from a *deterministic waveform* — e.g. `mult = 2 + A·(sin(k1·phase) + sin(k2·phase))/2` with incommensurate `k1,k2` so it *looks* chaotic but is fully reproducible; clamp ≥ some floor; mean stays ×2. No RNG, harness sees a stable curve.
-  - **Make it a *decision*, not just cosmetic shimmer (recommended):** a passive oscillation the player can't act on adds little retention. Better: let the player **tap to "collapse/observe"** — locking the *current* multiplier for a short window. Now the skill is timing the tap on a peak (a genuine third interaction: Food = tap-to-start-fixed-surge, Finance = passive ramp, Quantum = tap-to-lock-a-swing). Harness-safe: the bot never taps → never locks → the mean applies, sim unchanged (same reasoning as Rush Hour).
-  - Visible cue required either way: the live Quantum multiplier shimmering + a "⚛ Superposition ×N — tap to lock" prompt at a high swing.
-- [ ] **Data-driven + tested:** a `content.test`-style guard that each of the 3 signatures fires (no dead perks — `1ee29c1`).
+**3-mechanic slice ✅ COMPLETE** — three distinct industry *feels*, all deterministic,
+mean-preserving, cued, and tested (218 green):
+- [x] **Food "Rush Hour"** — active tap window on speed (`FloatingRushHour`). ✅ (`ffc8fe5`).
+- [x] **Finance "Compound Interest"** — passive profit ramp (`FinanceCompoundCue`). ✅ (`f09ef29`).
+- [x] **Quantum "Superposition"** — deterministic collapse *spike* on profit, its own signature (Space keeps `moonshot`), `QuantumSuperpositionCue`. ✅ (`5cea210`).
 
-**After the slice — decision for the reviewer/dev:** 5 of 8 industries (Retail, Tech,
-Logistics, Energy, Space) still have flat perks. The late ones (Logistics→Space) are exactly
-where the **dampener makes players linger**, so extending felt mechanics *there* is higher
-retention value than Task 5 (event cards) — but it's more of the same work. Reassess once
-Quantum lands and the 3-mechanic slice reads well on device.
+*Note:* Quantum shipped **passive** (auto-collapse on a deterministic cadence), not the
+tap-to-lock decision I floated — fine for an ultra-endgame idle industry. But it means **2 of
+3 mechanics are passive; only Food adds an active decision.** That gap is the cleanest bridge
+to the next task (below).
+
+**Deferred within Task 4 (do NOT grind out now):** 5 industries (Retail, Tech, Logistics,
+Energy, Space) still have flat perks. The slice already breaks the "same-but-numbers"
+flatness meaningfully; more bespoke per-industry mechanics are diminishing returns + more
+balance/UI surface. Backlog it — and if a device playtest shows the mid/late game still feels
+flat, prioritise the **dampened late tiers** (Logistics→Space) since that's where players
+linger, not early Retail/Tech.
+
+---
+
+## Next highest-value task → Task 5: Business event cards
+
+**Why now (not more industry mechanics):** the industry slice proves differentiation, but 2
+of its 3 mechanics are *passive* — across the whole game, **Food's Rush Hour is the only
+recurring active decision.** Idle players open the app and mostly watch. Event cards add the
+missing layer: a periodic **opportunity/crisis with a real 2-option choice** that applies to
+*any* industry, so it lifts the flat industries too without bespoke per-industry work. This
+is a *different* retention lever (active decision beats), not more of the same.
+
+**Acceptance criteria (thin, harness-safe, data-driven)**
+- [ ] A card surfaces on a **deterministic cadence** — reuse the `golden.ts`/`rushHour.ts` tick-counter (a `cardCooldownMs` + counter), **no RNG in the spawn or the effect** so `harness`/`balance`/`progressionLoop` stay stable. Card *selection* from the deck may rotate by a deterministic index (like the contract board's `nextIndex`), not `Math.random`.
+- [ ] Each card is a **genuine 2-option choice with a trade-off**, e.g. *Supply glut* — [Stockpile: −cash now, +profit for 60s] vs [Sell off: +cash now, −speed for 60s]; *Investor offer* — [Take the deal: instant cash, skip next Golden] vs [Decline: keep the Golden]. Both options should be *situationally* better — no dominant pick.
+- [ ] **Effects are bounded + transient** (short timed buffs/debuffs or one-off cash), layered on top like Rush Hour/founder perks — **never touch the base curve** (monotonicity stays green). Resolve/expire deterministically.
+- [ ] **Harness-safe:** the greedy bot ignores cards (never picks), so pacing is unchanged — same pattern as Golden Deals. Confirm `harness.test.ts` + `progressionLoop` unmoved.
+- [ ] **Data-driven + tested:** a `CARDS` table (id, prompt, 2 options, effects) + a `content.test` guard that every option's effect is wired (dead-perk history — `1ee29c1`). Save-safe: any persisted card state defaults cleanly on old saves.
+- [ ] **Mobile:** the card is a one-tap-per-option modal at 375px with clear effect text; dismissible; doesn't block the idle loop behind it.
+
+Scope guard: **3–5 cards** to prove the loop (opportunity + crisis + a neutral gamble), not a
+big deck. Reuse the Golden-Deal spawn + the contract-board data pattern; ship the smallest
+version that makes "should I open the app? there might be a decision waiting" true.
+
+**Playtest gate first:** before building, a quick on-device pass on the 3 industry mechanics
+(does the mid/late game *feel* differentiated now?). If it still feels flat, a late-tier
+industry mechanic may edge out event cards — but on current evidence, Task 5 is the call.
 
 ---
 
