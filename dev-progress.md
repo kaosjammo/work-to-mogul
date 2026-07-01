@@ -4,6 +4,41 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI uplift #2 — frosted + elevated shell chrome (HUD + NavBar)
+
+**Slice #2 from [`docs/UI_UPLIFT_BACKLOG.md`](docs/UI_UPLIFT_BACKLOG.md)** — a reusable lever
+visible on *every* screen. The audit flagged the two fixed chrome bars as the flattest, most
+static parts of an otherwise juicy app: opaque `var(--surface)` with only a hairline border, so
+they read as coplanar with the content rather than as chrome floating above it.
+
+**Implemented (presentation-only, progressive enhancement):**
+- `tokens.css`: frosted-chrome tokens — `--surface-frost` (`color-mix` → 80% `--surface`, 20%
+  transparent), `--frost-blur` (`blur(14px) saturate(1.4)`), and directional elevation
+  `--shadow-hud` (down) / `--shadow-nav` (up).
+- `global.css`: reusable `.chrome` + `.chrome-hud`/`.chrome-nav` utilities. **Progressive
+  enhancement**: opaque `--surface` by default so legibility *never* regresses, with the
+  translucent blur applied only inside `@supports (backdrop-filter…)`.
+- Applied `.chrome chrome-hud` to `TopHUD` and `.chrome chrome-nav` to `NavBar`, dropping their
+  inline opaque `background` so the frost takes over. Borders + safe-area paddings kept.
+
+Now the HUD/nav read as premium glass floating over the city backdrop, with a soft shadow
+separating chrome from content — a native-feeling layer on every tab.
+
+**Validation:** `tsc -b` + build clean (supabase still split; CSS 24.4→27.3kB from the
+`@supports` block), oxlint clean, **244 tests green** (presentation-only). **Browser-verified at
+375px** via computed styles: both bars carry `backdrop-filter: blur(14px) saturate(1.4)`, an
+80%-opaque translucent surface, and the directional shadows (HUD `0 6px 20px`, nav `0 -6px 20px`);
+text styling untouched; no layout overflow; no console errors. (Screenshot hit the known rAF
+timeout; computed-style measurement is the definitive proof.)
+
+**Files:** ~`ui/styles/tokens.css`, `ui/styles/global.css`, `ui/shell/TopHUD.tsx`,
+`ui/shell/NavBar.tsx`; ~`docs/UI_UPLIFT_BACKLOG.md`.
+
+**Next (from the backlog):** the typographic scale (#3 lever), then the two real bugs — the dead
+AssignmentSheet affinity border (#4) and the sub-44px Bench button (#29).
+
+---
+
 ## UI uplift #1 — elevation + shared `.card` token layer (depth that lifts every screen)
 
 **Context (user-directed):** the user redirected the loop to focus on **UI uplift**. Ran a

@@ -34,11 +34,10 @@ export function TopHUD() {
 
   return (
     <header
-      className="sticky top-0 z-20 flex flex-col gap-2 border-b px-4"
+      className="chrome chrome-hud sticky top-0 z-20 flex flex-col gap-2 border-b px-4"
       style={{
         paddingTop: 'calc(var(--safe-top) + 10px)',
         paddingBottom: '10px',
-        background: 'var(--surface)',
         borderColor: 'var(--border)',
       }}
     >

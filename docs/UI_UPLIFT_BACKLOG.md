@@ -14,7 +14,7 @@ targets ≥44px, no stack change, no rewrite, keep playable.
 ## Biggest cross-screen levers (do these first — they lift many screens at once)
 1. ✅ **Elevation + `.card` token layer** — shadow scale + warmed surface gradient + hairline.
 2. **Typographic scale** (`--fs-*` / `.t-title`/`.t-meta`) — no scale today; card titles == cue labels.
-3. **Frost + elevate the shell chrome** (TopHUD + NavBar) — translucent blur + shadow tokens.
+3. ✅ **Frost + elevate the shell chrome** (TopHUD + NavBar) — translucent blur + shadow tokens.
 4. **Motion tokens** (`--dur-*`, `--ease-*`) + one `.press` active-scale utility.
 
 ## Ranked backlog
@@ -22,7 +22,7 @@ targets ≥44px, no stack change, no rewrite, keep playable.
 | # | Slice | Impact | Effort | Risk | Status |
 |---|-------|--------|--------|------|--------|
 | 1 | Elevation + card-surface token layer + shared `.card` (BusinessCard, WorkCard first) | high | M | low | ✅ DONE (`457ecf4`+this) |
-| 2 | Frost + elevate shell chrome (TopHUD + NavBar): translucent blur + `--shadow-hud/-nav` | high | S | low | todo |
+| 2 | Frost + elevate shell chrome (TopHUD + NavBar): translucent blur + `--shadow-hud/-nav` | high | S | low | ✅ DONE |
 | 3 | Typographic scale tokens/utilities → card titles/rates/meta | high | M | low | todo |
 | 4 | **Fix dead affinity-match border in AssignmentSheet (real bug** — passes `industryId` string as a CSS color → affinity highlight never shows; map to `var(--industry-${id})`) | high | S | low | todo |
 | 5 | Per-industry accent identity on owned BusinessCards (accent edge/wash + tinted icon tile) | high | M | low | todo |

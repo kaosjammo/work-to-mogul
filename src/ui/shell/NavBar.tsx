@@ -21,9 +21,8 @@ export function NavBar() {
   )
   return (
     <nav
-      className="z-20 flex border-t"
+      className="chrome chrome-nav z-20 flex border-t"
       style={{
-        background: 'var(--surface)',
         borderColor: 'var(--border)',
         paddingBottom: 'var(--safe-bottom)',
       }}

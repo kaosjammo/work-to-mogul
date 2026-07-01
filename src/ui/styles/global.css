@@ -247,6 +247,27 @@ button {
   box-shadow: var(--shadow-card), var(--hairline-top);
 }
 
+/* Frosted, elevated chrome for the fixed HUD + bottom nav. Progressive enhancement:
+   opaque --surface by default so legibility never regresses; translucent blur only
+   where backdrop-filter is supported, turning the bars into premium glass over the
+   city backdrop. .chrome-hud/.chrome-nav add the directional elevation shadow. */
+.chrome {
+  background: var(--surface);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .chrome {
+    background: var(--surface-frost);
+    -webkit-backdrop-filter: var(--frost-blur);
+    backdrop-filter: var(--frost-blur);
+  }
+}
+.chrome-hud {
+  box-shadow: var(--shadow-hud);
+}
+.chrome-nav {
+  box-shadow: var(--shadow-nav);
+}
+
 /* Progress-bar fill is GPU-composited via transform: scaleX(). */
 .progress-fill {
   transform-origin: left center;

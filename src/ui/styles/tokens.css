@@ -48,6 +48,15 @@
   --surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 40%), var(--surface);
   --hairline-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
+  /* Frosted chrome (fixed HUD + bottom nav) — translucent surface + blur so the bars
+     read as premium glass floating over the city backdrop. Falls back to opaque
+     --surface where backdrop-filter is unsupported (see .chrome in global.css). The
+     HUD shadow points down, the nav shadow up — away from the content each floats over. */
+  --surface-frost: color-mix(in srgb, var(--surface) 80%, transparent);
+  --frost-blur: blur(14px) saturate(1.4);
+  --shadow-hud: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-nav: 0 -6px 20px rgba(0, 0, 0, 0.45);
+
   /* Safe-area insets (resolve to 0 on devices without notches) */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
