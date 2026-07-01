@@ -66,10 +66,30 @@ function zeroSummary(): SaveSummary {
   return { savedAt: 0, cash: 0, lifetime: 0 }
 }
 
+// Cash ticks every 100ms, so a returning user's local save is essentially never
+// byte-identical to the cloud copy. Exact equality here fired a spurious conflict
+// chooser on almost every login. Treat two numbers as equal within a small
+// RELATIVE tolerance (idle drift between save + upload), and only flag a conflict
+// when cash/lifetime genuinely diverge (a different device that made real progress).
+const SAVED_AT_TOLERANCE_MS = 3000
+const REL_TOLERANCE = 0.02 // 2% — idle drift is well under this; real divergence is far above.
+
+/** Two figures are "the same" if within REL_TOLERANCE of the larger magnitude (0 === 0). */
+function closeEnough(a: number, b: number): boolean {
+  if (a === b) return true
+  const scale = Math.max(Math.abs(a), Math.abs(b))
+  if (scale === 0) return true // both zero (handled by a === b, but keep it explicit)
+  return Math.abs(a - b) <= REL_TOLERANCE * scale
+}
+
 // Two saves are "the same" if their key figures match closely (so a returning
 // user who is already in sync isn't nagged with the conflict chooser).
-function sameSave(a: SaveSummary, b: SaveSummary): boolean {
-  return Math.abs(a.savedAt - b.savedAt) < 2000 && a.cash === b.cash && a.lifetime === b.lifetime
+export function sameSave(a: SaveSummary, b: SaveSummary): boolean {
+  return (
+    Math.abs(a.savedAt - b.savedAt) <= SAVED_AT_TOLERANCE_MS &&
+    closeEnough(a.cash, b.cash) &&
+    closeEnough(a.lifetime, b.lifetime)
+  )
 }
 
 function safeSet(key: string, value: string): void {
