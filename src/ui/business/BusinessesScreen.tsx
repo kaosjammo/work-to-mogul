@@ -248,7 +248,7 @@ export function BusinessesScreen() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="card overflow-hidden">
         {ind.businessIds.map((bid) => {
           const view = businesses[bid]
           if (!view) return null

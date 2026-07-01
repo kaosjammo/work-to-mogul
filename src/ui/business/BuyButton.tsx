@@ -2,9 +2,10 @@ import type { BusinessView } from '../../store/buildView'
 import { money } from '../../engine/num'
 import { buyBusiness } from '../../store/actions'
 
+/** Content-hugging Buy chip — gold when affordable, neutral-dim when not. One line. */
 export function BuyButton({ view }: { view: BusinessView }) {
   const disabled = !view.affordable
-  const qtyLabel = view.buyQty > 1 ? ` ×${view.buyQty}` : view.buyQty === 0 ? '' : ''
+  const qtyLabel = view.buyQty > 1 ? ` ×${view.buyQty}` : ''
   return (
     <button
       type="button"
@@ -13,18 +14,12 @@ export function BuyButton({ view }: { view: BusinessView }) {
         e.stopPropagation()
         buyBusiness(view.id)
       }}
-      className="flex flex-col items-center justify-center rounded-xl px-4 font-bold transition active:scale-[0.97]"
-      style={{
-        minHeight: 'var(--tap-lg)',
-        minWidth: '104px',
-        background: disabled ? 'var(--surface-3)' : 'var(--accent)',
-        color: disabled ? 'var(--text-faint)' : 'var(--accent-ink)',
-        opacity: disabled ? 0.7 : 1,
-        boxShadow: disabled ? 'none' : '0 2px 10px rgba(245,197,24,0.25)',
-      }}
+      className={`btn btn-md shrink-0 ${disabled ? 'btn-secondary' : 'btn-primary'}`}
     >
-      <span className="text-sm leading-tight">Buy{qtyLabel}</span>
-      <span className="tnum text-xs leading-tight opacity-90">{money(view.buyCost)}</span>
+      <span>Buy{qtyLabel}</span>
+      <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+        {money(view.buyCost)}
+      </span>
     </button>
   )
 }

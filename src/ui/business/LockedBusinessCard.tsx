@@ -24,37 +24,36 @@ export function LockedBusinessCard({
   def: BusinessDef
   progress?: { current: number; target: number }
 }) {
+  const pct =
+    progress && progress.target > 0
+      ? Math.min(100, Math.round((progress.current / progress.target) * 100))
+      : 0
   return (
-    <div
-      className="flex items-center gap-3 rounded-2xl p-3 opacity-70"
-      style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}
-    >
+    <div className="list-row relative py-2.5 pl-3 pr-3 opacity-60">
       <div
-        className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl grayscale"
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg grayscale"
         style={{ background: 'var(--surface-2)' }}
       >
-        <Icon art={businessArt(def.id, def.icon)} size={40} alt="" />
+        <Icon art={businessArt(def.id, def.icon)} size={34} alt="" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold" style={{ color: 'var(--text-dim)' }}>
+        <div className="truncate text-sm font-semibold" style={{ color: 'var(--text-dim)' }}>
           {def.name}
         </div>
-        <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
-          Unlock: {unlockText(def)}
+        <div className="truncate text-xs" style={{ color: 'var(--text-faint)' }}>
+          🔒 {unlockText(def)}
           {progress ? ` (${progress.current}/${progress.target})` : ''}
         </div>
-        {progress && progress.target > 0 && (
-          <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
-            <div
-              className="h-full rounded-full"
-              style={{
-                background: 'var(--text-dim)',
-                width: `${Math.min(100, Math.round((progress.current / progress.target) * 100))}%`,
-              }}
-            />
-          </div>
-        )}
       </div>
+      {progress && progress.target > 0 && (
+        <div
+          className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden"
+          style={{ background: 'var(--surface-2)' }}
+          aria-hidden
+        >
+          <div className="h-full" style={{ background: 'var(--text-faint)', width: `${pct}%` }} />
+        </div>
+      )}
     </div>
   )
 }

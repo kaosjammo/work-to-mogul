@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI REDESIGN Phase 1a — business list → flat dense rows
+
+**The core visible transformation** of the redesign (the mockup the user approved): the Business
+screen's list of big bordered/elevated cards becomes a flat, dense list of divider-separated rows.
+
+- **BuyButton** → a content-hugging `.btn-md` chip (40px, single line "Buy ×N · $cost"), gold when
+  affordable else neutral-dim (was a 56px, 104px-min, two-line gold slab).
+- **BusinessCard** → a flat `.list-row` (~60px): 40px icon well (tap-ready glow when idle), 2-line
+  body (name + ×owned; then rate + one status micro — auto / tap-to-run / ⚠️ / ⏳ ETA / ★ milestone),
+  a ghost staff chip, best-ROI as a 2px accent LEFT stripe (not a pill), and a thin progress
+  baseline along the bottom. Manual businesses run a cycle on row tap (keeps the +$ float + haptic).
+  The multi-emoji stat dump (profit%/speed%/crit%/focus%) moved off the row (belongs in the sheet).
+- **LockedBusinessCard** → a matching dimmed row.
+- **BusinessesScreen** list → one flat `.card overflow-hidden` holding the divider-separated rows
+  (was a `grid gap-3` of N separate cards). Big box-count drop: N business boxes → 1.
+
+**Validation:** `tsc -b` + build clean (JS actually −2 kB), oxlint clean, **244 tests green**.
+**Browser-verified at 375px:** rows ~60px, 5 visible (was ~2), Buy chip 40px visual with a **44px
+tap area** (the `.btn::before` hit-expander), the busiest row (staff chip + Buy chip + stripe) fits
+at rowRight 362 ≤ 375, no horizontal overflow, no console errors.
+
+**Files:** ~`ui/business/BuyButton.tsx`, `BusinessCard.tsx`, `LockedBusinessCard.tsx`,
+`BusinessesScreen.tsx`; ~`docs/UI_REDESIGN.md`.
+
+**Next (Phase 1b):** collapse the stacked cue boxes into one themed strip, then WorkCard →
+accent-stripe strip, IndustryTabs/Banner → pills + borderless banner, and the single-tier HUD with
+the slim Business-tab buy-mode row.
+
+---
+
 ## UI REDESIGN Phase 0 — foundation (flat, dense, one button system)
 
 **Context:** user called the UI hectic/boxy with "giant bar" buttons and asked for a real

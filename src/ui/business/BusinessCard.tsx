@@ -6,7 +6,6 @@ import { haptic } from '../../lib/haptics'
 import { useUiStore } from '../../store/uiStore'
 import { Icon } from '../shared/Icon'
 import { businessArt } from '../shared/art'
-import { ProgressBar } from './ProgressBar'
 import { BuyButton } from './BuyButton'
 
 interface Props {
@@ -14,11 +13,17 @@ interface Props {
   accent: string
 }
 
+/**
+ * A dense, flat business ROW (not a card). Icon + name/owned on line 1, rate + one
+ * status micro on line 2, a content-hug Buy chip on the right, staff behind a ghost
+ * chip. Best-ROI shows as a 2px accent left stripe; a thin progress baseline runs
+ * along the bottom edge. Manual (un-automated) businesses run a cycle on row tap.
+ */
 function BusinessCardImpl({ view, accent }: Props) {
   const tappable = view.owned > 0 && !view.isAutomated
-  const idle = view.owned > 0 && !view.isAutomated && view.progressFraction <= 0
+  const idle = tappable && view.progressFraction <= 0
 
-  // Pop the owned-count badge whenever it grows (a satisfying buy confirmation).
+  // Pop the owned count whenever it grows (a satisfying buy confirmation).
   const [ownedPop, setOwnedPop] = useState(0)
   const prevOwned = useRef(view.owned)
   useEffect(() => {
@@ -26,132 +31,94 @@ function BusinessCardImpl({ view, accent }: Props) {
     prevOwned.current = view.owned
   }, [view.owned])
 
+  const rate = view.owned > 0 ? formatRate(view.pps) : 'not started'
+  let state = ''
+  if (view.isAutomated) state = ' · auto'
+  else if (tappable) state = idle ? ' · tap to run' : ' · running…'
+  // One appended status hint, most-urgent first (kept to a single truncated line).
+  let hint = ''
+  if (view.riskEnabled && view.riskEventActive) hint = ' · ⚠️ −50%'
+  else if (!view.affordable && view.affordEtaSec != null) hint = ` · ⏳ ${formatEta(view.affordEtaSec)}`
+  else if (view.nextMilestoneThreshold != null) hint = ` · ★ ${view.nextMilestoneThreshold}`
+
+  const runCycle = (e: { clientX: number; clientY: number }) => {
+    const payout = view.pps * (view.cycleMs / 1000)
+    if (payout > 0) useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(payout)}`)
+    haptic(12)
+    tap(view.id)
+  }
+
   return (
-    <div className="card flex flex-col gap-2 p-3">
-      <div className="flex items-center gap-3">
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-          style={{ background: 'var(--surface-2)' }}
-        >
-          <Icon art={businessArt(view.id, view.icon)} size={40} alt={view.name} />
+    <div
+      className="list-row relative py-2.5 pr-3"
+      style={{
+        paddingLeft: view.isBestBuy ? '9px' : '12px',
+        borderLeft: view.isBestBuy ? `2px solid ${accent}` : undefined,
+        cursor: tappable ? 'pointer' : undefined,
+      }}
+      onClick={tappable ? runCycle : undefined}
+    >
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${idle ? 'tap-ready' : ''}`}
+        style={{ background: 'var(--surface-2)' }}
+      >
+        <Icon art={businessArt(view.id, view.icon)} size={34} alt={view.name} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-semibold">{view.name}</span>
+          <span
+            key={ownedPop}
+            className={`tnum shrink-0 text-xs font-bold ${ownedPop > 0 ? 'count-pop' : ''}`}
+            style={{ color: accent }}
+          >
+            ×{view.owned}
+          </span>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-semibold">{view.name}</span>
-            <span
-              key={ownedPop}
-              className={`tnum shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ownedPop > 0 ? 'count-pop' : ''}`}
-              style={{ background: 'var(--surface-3)', color: accent }}
-            >
-              ×{view.owned}
-            </span>
-          </div>
-          <div className="tnum text-xs" style={{ color: 'var(--text-dim)' }}>
-            {view.owned > 0 ? formatRate(view.pps) : 'not started'}
-            {view.isAutomated ? ' · 🤖 auto' : ''}
-          </div>
+        <div className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
+          {rate}
+          <span style={{ color: 'var(--text-faint)' }}>
+            {state}
+            {hint}
+          </span>
         </div>
       </div>
 
-      <ProgressBar fraction={view.owned > 0 ? view.progressFraction : 0} color={accent} />
-
-      {/* Manual businesses run one cycle per tap until an Operator (⚙️) automates them. */}
-      {tappable && (
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              // Satisfying payoff: a "+$X" pop at the tap point + a haptic tick.
-              const payout = view.pps * (view.cycleMs / 1000)
-              if (payout > 0) useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(payout)}`)
-              haptic(12)
-              tap(view.id)
-            }}
-            disabled={!idle}
-            className={`w-full rounded-xl text-sm font-extrabold uppercase tracking-wide transition-opacity ${idle ? 'tap-ready' : ''}`}
-            style={{
-              minHeight: 'var(--tap-lg)',
-              background: idle ? accent : 'var(--surface-3)',
-              color: idle ? 'var(--accent-ink)' : 'var(--text-faint)',
-              opacity: idle ? 1 : 0.85,
-            }}
-          >
-            {idle ? '▶ Run store' : 'Running…'}
-          </button>
-          <button
-            type="button"
-            onClick={() => useUiStore.getState().openAssignment(view.id)}
-            className="w-fit text-left text-xs"
-            style={{ color: 'var(--text-faint)' }}
-          >
-            {view.assignedCount === 0
-              ? '💡 Assign an Operator ⚙️ to run it automatically'
-              : '⚙️ Add an Operator to automate — other staff only boost it'}
-          </button>
-        </div>
+      {view.owned > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            useUiStore.getState().openAssignment(view.id)
+          }}
+          aria-label={`Manage staff for ${view.name} — ${view.assignedCount} of ${view.unlockedSlots} assigned`}
+          className="btn btn-ghost btn-sm shrink-0"
+          style={{ padding: '0 8px', gap: '4px' }}
+        >
+          👤 {view.assignedCount}/{view.unlockedSlots}
+          {view.synergies.length > 0 && <span style={{ color: '#c084fc' }}>✨{view.synergies.length}</span>}
+        </button>
       )}
 
-      <div className="flex items-center gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          {view.isBestBuy && (
-            <span
-              className="w-fit rounded-full px-2 py-0.5 text-xs font-bold"
-              style={{ background: 'rgba(245,197,24,0.18)', color: 'var(--accent)' }}
-              title="Best return on investment right now"
-            >
-              ⭐ Best ROI
-            </span>
-          )}
-          {/* Compact staff chip — opens the assignment sheet. */}
-          {view.owned > 0 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                useUiStore.getState().openAssignment(view.id)
-              }}
-              aria-label={`Manage staff for ${view.name} — ${view.assignedCount} of ${view.unlockedSlots} assigned`}
-              className="flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
-            >
-              <span>👤 {view.assignedCount}/{view.unlockedSlots}</span>
-              {view.automated && <span title="Automated">⚙️</span>}
-              {view.staffProfitPct > 0 && <span style={{ color: 'var(--good)' }}>+{view.staffProfitPct}%</span>}
-              {view.staffSpeedPct > 0 && <span style={{ color: 'var(--accent)' }}>⚡{view.staffSpeedPct}%</span>}
-              {view.staffCritChance > 0 && <span title="Crit chance">🎲{view.staffCritChance}%</span>}
-              {view.staffFocusPct > 0 && (
-                <span style={{ color: 'var(--accent)' }} title="Industry focus bonus">
-                  🎯{view.staffFocusPct}%
-                </span>
-              )}
-              {view.synergies.length > 0 && (
-                <span style={{ color: '#c084fc' }} title={view.synergies.join(', ')}>
-                  ✨{view.synergies.length}
-                </span>
-              )}
-            </button>
-          )}
-          {view.nextMilestoneThreshold != null && (
-            <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
-              ★ at {view.nextMilestoneThreshold} → {view.nextMilestoneLabel}
-            </span>
-          )}
-          {!view.affordable && view.affordEtaSec != null && (
-            <span className="tnum text-xs" style={{ color: 'var(--text-faint)' }}>
-              ⏳ Affordable in ~{formatEta(view.affordEtaSec)}
-            </span>
-          )}
-          {view.riskEnabled && (
-            <span
-              className="text-xs"
-              style={{ color: view.riskEventActive ? 'var(--bad)' : 'var(--text-faint)' }}
-            >
-              {view.riskEventActive ? '⚠️ Disruption (−50%)' : `🛡️ Risk ${view.riskPct}%`}
-            </span>
-          )}
+      <BuyButton view={view} />
+
+      {view.owned > 0 && (
+        <div
+          className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden"
+          style={{ background: 'var(--surface-2)' }}
+          aria-hidden
+        >
+          <div
+            className="progress-fill h-full"
+            style={{
+              background: accent,
+              transform: `scaleX(${view.progressFraction})`,
+              transition: 'transform 0.1s linear',
+            }}
+          />
         </div>
-        <BuyButton view={view} />
-      </div>
+      )}
     </div>
   )
 }
