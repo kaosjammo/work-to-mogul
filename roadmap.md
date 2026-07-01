@@ -16,6 +16,7 @@ Tokens → run again, faster.
 ## Current state (verified this pass)
 
 - **218 tests / 33 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
 - **Late-game pacing dampener — landed (`722c386`, `economy.ts`):** a runtime profit multiplier (`lateGameDampen`, ×0.85 compounding from tier 3 / Logistics onward) that slows the mid/late game per a "slow it down significantly" steer. Cleanly layered on top (base curve untouched, so `balance.test` monotonicity holds). **Verified harness-safe this pass:** first-run landmarks still in-band (7 industries, prestige unlock ~3h) and the prestige slope still climbs ($10.2Qi at run #6, no plateau) with the Mastery sink still reachable; full suite green at 208. ⚠️ But it shrank the token margin over that sink (cum 67 → 54 at #6) — see Risks.
@@ -233,9 +234,17 @@ Scope guard: **3–5 cards** to prove the loop (opportunity + crisis + a neutral
 big deck. Reuse the Golden-Deal spawn + the contract-board data pattern; ship the smallest
 version that makes "should I open the app? there might be a decision waiting" true.
 
-**Playtest gate first:** before building, a quick on-device pass on the 3 industry mechanics
-(does the mid/late game *feel* differentiated now?). If it still feels flat, a late-tier
-industry mechanic may edge out event cards — but on current evidence, Task 5 is the call.
+**Playtest gate ✅ PASSED (reviewer, on-device at 375px, dev bridge).** All three industry
+cues fire and render legibly, no overflow, no console errors:
+- 🍔 **Rush Hour** — a tappable **238×53px** button "Food ×3 speed · tap! (11s)" (clear effect + live countdown).
+- 📈 **Compound Interest** — passive cue "+50% profit" (shows the live ramp value).
+- ⚛️ **Superposition** — passive cue "💥 COLLAPSE ×9!" during the spike window.
+
+The mid/late game genuinely *feels* differentiated now — the mechanics are visible and read
+well on mobile. So **Task 5 (event cards) is confirmed as next**, not a late-tier industry
+mechanic. (Balance note: Quantum's spike shows ×9 — a dramatic swing; the mean-preservation
+is test-guarded, but keep an eye that the ×9 flash doesn't feel like a slot machine vs a
+signature.)
 
 ---
 
