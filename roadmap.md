@@ -33,7 +33,7 @@ Tokens → run again, faster.
 **Known issues / notes**
 
 - Employee systems already exceed the old "4 roles only" MVP rule — intentional pre-existing state, stable. Don't *add* roles; **do** deepen the existing ones (see Task 3).
-- Cloud save needs real Supabase creds for an on-device test (code verified, env-gated, anonymous play unaffected). `@supabase/supabase-js` adds ~153 kB gzip — deferred code-split.
+- Cloud save needs real Supabase creds for an on-device test (code verified, env-gated, anonymous play unaffected). `@supabase/supabase-js` is now **code-split** (`91f9876`, dynamic `import()`) — off the initial bundle, so the anonymous majority load lean (~153 kB gzip saved).
 - No standalone `typecheck` script; `tsc -b` runs inside `npm run build`. Art coverage complete for 32 businesses / 8 industries / 34 upgrades / 18 employee portraits; only optional P2 emoji depth-glyphs remain.
 
 ---
@@ -295,8 +295,8 @@ meaningfully different" rule).
 1. **Ascension celebration ✅ DONE (`86ff4c7`).** `AscensionCelebration.tsx` shows a brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on a successful ascend, reusing the Welcome-Back pattern + founder mascot, one-tap (44px+), reassuring copy ("your talents, tokens and progress carry over"), harness-inert (UI-only, player-triggered), with the `prestige` sound + haptic in the action. 236 tests green. Reviewed to-spec — just a 375px device check when convenient. **The polish backlog is now exhausted.**
 2. **From here it's live signal, not building.** The roadmap *and* every clear polish item are delivered. Inventing more would be padding. The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. **Ship it; measure; let the data name the next task.**
 
-Everything else (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty
-XP) stays optional in the backlog — do only if a playtest or metric asks for it.
+Everything else (brand glyphs, late-tier industry mechanics, active-duty XP) stays optional in
+the backlog — do only if a playtest or metric asks for it.
 
 ### When you ship: what to watch (the observation agenda that names the next task)
 
@@ -349,10 +349,10 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 *The roadmap is delivered. The one remaining clear polish (**ascension celebration**) is
 called out above; everything below is optional — do only if a playtest or metric asks:*
 
-- **Ascension celebration** — promoted to the top of "what's next" above (prestige currently resets quietly).
 - **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty. **Watch for bloat** — they already carry cash-levels + 2 specs + capstone; only if it's a *light* touch (feeds the existing level, not a parallel track).
 - **Extend industry mechanics to the dampened late tiers** (Logistics→Space) *if* a playtest shows the mid/late game still feels flat — else leave the 5 flat industries (the 3-mechanic slice already broke the worst sameness).
-- **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
+
+*(Done & removed from backlog: ascension celebration `86ff4c7`, sound layer `2908bee`, supabase code-split `91f9876`.)*
 
 ## Deferred ideas
 
