@@ -51,6 +51,14 @@ import {
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
+import {
+  LOGISTICS_INDUSTRY_ID,
+  ownsLogistics,
+  logisticsLoadFraction,
+  logisticsDispatchActive,
+  canDispatch,
+  dispatchMultAt,
+} from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { canClaimDaily, dailyReward } from '../engine/daily'
 import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
@@ -270,6 +278,17 @@ export interface RushHourView {
   speedMult: number // the Food speed multiplier during a surge (for the label)
 }
 
+export interface LogisticsView {
+  industryId: string
+  owned: boolean // owns any Logistics (only show the cue when relevant)
+  loadFraction: number // 0..1 cargo load accrued
+  canDispatch: boolean // load is full enough + no surge running → the button is live
+  readyPct: number // the profit % a dispatch would grant right now (for the button label)
+  surgeActive: boolean // a released dispatch surge is boosting Logistics profit
+  surgeSecondsLeft: number
+  surgePct: number // the active surge's profit % (for the running countdown label)
+}
+
 export interface EventCardView {
   id: string
   icon: string
@@ -305,6 +324,7 @@ export interface ViewSnapshot {
   newTabs: RevealedTabs
   golden: GoldenView
   rushHour: RushHourView
+  logistics: LogisticsView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
@@ -780,6 +800,19 @@ export function buildView(
     speedMult: RUSH_SPEED_MULT,
   }
 
+  // Logistics' Just-In-Time Dispatch — the cargo load + any active release surge.
+  const logisticsFraction = logisticsLoadFraction(state)
+  const logistics: LogisticsView = {
+    industryId: LOGISTICS_INDUSTRY_ID,
+    owned: ownsLogistics(state),
+    loadFraction: logisticsFraction,
+    canDispatch: canDispatch(state),
+    readyPct: Math.round((dispatchMultAt(logisticsFraction) - 1) * 100),
+    surgeActive: logisticsDispatchActive(state),
+    surgeSecondsLeft: Math.ceil((state.logistics?.surgeMsLeft ?? 0) / 1000),
+    surgePct: Math.round(((state.logistics?.surgeMult ?? 1) - 1) * 100),
+  }
+
   // Finance's Compound Interest — its current profit bonus (for the industry cue).
   const financeCompound = {
     industryId: FINANCE_INDUSTRY_ID,
@@ -916,6 +949,7 @@ export function buildView(
     newTabs,
     golden,
     rushHour,
+    logistics,
     financeCompound,
     quantumSuperposition,
     eventCard,

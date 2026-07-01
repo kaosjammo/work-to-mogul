@@ -24,6 +24,7 @@ import { buyTalent as buyTalentFn } from '../engine/talents'
 import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
 import { claimGoldenDeal } from '../engine/golden'
 import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
+import { claimDispatch } from '../engine/logistics'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
@@ -240,6 +241,18 @@ export function claimRush(): void {
     haptic(20)
     playSound('tap')
     useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed`])
+    publishNow()
+  }
+}
+
+/** Release Logistics' accrued cargo → a profit surge scaling with how full the load was. */
+export function dispatchCargo(): void {
+  const mult = claimDispatch(getEngineState())
+  if (mult > 1) {
+    haptic(20)
+    playSound('tap')
+    const pct = Math.round((mult - 1) * 100)
+    useUiStore.getState().pushCelebrations([`🚚 Dispatch! Logistics +${pct}% profit`])
     publishNow()
   }
 }

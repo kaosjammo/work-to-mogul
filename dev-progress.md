@@ -4,6 +4,55 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Industry identity — Logistics "Just-In-Time Dispatch" (a 4th distinct mechanic)
+
+**Analysed (user-directed):** with the roadmap's buildable list delivered, the user chose (via
+an explicit decision prompt) to extend the proven Food/Finance/Quantum "felt mechanic" pattern
+to a flat late-tier industry — overriding the reviewer's *defer* on the 5 remaining flat
+industries. Picked **Logistics**, whose `just_in_time: speed ×2` was a literal duplicate of
+Food's `rush_hour: speed ×2` (the most egregious sameness), and it's a dampened late tier where
+players linger (the reviewer's own "prioritise the dampened late tiers" steer).
+
+**Designed a genuinely distinct shape.** The existing three: Food = catch-the-ephemeral-window
+(active), Finance = slow passive ramp, Quantum = passive auto-oscillation. Logistics gets the
+missing **active bank-and-release timing decision**: cargo "load" accrues while Logistics is
+owned (fills over ~2.5 min, caps at 100%); once past 25% the player taps **Dispatch** to release
+it for a Logistics **profit** surge (30s) that **scales with how full the load was** (+up to
+80%). The decision — dispatch small-and-often vs. bank for a bigger shipment — is new. This also
+closes the roadmap's noted gap ("2 of 3 mechanics are passive; only Food is active") by adding a
+**2nd active decision**. Keeps the `speed ×2` baseline (Logistics' "lean/fast" identity, per the
+reviewer's keep-the-baseline exception); the active layer is a modest, opt-in PROFIT bonus on top.
+
+**Harness byte-identical by construction.** The greedy sim bot never dispatches, so `surgeMsLeft`
+stays 0 and `logisticsDispatchProfitMult` is always 1 — Logistics income is unchanged in the sim
+(the load meter accrues but is inert until released). The flat perk is untouched. Deterministic,
+no RNG. **Confirmed:** `harness.test`/`balance.test`/`progressionLoop.test` all pass unchanged.
+
+**Implemented (finished vertical slice, mirrors the Rush Hour wiring exactly):**
+- `engine/logistics.ts` (new, +`logistics.test.ts` 8 cases): `tickLogistics`, `claimDispatch`,
+  `canDispatch`, load/surge accessors, load-scaled `dispatchMultAt`.
+- Wired: `simulate.ts` tick, `economy.ts` profit fold (Logistics-only, ×1 unless surging),
+  `domain.ts` `LogisticsState` (transient), `initialState.ts`, `buildView.ts` `LogisticsView` +
+  `useLogistics`, `actions.ts` `dispatchCargo` (haptic + `tap` sound + 🚚 toast).
+- UI: an **inline** `LogisticsDispatchCue` on the Logistics business screen (mirrors the
+  Finance/Quantum cues, not a 3rd floating button — the load persists, so no urgency): a load bar,
+  a Dispatch button (**44px tap target**), and a live "🚀 +N% profit (Ns)" surge countdown.
+
+**Validation:** `tsc -b` + build clean (supabase still split), oxlint clean, **244 tests green**
+(+8). **Browser-verified at 375px:** cue renders with no overflow; at 80% load the button reads
+"🚚 Dispatch cargo → +64% profit" (1 + 0.8×0.8 ✓) and is enabled; clicking it set the engine
+surge (mult 1.765 at ~95% load, load reset to 0) and the cue switched to "🚀 +76% profit (20s)".
+No console errors.
+
+**Files:** +`engine/logistics.ts` (+`.test.ts`); ~`types/domain.ts`, `engine/simulate.ts`,
+`engine/economy.ts`, `store/initialState.ts`, `store/buildView.ts`, `store/gameStore.ts`,
+`store/actions.ts`, `ui/business/BusinessesScreen.tsx`.
+
+**Roadmap status:** 4th distinct industry mechanic; 4 of 8 industries now play differently
+(Food/Finance/Quantum/Logistics). Left `roadmap.md` for the reviewer (parallel-session hygiene).
+
+---
+
 ## Mobile QA — completed the app-wide 375px tap-target audit (no change warranted)
 
 **Analysed:** the prior tap-target passes covered action buttons on

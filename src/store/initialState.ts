@@ -12,6 +12,7 @@ import { BUSINESSES, BUSINESS_ORDER } from '../content/businesses'
 import { initialCareerState } from '../engine/career'
 import { initialGoldenState } from '../engine/golden'
 import { initialRushHourState } from '../engine/rushHour'
+import { initialLogisticsState } from '../engine/logistics'
 import { initialEventCardsState } from '../engine/eventCards'
 import { initialContractsState } from '../engine/contracts'
 
@@ -49,6 +50,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     career: initialCareerState(),
     golden: initialGoldenState(),
     rushHour: initialRushHourState(),
+    logistics: initialLogisticsState(),
     eventCards: initialEventCardsState(),
     financeCompoundMs: 0,
     quantumPhaseMs: 0,

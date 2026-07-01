@@ -217,6 +217,16 @@ export interface RushHourState {
   surgeMsLeft: number // > 0 while a claimed surge is boosting Food's speed
 }
 
+/** Logistics' signature mechanic — "Just-In-Time Dispatch". Cargo load accrues while
+ *  Logistics is owned; the player releases it for a profit surge that scales with how
+ *  full the load was (a bank-and-release timing decision). Transient (not persisted;
+ *  fresh on load/prestige), deterministic — no RNG. */
+export interface LogisticsState {
+  loadMs: number // accrued cargo load (0..DISPATCH_FILL_MS) while Logistics is owned
+  surgeMsLeft: number // > 0 while a released dispatch surge is boosting Logistics profit
+  surgeMult: number // the profit multiplier of the active surge (captured at release time)
+}
+
 /** Business event cards — the active-decision layer. Transient (not persisted;
  *  fresh on load/prestige), deterministic cadence + deck rotation. */
 export interface EventCardsState {
@@ -243,6 +253,7 @@ export interface GameState {
   career: CareerState
   golden: GoldenState
   rushHour: RushHourState
+  logistics: LogisticsState // Logistics' signature: Just-In-Time Dispatch (transient)
   eventCards: EventCardsState // the active-decision layer (transient)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator

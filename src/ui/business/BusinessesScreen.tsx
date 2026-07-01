@@ -1,8 +1,15 @@
-import { useGameStore, useActiveIndustry, useFinanceCompound, useQuantumSuperposition } from '../../store/gameStore'
+import {
+  useGameStore,
+  useActiveIndustry,
+  useFinanceCompound,
+  useQuantumSuperposition,
+  useLogistics,
+} from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money, formatEta } from '../../engine/num'
-import { spendCash } from '../../store/actions'
+import { spendCash, dispatchCargo } from '../../store/actions'
+import type { LogisticsView } from '../../store/buildView'
 import { WorkCard } from '../work/WorkCard'
 import { IndustryTabs } from './IndustryTabs'
 import { IndustryBanner } from './IndustryBanner'
@@ -86,6 +93,59 @@ function QuantumSuperpositionCue({ collapsing, mult, theme }: { collapsing: bool
   )
 }
 
+// Logistics' signature cue — cargo "load" builds while it runs; release it (on your own
+// timing) for a profit surge that scales with how full the load was.
+function LogisticsDispatchCue({ view, theme }: { view: LogisticsView; theme: string }) {
+  if (view.surgeActive) {
+    return (
+      <div
+        className="mb-3 rounded-2xl px-3 py-2"
+        style={{ background: 'rgba(46,211,105,0.14)', border: `1px solid ${theme}` }}
+      >
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span style={{ color: 'var(--text-dim)' }}>🚚 Just-In-Time Dispatch</span>
+          <span className="tnum font-bold" style={{ color: theme }}>
+            🚀 +{view.surgePct}% profit ({view.surgeSecondsLeft}s)
+          </span>
+        </div>
+        <div className="mt-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
+          Shipment away! Logistics profit is surging — the cargo reloads after.
+        </div>
+      </div>
+    )
+  }
+  const loadPct = Math.round(view.loadFraction * 100)
+  return (
+    <div className="mb-3 rounded-2xl px-3 py-2" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span style={{ color: 'var(--text-dim)' }}>🚚 Just-In-Time Dispatch</span>
+        <span className="tnum font-bold" style={{ color: view.canDispatch ? 'var(--good)' : 'var(--text-faint)' }}>
+          Cargo {loadPct}%
+        </span>
+      </div>
+      <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+        <div className="h-full rounded-full" style={{ background: theme, width: `${loadPct}%` }} />
+      </div>
+      <button
+        type="button"
+        onClick={dispatchCargo}
+        disabled={!view.canDispatch}
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl text-sm font-bold transition active:scale-[0.99] disabled:opacity-60"
+        style={{
+          minHeight: 'var(--tap)',
+          background: view.canDispatch ? theme : 'var(--surface-3)',
+          color: view.canDispatch ? 'var(--accent-ink)' : 'var(--text-faint)',
+        }}
+      >
+        {view.canDispatch ? `🚚 Dispatch cargo → +${view.readyPct}% profit` : `Loading cargo… (${loadPct}%)`}
+      </button>
+      <div className="mt-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
+        Bank the load for a bigger release, or dispatch often — your call.
+      </div>
+    </div>
+  )
+}
+
 export function BusinessesScreen() {
   const activeId = useActiveIndustry()
   const ind = INDUSTRIES[activeId]
@@ -93,6 +153,7 @@ export function BusinessesScreen() {
   const businesses = useGameStore((s) => s.businesses)
   const financeCompound = useFinanceCompound()
   const quantumSuperposition = useQuantumSuperposition()
+  const logistics = useLogistics()
 
   if (!ind || !industryView) return null
 
@@ -130,6 +191,10 @@ export function BusinessesScreen() {
           mult={quantumSuperposition.mult}
           theme={ind.theme}
         />
+      )}
+
+      {activeId === logistics.industryId && industryView.ownsAny && (
+        <LogisticsDispatchCue view={logistics} theme={ind.theme} />
       )}
 
       {hasAnyBusiness && (
