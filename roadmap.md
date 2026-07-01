@@ -301,12 +301,16 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 
 ---
 
-## Backlog (post Task 4)
+## Backlog (the roadmap is feature-complete — these are polish + marginal gains)
 
-- **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty (assigned + producing), nudging toward a "Lv-up!" moment without spending. **Watch for bloat** — employees already carry cash-levels + 2 specs + capstone; only add if it stays a *light* touch (e.g. XP feeds the existing level, not a parallel track).
-- **Business event cards (Task 5):** lightweight opportunity/crisis cards with a 2-option choice during idle stretches; deterministic spawn (reuse the Golden Deal spawn-counter pattern, not RNG, to stay harness-safe).
-- **Daily/weekly time-gated contracts:** needs a wall-clock cadence design (the long-standing blocker).
-- **Mobile/feel polish:** optional P2 brand glyphs (✦ Empire-Token mark, sync icon), sound layer behind the existing FX toggle, ascension celebration moment.
+*Ordered by retention value. The **next task** (merge the two return modals) is above; after
+that:*
+
+- **Streak long-term payoff (highest marginal D7 gain):** the daily streak (`dailyStreak`, already tracked) currently just multiplies cash — that plateaus. Add **milestone rewards at day 7 / day 30** (a bigger bonus, a free Golden Deal, a cosmetic) so the streak is a *goal*, not just a multiplier. Deterministic, save-tracked (the counter exists). This is what turns "I opened it today" into "I don't want to break my run."
+- **Sound layer (biggest Task-6 feel gap):** haptics + visual FX exist, but there's no audio — a satisfying "cha-ching" on income/claim, behind the existing FX/settings toggle (respect silent mode). The single most-noticeable feel upgrade left.
+- **Ascension celebration moment:** prestige is a big beat but resets quietly; a short celebration (reuse the milestone/celebration components) would mark it.
+- **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty. **Watch for bloat** — they already carry cash-levels + 2 specs + capstone; only if it's a *light* touch (feeds the existing level, not a parallel track).
+- **Extend industry mechanics to the dampened late tiers** (Logistics→Space) *if* a playtest shows the mid/late game still feels flat — else leave the 5 flat industries (the 3-mechanic slice already broke the worst sameness).
 - **Code-split `@supabase/supabase-js`** so anonymous builds stay lean (~153 kB gzip win).
 
 ## Deferred ideas
