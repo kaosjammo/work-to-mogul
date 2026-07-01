@@ -17,6 +17,7 @@ import { IndustryTabs } from './IndustryTabs'
 import { IndustryBanner } from './IndustryBanner'
 import { BusinessCard } from './BusinessCard'
 import { LockedBusinessCard } from './LockedBusinessCard'
+import { CombinatorCard } from './CombinatorCard'
 
 // Industry specialisation bonuses unlock at owned thresholds (industryMultipliers):
 // 100 → ×1.5 profit, 250 → ×2, 500 → ×2 + the industry's signature perk.
@@ -146,6 +147,7 @@ export function BusinessesScreen() {
         </div>
       )}
       <WorkCard />
+      <CombinatorCard />
       <IndustryTabs />
       <IndustryBanner industryId={activeId} name={ind.name} totalOwned={industryView.totalOwned} />
 

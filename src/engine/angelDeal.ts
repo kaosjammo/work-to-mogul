@@ -12,11 +12,17 @@ import type { GameState, IndustryId } from '../types/domain'
 import type { AngelDealState } from '../types/domain'
 import { ANGEL_DEAL, SCORE_KEYS, type Scores, type RoleBoost, type DealChoice } from '../content/angelDeal'
 import { INDUSTRIES } from '../content/industries'
+import { COMBINATOR_ID } from '../content/businesses'
 
 export type OutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 
 export const FINANCE_INDUSTRY_ID = 'finance'
-export const TECH_INDUSTRY_ID = 'tech'
+
+// Startup Combinator "exit" payouts — a periodic lump = N seconds of the Combinator's
+// income, on a deterministic, occasionally-MASSIVE sequence (no RNG → harness-safe; the
+// bot never owns the Combinator anyway). 900s = a ~15-min jackpot.
+export const EXIT_INTERVAL_MS = 120_000
+const EXIT_SECONDS = [75, 180, 45, 420, 120, 900, 60, 240]
 
 // ── Tuning ───────────────────────────────────────────────────────────────────
 export const ANGEL_FIRST_OFFER_MS = 4 * 60_000 // ~4 min of eligible Finance time before the first pitch
@@ -24,8 +30,6 @@ export const ANGEL_REOFFER_MS = 30 * 60_000 // long cooldown between pitches (ra
 export const ANGEL_MIN_CASH = 1_000_000 // "enough to plausibly invest" — a modest floor (Finance is already mid-late)
 export const ANGEL_INVEST_FRACTION = 0.12 // the cheque = 12% of current cash (bounded, never ruinous)
 
-// The permanent great-outcome benefit: Startup Combinator folds a Finance/Tech hybrid bonus.
-export const COMBINATOR_MULT = 1.15
 // Post-deal timed Finance effects.
 export const GOOD_BOOST_MULT = 1.4
 export const GOOD_BOOST_MS = 90_000
@@ -50,7 +54,37 @@ export function initialAngelDealState(): AngelDealState {
     payout: 0,
     boostMult: 1,
     boostMsLeft: 0,
+    exitCooldownMs: EXIT_INTERVAL_MS,
+    exitCount: 0,
+    lastExitAmount: 0,
   }
+}
+
+/** Does the player own the Startup Combinator business (great-outcome reward)? */
+export function ownsCombinator(state: GameState): boolean {
+  return (state.businesses[COMBINATOR_ID]?.owned ?? 0) > 0
+}
+
+/**
+ * Advance the Combinator's "exit" timer. When it fires, pay a lump = N seconds of the
+ * Combinator's current income (comboPps, passed in by the caller to avoid an import cycle
+ * with resolveBusiness), on the deterministic EXIT_SECONDS sequence. Only runs once the
+ * Combinator is owned (great outcome) → the sim bot, which never owns it, is unaffected.
+ */
+export function tickCombinatorExit(state: GameState, comboPps: number, dtMs: number): void {
+  const a = state.angelDeal
+  if (!a || !a.combinatorUnlocked || !ownsCombinator(state) || comboPps <= 0) return
+  a.exitCooldownMs -= dtMs
+  if (a.exitCooldownMs > 0) return
+  const secs = EXIT_SECONDS[a.exitCount % EXIT_SECONDS.length]
+  const payout = comboPps * secs
+  if (Number.isFinite(payout) && payout > 0) {
+    state.cash += payout
+    state.lifetimeEarnings += payout
+    a.lastExitAmount = payout
+    a.exitCount += 1
+  }
+  a.exitCooldownMs = EXIT_INTERVAL_MS
 }
 
 /** Employee roles the player has at least one of — used to lightly amplify matching choices. */
@@ -188,7 +222,17 @@ function applyOutcome(state: GameState, band: OutcomeBand, disciplined: boolean)
   const payout = payoutFor(band, disciplined, state.cash)
   state.cash = Math.max(0, state.cash + payout)
   if (payout > 0) state.lifetimeEarnings += payout
-  if (band === 'great') a.combinatorUnlocked = true
+  if (band === 'great') {
+    a.combinatorUnlocked = true
+    // Found the Startup Combinator: a standalone business you now own (buy more later),
+    // paying steady income + periodic "exit" jackpots.
+    const b = state.businesses[COMBINATOR_ID]
+    if (b) {
+      b.unlocked = true
+      b.owned = Math.max(1, b.owned)
+    }
+    a.exitCooldownMs = EXIT_INTERVAL_MS
+  }
   if (band === 'good') {
     a.boostMult = GOOD_BOOST_MULT
     a.boostMsLeft = GOOD_BOOST_MS
@@ -251,12 +295,6 @@ export function dismissAngelOutcome(state: GameState): void {
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────
-/** Permanent Startup Combinator bonus for Finance + Tech (1 until the great outcome). */
-export function angelCombinatorMult(state: GameState, industryId: IndustryId): number {
-  if (!state.angelDeal?.combinatorUnlocked) return 1
-  return industryId === FINANCE_INDUSTRY_ID || industryId === TECH_INDUSTRY_ID ? COMBINATOR_MULT : 1
-}
-
 /** Timed post-deal Finance boost (good) or debuff (bad); 1 when none active. */
 export function angelFinanceBoostMult(state: GameState, industryId: IndustryId): number {
   const a = state.angelDeal

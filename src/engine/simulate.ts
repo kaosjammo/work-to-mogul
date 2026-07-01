@@ -2,7 +2,7 @@
 //  applyTick — the fixed-timestep simulation step (pure over GameState).
 // ============================================================
 import type { GameState, UnlockCondition } from '../types/domain'
-import { BUSINESSES } from '../content/businesses'
+import { BUSINESSES, COMBINATOR_ID } from '../content/businesses'
 import { resolveBusiness } from './resolveBusiness'
 import {
   totalOwnedInIndustry,
@@ -17,7 +17,7 @@ import { checkAchievements } from './achievements'
 import { tickGolden } from './golden'
 import { tickRushHour } from './rushHour'
 import { tickLogistics } from './logistics'
-import { tickAngelDeal } from './angelDeal'
+import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
 import { tickEventCards } from './eventCards'
 
 /** Morale eases toward its equilibrium with ~20s time constant. */
@@ -116,6 +116,11 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   tickLogistics(state, dtMs)
   tickEventCards(state, dtMs)
   tickAngelDeal(state, dtMs)
+  // Startup Combinator "exit" payouts — only compute its income when actually owned
+  // (great-outcome reward; the sim bot never owns it, so this stays byte-identical).
+  if (state.angelDeal.combinatorUnlocked && (state.businesses[COMBINATOR_ID]?.owned ?? 0) > 0) {
+    tickCombinatorExit(state, resolveBusiness(state, BUSINESSES[COMBINATOR_ID]).pps, dtMs)
+  }
   // Finance's Compound Interest accrues while Finance is owned (capped at the ramp).
   if (ownsFinance(state)) {
     state.financeCompoundMs = Math.min(

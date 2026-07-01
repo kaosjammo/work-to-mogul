@@ -34,7 +34,7 @@ export function resolveBusiness(state: GameState, def: BusinessDef): ResolvedBus
     revenuePerCycle,
     pps,
     buyCostMult: emp.buyCostMult * econ.baseCostFactor,
-    isAutomated: emp.isAutomated,
+    isAutomated: emp.isAutomated || !!def.autoRun, // autoRun businesses (e.g. the Combinator fund) run without an Operator
     critChance: emp.critChance,
     critMult: emp.critMult,
     moraleScalar: emp.moraleScalar,

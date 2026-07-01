@@ -244,6 +244,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     a.cooldownMs = Math.max(0, num(la.cooldownMs, a.cooldownMs))
     a.boostMult = num(la.boostMult, 1) || 1
     a.boostMsLeft = Math.max(0, num(la.boostMsLeft))
+    a.exitCooldownMs = Math.max(0, num(la.exitCooldownMs, a.exitCooldownMs))
+    a.exitCount = Math.max(0, Math.floor(num(la.exitCount)))
+    a.lastExitAmount = Math.max(0, num(la.lastExitAmount))
     a.payout = num(la.payout)
     a.disciplined = !!la.disciplined
     if (la.scores && typeof la.scores === 'object') {

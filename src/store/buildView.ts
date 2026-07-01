@@ -61,6 +61,8 @@ import {
 } from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { ANGEL_DEAL } from '../content/angelDeal'
+import { COMBINATOR_ID } from '../content/businesses'
+import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
 import { canClaimDaily, dailyReward } from '../engine/daily'
 import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
@@ -280,6 +282,15 @@ export interface RushHourView {
   speedMult: number // the Food speed multiplier during a surge (for the label)
 }
 
+export interface CombinatorView {
+  unlocked: boolean // player owns the Startup Combinator (great-outcome reward)
+  business: BusinessView | null // its business row (owned / pps / buy) — null until unlocked
+  nextExitSec: number // countdown to the next "exit" payout
+  exitProgress: number // 0..1 toward the next exit
+  exitCount: number // exits fired (drives the celebration)
+  lastExitAmount: number // most recent exit payout
+}
+
 export interface AngelDealView {
   offered: boolean // a pitch is waiting (floating prompt)
   active: boolean // the mini-game modal is open
@@ -353,6 +364,7 @@ export interface ViewSnapshot {
   rushHour: RushHourView
   logistics: LogisticsView
   angelDeal: AngelDealView
+  combinator: CombinatorView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
@@ -856,6 +868,16 @@ export function buildView(
     hints: angelHints(ad.scores),
   }
 
+  // Startup Combinator business (great-outcome reward) — its row + the exit-payout timer.
+  const combinator: CombinatorView = {
+    unlocked: ad.combinatorUnlocked,
+    business: businesses[COMBINATOR_ID] ?? null,
+    nextExitSec: Math.ceil((ad.exitCooldownMs ?? 0) / 1000),
+    exitProgress: 1 - Math.min(1, Math.max(0, (ad.exitCooldownMs ?? 0) / EXIT_INTERVAL_MS)),
+    exitCount: ad.exitCount ?? 0,
+    lastExitAmount: ad.lastExitAmount ?? 0,
+  }
+
   // Finance's Compound Interest — its current profit bonus (for the industry cue).
   const financeCompound = {
     industryId: FINANCE_INDUSTRY_ID,
@@ -994,6 +1016,7 @@ export function buildView(
     rushHour,
     logistics,
     angelDeal,
+    combinator,
     financeCompound,
     quantumSuperposition,
     eventCard,

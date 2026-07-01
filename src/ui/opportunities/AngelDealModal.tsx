@@ -121,8 +121,9 @@ export function AngelDealModal() {
             </p>
           )}
           {a.combinatorUnlocked && a.outcome === 'great' && (
-            <p className="text-xs font-bold" style={{ color: 'var(--accent)' }}>
-              ✦ Startup Combinator unlocked — permanent ×1.15 to Finance &amp; Tech profit.
+            <p className="text-xs font-bold" style={{ color: 'var(--good)' }}>
+              🚀 You founded the <b>Startup Combinator</b> — a new business paying steady income plus
+              periodic <b>exit jackpots</b>. Find it at the top of the Business screen.
             </p>
           )}
           <button type="button" onClick={closeAngelOutcome} className="btn btn-primary btn-lg btn-block mt-1">

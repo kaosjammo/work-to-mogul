@@ -14,14 +14,16 @@ import {
   startAngelDeal,
   chooseAngelChoice,
   dismissAngelOutcome,
-  angelCombinatorMult,
   angelFinanceBoostMult,
+  ownsCombinator,
+  tickCombinatorExit,
   hiredRoles,
   ANGEL_FIRST_OFFER_MS,
   ANGEL_MIN_CASH,
   ANGEL_INVEST_FRACTION,
-  COMBINATOR_MULT,
+  EXIT_INTERVAL_MS,
 } from './angelDeal'
+import { COMBINATOR_ID } from '../content/businesses'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -133,6 +135,10 @@ describe('Angel Deal — flow + resolution', () => {
     expect(s.angelDeal.combinatorUnlocked).toBe(true)
     expect(s.cash).toBeGreaterThan(cashBefore) // great pays out
     expect(s.angelDeal.completedCount).toBe(1)
+    // Great outcome FOUNDS the Startup Combinator business (owned + unlocked).
+    expect(s.businesses[COMBINATOR_ID].owned).toBeGreaterThanOrEqual(1)
+    expect(s.businesses[COMBINATOR_ID].unlocked).toBe(true)
+    expect(ownsCombinator(s)).toBe(true)
   })
 
   it('a bad invest costs money but never ruins the run', () => {
@@ -180,15 +186,13 @@ describe('Angel Deal — trigger + economy folds', () => {
     expect(s.angelDeal.offered).toBe(false)
   })
 
-  it('the Combinator + boost folds are ×1 until a deal is played (harness-safe)', () => {
+  it('the timed Finance boost fold is ×1 until a deal is played (harness-safe)', () => {
     const s = eligibleState()
-    expect(angelCombinatorMult(s, 'finance')).toBe(1)
-    expect(angelCombinatorMult(s, 'tech')).toBe(1)
     expect(angelFinanceBoostMult(s, 'finance')).toBe(1)
-    s.angelDeal.combinatorUnlocked = true
-    expect(angelCombinatorMult(s, 'finance')).toBeCloseTo(COMBINATOR_MULT)
-    expect(angelCombinatorMult(s, 'tech')).toBeCloseTo(COMBINATOR_MULT)
-    expect(angelCombinatorMult(s, 'food')).toBe(1) // other industries unaffected
+    s.angelDeal.boostMult = 1.4
+    s.angelDeal.boostMsLeft = 5000
+    expect(angelFinanceBoostMult(s, 'finance')).toBeCloseTo(1.4)
+    expect(angelFinanceBoostMult(s, 'food')).toBe(1) // Finance-only
   })
 
   it('hiredRoles reflects the roster', () => {
@@ -196,6 +200,41 @@ describe('Angel Deal — trigger + economy folds', () => {
     expect(hiredRoles(s).size).toBe(0)
     s.employees.e1 = { id: 'e1', templateId: 't', name: 'C', role: 'closer', rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null, specialisation2: null }
     expect(hiredRoles(s).has('closer')).toBe(true)
+  })
+})
+
+describe('Startup Combinator — exit payouts', () => {
+  function ownedCombinatorState() {
+    const s = eligibleState()
+    s.angelDeal.combinatorUnlocked = true
+    s.businesses[COMBINATOR_ID].owned = 1
+    s.businesses[COMBINATOR_ID].unlocked = true
+    s.angelDeal.exitCooldownMs = EXIT_INTERVAL_MS
+    return s
+  }
+
+  it('fires a lump-sum exit only after the interval, then resets', () => {
+    const s = ownedCombinatorState()
+    const pps = 1000
+    const cash0 = s.cash
+    tickCombinatorExit(s, pps, EXIT_INTERVAL_MS - 1000) // not yet
+    expect(s.cash).toBe(cash0)
+    expect(s.angelDeal.exitCount).toBe(0)
+    tickCombinatorExit(s, pps, 2000) // crosses the interval → exit fires
+    expect(s.cash).toBeGreaterThan(cash0)
+    expect(s.angelDeal.lastExitAmount).toBeGreaterThan(0)
+    expect(s.angelDeal.exitCount).toBe(1)
+    expect(s.angelDeal.exitCooldownMs).toBe(EXIT_INTERVAL_MS) // re-armed
+  })
+
+  it('never fires when the Combinator isn’t owned (harness-safe)', () => {
+    const s = eligibleState()
+    s.angelDeal.combinatorUnlocked = true // unlocked but not owned
+    s.angelDeal.exitCooldownMs = 0
+    const cash0 = s.cash
+    tickCombinatorExit(s, 1000, EXIT_INTERVAL_MS * 3)
+    expect(s.cash).toBe(cash0)
+    expect(s.angelDeal.exitCount).toBe(0)
   })
 })
 

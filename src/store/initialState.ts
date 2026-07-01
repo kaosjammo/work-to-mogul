@@ -8,7 +8,7 @@ import type {
   IndustryState,
 } from '../types/domain'
 import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
-import { BUSINESSES, BUSINESS_ORDER } from '../content/businesses'
+import { BUSINESSES } from '../content/businesses'
 import { initialCareerState } from '../engine/career'
 import { initialGoldenState } from '../engine/golden'
 import { initialRushHourState } from '../engine/rushHour'
@@ -28,8 +28,11 @@ export function initialGameState(now: number = Date.now()): GameState {
     industries[id] = { unlocked: INDUSTRIES[id].unlock.kind === 'free' }
   }
 
+  // Iterate ALL businesses (incl. the special Startup Combinator, which is not in
+  // BUSINESS_ORDER) so every business — even the reward one — gets a state. The
+  // Combinator starts locked (its unlock gate is never met; only the Angel Deal unlocks it).
   const businesses: Record<string, BusinessState> = {}
-  for (const id of BUSINESS_ORDER) {
+  for (const id of Object.keys(BUSINESSES)) {
     const def = BUSINESSES[id]
     const industryUnlocked = industries[def.industryId].unlocked
     const ownMet = def.unlock.kind === 'free'

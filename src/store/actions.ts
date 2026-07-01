@@ -330,7 +330,7 @@ export function closeAngelOutcome(): void {
   const great = s.angelDeal.outcome === 'great'
   dismissAngelOutcome(s)
   if (great) {
-    useUiStore.getState().pushCelebrations(['✦ Startup Combinator unlocked! Finance & Tech ×1.15'])
+    useUiStore.getState().pushCelebrations(['🚀 Startup Combinator founded — see the Business screen!'])
   }
   publishNow()
 }

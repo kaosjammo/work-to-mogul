@@ -136,8 +136,34 @@ function toDef(r: Row): BusinessDef {
   }
 }
 
-export const BUSINESSES: Record<BusinessId, BusinessDef> = Object.fromEntries(
-  ROWS.map((r) => [r.id, toDef(r)]),
-)
+// ── Startup Combinator — the Angel Deal "great outcome" reward ──────────────────
+// A SPECIAL standalone business: unlocked ONLY by winning the angel deal (never by
+// checkUnlocks — the self-referential gate is never met), and deliberately NOT part of
+// any industry ladder or BUSINESS_ORDER, so it's excluded from the efficiency-
+// monotonicity invariant (balance.test) and doesn't disturb industry gates/lists. It
+// pays strong income and periodically fires a large "exit" payout (see engine/angelDeal).
+export const COMBINATOR_ID: BusinessId = 'startup_combinator'
+const COMBINATOR: BusinessDef = {
+  id: COMBINATOR_ID,
+  industryId: 'tech', // Finance/Tech hybrid flavour — benefits from Tech's global bonus
+  name: 'Startup Combinator',
+  icon: '🚀',
+  baseCost: 1e11,
+  growthRate: 1.16,
+  baseRevenue: 4e10,
+  baseCycleMs: 20000,
+  preferredChannels: ['profitMult', 'critChance'],
+  slotUnlocks: SLOTS,
+  milestones: profitHeavyMilestones(COMBINATOR_ID),
+  unlock: { kind: 'businessOwned', businessId: COMBINATOR_ID, count: Number.MAX_SAFE_INTEGER },
+  riskEnabled: false,
+  autoRun: true, // a fund — auto-runs the moment you found it, no Operator needed
+}
 
+export const BUSINESSES: Record<BusinessId, BusinessDef> = Object.fromEntries([
+  ...ROWS.map((r) => [r.id, toDef(r)] as const),
+  [COMBINATOR.id, COMBINATOR] as const,
+])
+
+// Ordered ladder for gameplay/tests — the special Combinator is intentionally excluded.
 export const BUSINESS_ORDER: BusinessId[] = ROWS.map((r) => r.id)

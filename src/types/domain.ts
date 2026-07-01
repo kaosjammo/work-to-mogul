@@ -97,6 +97,8 @@ export interface BusinessDef {
   unlock: UnlockCondition
   /** Finance-style businesses accrue risk (M4b). */
   riskEnabled?: boolean
+  /** Auto-runs without an assigned Operator (e.g. the Startup Combinator fund). */
+  autoRun?: boolean
 }
 
 export interface RoleDef {
@@ -272,6 +274,10 @@ export interface AngelDealState {
   payout: number // net cash delta applied at resolve (for the outcome screen)
   boostMult: number // timed post-deal Finance multiplier (>1 good / <1 bad)
   boostMsLeft: number
+  // Startup Combinator business (unlocked by the great outcome): periodic "exit" payouts.
+  exitCooldownMs: number // countdown to the next exit lump (while the Combinator is owned)
+  exitCount: number // exits fired (drives the deterministic payout sequence + UI celebration)
+  lastExitAmount: number // the most recent exit payout (for the celebration)
 }
 
 export interface GameState {

@@ -16,7 +16,7 @@ import { talentEconomy } from './talents'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
 import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
 import { logisticsDispatchProfitMult, LOGISTICS_INDUSTRY_ID } from './logistics'
-import { angelCombinatorMult, angelFinanceBoostMult } from './angelDeal'
+import { angelFinanceBoostMult } from './angelDeal'
 import { eventProfitMult, eventSpeedMult } from './eventCards'
 
 // ----- Cost scaling -----
@@ -268,9 +268,10 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   // Event cards: a resolved card's timed all-business profit/speed buff (1 when none).
   const evProfit = eventProfitMult(state)
   const evSpeed = eventSpeedMult(state)
-  // Angel Investment: permanent Startup Combinator bonus (Finance/Tech) + a timed
-  // post-deal Finance boost/debuff. Both ×1 until the player plays a deal → harness-safe.
-  const angel = angelCombinatorMult(state, def.industryId) * angelFinanceBoostMult(state, def.industryId)
+  // Angel Investment: a timed post-deal Finance boost/debuff (×1 until the player
+  // plays a deal → harness-safe). The Startup Combinator is now a standalone business,
+  // not a multiplier.
+  const angel = angelFinanceBoostMult(state, def.industryId)
   return {
     profit:
       ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * angel,

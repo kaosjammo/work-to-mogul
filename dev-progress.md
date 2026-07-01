@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Startup Combinator — now a real standalone business with "exit" jackpots
+
+Upgraded the Angel Deal great-outcome reward from a permanent ×1.15 multiplier placeholder into an
+actual business you found and own.
+
+- **New `startup_combinator` business** (`content/businesses.ts`): icon 🚀, industry `tech`
+  (Finance/Tech hybrid flavour), `autoRun: true` (a fund — runs without an Operator; new
+  `BusinessDef.autoRun` + `resolveBusiness` honours it). Deliberately **NOT** in `BUSINESS_ORDER`
+  or any industry's `businessIds`, so it's excluded from `balance.test`'s efficiency-monotonicity
+  ladder and the normal industry lists; never auto-unlocks (self-referential gate). `initialState`
+  now iterates all of `BUSINESSES` so its state exists (starts locked, owned 0).
+- **Great outcome** now `unlocked = true; owned = max(1, owned)` (you found it) instead of the old
+  multiplier fold, which was **removed** from `economy.ts` (the timed Finance boost/debuff stays).
+- **Exit payouts** (`engine/angelDeal.ts`): every ~2 min the Combinator "exits" for a lump =
+  N seconds of its income on a deterministic, occasionally-MASSIVE sequence (`[75,180,45,420,120,
+  900,60,240]` — 900s ≈ a 15-min jackpot). No RNG. Fires in `simulate` only when owned. Offline is
+  safe: catch-up is closed-form (`automatedIncomePerSec × seconds`), so steady income is credited
+  but exits don't fire offline (no windfall exploit).
+- **UI:** `CombinatorCard` (a prized green card at the top of the Business screen when unlocked —
+  name/owned/pps + Buy + an exit-countdown bar) and an always-mounted `CombinatorExitWatcher` so
+  the exit celebration fires on any tab.
+- **Harness byte-identical:** the sim bot never wins the deal → never owns the Combinator → the
+  exit tick + income are inert for it; `BUSINESS_ORDER` excludes it so the bot never buys it.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **274 tests** (+2 exit-payout tests; balance +
+harness + progression all unchanged). Browser-verified 375px: card renders/fits, steady income
+accrues (auto-run), exits fire ($450B then $1.08T — varying), no overflow/errors.
+
+---
+
 ## Opportunity Mini-Game #1 — Angel Investment Deal (FridgeMind)
 
 A full, decently-lengthy visual-novel negotiation built into the Finance industry — the first
