@@ -3,7 +3,7 @@
 //  Stores the SAME versioned envelope used by localStorage, as jsonb. All calls
 //  no-op / throw cleanly when Supabase is unconfigured; callers guard on a user.
 // ============================================================
-import { supabase } from '../lib/supabase'
+import { getSupabase } from '../lib/supabase'
 import { CURRENT_SAVE_VERSION, type SaveEnvelope } from './serialize'
 
 export interface CloudSave {
@@ -14,6 +14,7 @@ export interface CloudSave {
 
 /** Fetch the signed-in user's cloud save, or null if they have none. */
 export async function fetchCloudSave(userId: string): Promise<CloudSave | null> {
+  const supabase = await getSupabase()
   if (!supabase) return null
   const { data, error } = await supabase
     .from('game_saves')
@@ -31,6 +32,7 @@ export async function fetchCloudSave(userId: string): Promise<CloudSave | null> 
 
 /** Upsert the user's cloud save. Returns the new `updated_at` ISO timestamp. */
 export async function uploadCloudSave(userId: string, envelope: SaveEnvelope): Promise<string> {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error('Cloud save is not configured')
   const updatedAt = new Date().toISOString()
   const { error } = await supabase.from('game_saves').upsert(

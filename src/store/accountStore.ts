@@ -6,7 +6,7 @@
 //  silently overwrite — both-exist surfaces a "use this device / use cloud" choice.
 // ============================================================
 import { create } from 'zustand'
-import { supabase, isSupabaseConfigured, configError as supabaseConfigError, supabaseHost } from '../lib/supabase'
+import { getSupabase, isSupabaseConfigured, configError as supabaseConfigError, supabaseHost } from '../lib/supabase'
 import { fetchCloudSave, uploadCloudSave } from '../save/cloud'
 import {
   snapshotEnvelope,
@@ -116,36 +116,46 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       void get().syncNow()
     })
 
-    if (!supabase) {
+    if (!isSupabaseConfigured || supabaseConfigError) {
       set({ ready: true, status: 'local' })
       return
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      const u = data.session?.user
-      if (u) {
-        set({ user: { id: u.id, email: u.email ?? null } })
-        maybeReconcile(u.id)
+    // Loads the Supabase library (its own chunk) — only reached when cloud is
+    // configured, so anonymous play never triggers the download.
+    void getSupabase().then((supabase) => {
+      if (!supabase) {
+        set({ ready: true, status: 'local' })
+        return
       }
-      set({ ready: true })
-    })
 
-    // Deduped by user id + in-flight guard, so repeated INITIAL_SESSION /
-    // TOKEN_REFRESHED events for an already-reconciled user are no-ops.
-    supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user
-      if (u) {
-        set({ user: { id: u.id, email: u.email ?? null }, authError: null })
-        maybeReconcile(u.id)
-      } else {
-        reconciledUserId = null
-        lastUploadAt = 0
-        set({ user: null, status: 'local', conflict: null })
-      }
+      supabase.auth.getSession().then(({ data }) => {
+        const u = data.session?.user
+        if (u) {
+          set({ user: { id: u.id, email: u.email ?? null } })
+          maybeReconcile(u.id)
+        }
+        set({ ready: true })
+      })
+
+      // Deduped by user id + in-flight guard, so repeated INITIAL_SESSION /
+      // TOKEN_REFRESHED events for an already-reconciled user are no-ops.
+      supabase.auth.onAuthStateChange((_event, session) => {
+        const u = session?.user
+        if (u) {
+          set({ user: { id: u.id, email: u.email ?? null }, authError: null })
+          maybeReconcile(u.id)
+        } else {
+          reconciledUserId = null
+          lastUploadAt = 0
+          set({ user: null, status: 'local', conflict: null })
+        }
+      })
     })
   },
 
   signUp: async (email, password) => {
+    const supabase = await getSupabase()
     if (!supabase) return
     set({ authBusy: true, authError: null, authNotice: null })
     const { data, error } = await supabase.auth.signUp({ email, password })
@@ -162,6 +172,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   },
 
   signIn: async (email, password) => {
+    const supabase = await getSupabase()
     if (!supabase) return
     set({ authBusy: true, authError: null, authNotice: null })
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -170,6 +181,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   },
 
   signOut: async () => {
+    const supabase = await getSupabase()
     if (!supabase) return
     await supabase.auth.signOut()
     reconciledUserId = null
@@ -179,7 +191,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
 
   syncNow: async () => {
     const { user } = get()
-    if (!supabase || !user) return
+    if (!user || !(await getSupabase())) return
     set({ status: 'syncing' })
     try {
       const updatedAt = await uploadCloudSave(user.id, snapshotEnvelope())
@@ -225,7 +237,7 @@ function maybeReconcile(userId: string): void {
 
 // Decide what to do with local vs cloud saves right after a session appears.
 async function reconcile(userId: string): Promise<void> {
-  if (!supabase) return
+  if (!(await getSupabase())) return
   reconciling = true
   reconciledUserId = userId
   const store = useAccountStore

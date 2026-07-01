@@ -4,6 +4,48 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Perf — code-split `@supabase/supabase-js` (mobile D1 first-load win)
+
+**Analysed:** the roadmap's one concrete *buildable* backlog item that isn't padding or new
+content. The whole app shipped as a **single 606.67 kB / 170.55 kB-gzip JS chunk** (rolldown
+even warned about it). `@supabase/supabase-js` (~50 kB gzip) sat in that eager chunk via the
+one static value-import (`createClient`) in `lib/supabase.ts`, imported from `main.tsx`'s
+startup graph (`accountStore.init()`) — so **every** player downloaded it, including the
+anonymous majority who never configure cloud save. Verified the eager path + the monolithic
+chunk with a baseline `npm run build` before touching anything.
+
+**Implemented (finished vertical slice, no behaviour change):** converted the single static
+`createClient` value-import into a **lazy `getSupabase(): Promise<SupabaseClient | null>`**
+that dynamic-imports the library on first cloud use and memoises the client (one shared auth
+instance). Only the *type* import stays static (erased at build). All the synchronous config
+exports (`isSupabaseConfigured`, `configError`, `supabaseHost`, `isPublishable`,
+`sanitizeAuthHeaders`) stay eager, so the account UI still knows cloud is available (and shows
+"Account — Local") without paying for the library. Consumers now `await getSupabase()`:
+`save/cloud.ts` (`fetchCloudSave`/`uploadCloudSave` — already async) and `store/accountStore.ts`
+(`init` wraps the auth-listener setup in `getSupabase().then(...)` behind a sync
+`isSupabaseConfigured` gate; `signUp`/`signIn`/`signOut`/`syncNow`/`reconcile` each await it).
+The unconfigured guard changed from `!supabase` (truthiness of the old eager const) to the
+equivalent sync `!isSupabaseConfigured || configError`, so semantics are byte-identical.
+
+**Result (measured `npm run build`):** eager JS chunk **606.67 → 404.06 kB** (gzip **170.55 →
+119.09 kB, a ~30% cut** to initial download); `@supabase/supabase-js` split into its own
+lazily-loaded `dist-*.js` (202.56 kB / **51.79 kB gzip**) that anonymous play never fetches.
+The >500 kB chunk-size warning is gone.
+
+**Validation:** `tsc -b` clean (no type errors), oxlint clean, **236 tests green** (unchanged —
+no engine/harness touched; the pure `supabase.test.ts` helpers are untouched). Browser-verified
+at the dev preview: app boots with **no console errors**, renders fully, "Account — Local"
+still shows (sync config gate intact), and no supabase network/console diagnostic fires on the
+anonymous path (`getSupabase()` never called).
+
+**Files:** ~`lib/supabase.ts` (lazy `getSupabase`), `save/cloud.ts`, `store/accountStore.ts`.
+
+**Roadmap status:** clears the "Code-split `@supabase/supabase-js`" backlog item (roadmap
+Backlog + Known-issues). Left `roadmap.md` for the reviewer (parallel-session hygiene). No new
+game system — a strict Pareto perf win serving the mobile-first D1 first-load edge.
+
+---
+
 ## Task 6 (feel) — ascension celebration (the last clear feel gap)
 
 **Analysed:** reviewer flagged this as the one remaining clear polish — prestige is the

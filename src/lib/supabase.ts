@@ -1,11 +1,16 @@
 // ============================================================
 //  Supabase client (optional). Created only when both Vite env vars are present
-//  AND the URL is well-formed; otherwise `supabase` is null and every cloud
-//  feature no-ops, so anonymous local play is completely unaffected. Only a
-//  PUBLIC frontend key is used here (publishable `sb_publishable_…` OR legacy
-//  anon JWT `eyJ…`) — NEVER a secret / service_role key.
+//  AND the URL is well-formed; otherwise `getSupabase()` resolves to null and
+//  every cloud feature no-ops, so anonymous local play is completely unaffected.
+//  Only a PUBLIC frontend key is used here (publishable `sb_publishable_…` OR
+//  legacy anon JWT `eyJ…`) — NEVER a secret / service_role key.
+//
+//  The `@supabase/supabase-js` library (~150 kB gzip) is loaded LAZILY via a
+//  dynamic import inside `getSupabase()`, so it splits into its own chunk that
+//  the anonymous majority never downloads — the initial mobile payload stays
+//  lean. Only the type import below is static (types are erased at build).
 // ============================================================
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 /** Strip accidental surrounding quotes + whitespace (common env-var paste mistake). */
 function cleanEnv(v: unknown): string | undefined {
@@ -75,14 +80,28 @@ function apiKeySafeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   return fixed ? fetch(input, { ...init, headers: fixed }) : fetch(input, init)
 }
 
-/** Shared client, or null when unconfigured / misconfigured (anonymous local-only). */
-export const supabase: SupabaseClient | null =
-  isSupabaseConfigured && !configError
-    ? createClient(url as string, anonKey as string, {
+// Memoised lazy client. The first `getSupabase()` call triggers the dynamic
+// import of the library and builds the client; subsequent calls reuse the same
+// in-flight/resolved promise so every consumer shares one auth instance.
+let clientPromise: Promise<SupabaseClient | null> | null = null
+
+/**
+ * Resolve the shared Supabase client, or null when unconfigured / misconfigured
+ * (anonymous local-only). Loads `@supabase/supabase-js` on first use — call this
+ * only on an actual cloud path (sign-in, sync) so anonymous play never fetches it.
+ */
+export function getSupabase(): Promise<SupabaseClient | null> {
+  if (!isSupabaseConfigured || configError) return Promise.resolve(null)
+  if (!clientPromise) {
+    clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
+      createClient(url as string, anonKey as string, {
         auth: { persistSession: true, autoRefreshToken: true },
         global: { fetch: apiKeySafeFetch },
-      })
-    : null
+      }),
+    )
+  }
+  return clientPromise
+}
 
 if (isSupabaseConfigured) {
   // Safe startup diagnostic — host + key KIND only, NEVER the key value.
