@@ -49,12 +49,12 @@ decision-rich** — the earlier gaps are closed:
 4. ✅ **Active decisions** — event cards add a recurring "a decision is waiting" beat across all industries (`6d5c394`).
 
 **The gap has moved from *depth* to the *edges of the session* — D1 and D7:**
-- **D1 (first session):** every review + playtest has been mid/late game. Whether a *brand-new* player understands the loop in the first 5 minutes is **unassessed**. For a mobile idle game this is the single biggest retention lever, and it's a blind spot.
-- **D7 (return reason):** all the recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so nothing *pulls* a lapsed player back tomorrow. No daily hook exists.
+- **D1 (first session): audited this pass — mostly solid.** There's a clear first-moment hint (tap Work Shift → buy a business) and a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige). The one gap: the *subsequent* reveals are **silent** — a new tab appears with no note on why to use it. Cheap fix (contextual hints).
+- **D7 (return reason): a true zero — the bigger lever.** All recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so **nothing pulls a lapsed player back tomorrow.** No daily hook exists.
 
-Diagnosis in one line: **the game is deep and polished in the middle; the untouched
-frontier is the *first session* (does a new player get it?) and a *daily return reason* —
-those are the next retention gains, not more mid-game systems.**
+Diagnosis in one line: **the game is deep and polished, and even onboarding is well-staged;
+the real untouched retention lever is a *daily return reason* (D7) — plus a cheap D1 polish
+(hint each staged reveal). Not more mid-game systems.**
 
 ---
 
@@ -68,7 +68,7 @@ those are the next retention gains, not more mid-game systems.**
 | **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
 | **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches | **✅ DONE** (`6d5c394`, 225 tests) — 4 trade-off cards, deterministic, harness byte-identical, modal playtested |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Incremental (ongoing) |
-| **7** | **Onboarding / first-session (D1) + daily return hooks (D7)** | The 6 core systems are built + mid/late-game is polished — but the *first 5 minutes* and *reason-to-return-tomorrow* have never been reviewed. This is the next real retention frontier | **⬅ NEW — highest-value next** (see below) |
+| **7** | **Daily return hook (D7) + onboarding hint polish (D1)** | D7: nothing pulls a lapsed player back tomorrow (all content refreshes on play-time). D1 audited this pass — already well-staged; just needs a hint on each silent tab reveal | **⬅ NEXT** — D7 is the real lever; D1 is a cheap polish (see below) |
 
 **The original 6-task roadmap is essentially complete** (1–5 done, 6 is ongoing polish).
 Do **not** add a 9th industry / raw content tier. The next retention gains are D1/D7, not
@@ -228,23 +228,23 @@ visible-tab layout check next time the server's up.)
 
 ## Next highest-value task → Onboarding (D1) + daily return hooks (D7)
 
-**The 6-task roadmap is essentially built** (1–5 done; 6 is ongoing polish). Every review so
-far — and every playtest — has been *mid/late game*. The two biggest retention levers for a
-mobile idle game have **never been looked at**, and they're now the highest-value work:
+**The 6-task roadmap is essentially built** (1–5 done; 6 is ongoing polish). The remaining
+retention frontier is the *edges of the session* — D1 and D7. **Onboarding audit this pass
+(code-level; a fresh-save live run was blocked by the hidden-preview-tab reload issue):**
 
-1. **First-session / onboarding (D1).** Does a brand-new player (fresh save, no prestige)
-   understand the loop in the first 2–5 minutes? Work → first business → automate → industries.
-   The game has a first-run hint, but the *whole* onboarding arc is unassessed. **Next reviewer
-   action: playtest a FRESH save** (`__game` from a cleared state) and audit the first 5 min for
-   clarity, first "aha", and time-to-first-automation.
-2. **Daily return hook (D7).** There is currently **no reason tied to wall-clock to come back
-   tomorrow** — contracts/golden deals refresh on play-time, not real time. This is the
-   long-deferred "daily/weekly time-gated content" item. Even a light **daily bonus / daily
-   contract** (claimable once per real day, deterministic) gives a reason to reopen.
+**D1 onboarding is in better shape than assumed — mostly done:**
+- ✅ **First-moment hint** (`BusinessesScreen.tsx`): before the first business, "👋 New here? Tap **Work Shift** below to earn your first cash, then buy a business" — clear, actionable, auto-dismisses. Starts broke ($0), Work is the obvious first action.
+- ✅ **Staged tab reveal** (`buildView.ts` `revealedTabs`): Business always; **Staff + Stats** appear after the 1st business; **Upgrades** at $10k lifetime; **Ascend** at prestige-unlock. Genuine progressive disclosure — not dumped at once.
+- ✅ Food is the tuned onboarding industry (lower gates); harness confirms 1st business <2 min, 2nd <5 min.
+- ⚠️ **The gap:** the *first* beat is hinted, but the **subsequent staged reveals are silent** — when Staff/Upgrades/Ascend tabs appear, nothing tells the player *why* to tap them. A new tab quietly appearing is easy to miss.
 
-**Acceptance criteria — pick D1 first (cheaper, higher-certainty win)**
-- [ ] **Onboarding audit + fixes:** from a fresh save, the first business + first automation are reachable in ≲2 min with clear prompts; each core system (industries, staff, upgrades, prestige) is *introduced* the first time it's relevant (a one-line contextual hint), not dumped at once. No new tutorial framework — reuse the existing hint/celebration components.
-- [ ] **Daily hook (if D1 is solid):** a once-per-real-day claimable (bonus cash scaled to income, or a free Golden Deal / a daily event card). Uses `Date`-based day-bucketing **persisted in the save**; must be **harness-safe** (the sim/bot never advances wall-clock, so it's inert in tests) and not exploitable by clock-changing (accept minor abuse; no server). Mobile: a claimable badge on open.
+**D7 is a true zero — the bigger lever.** All recurring content (contracts, golden deals,
+event cards) refreshes on **play-time**, not wall-clock, so **nothing pulls a lapsed player
+back tomorrow.** No daily hook exists at all.
+
+**Acceptance criteria**
+- [ ] **D1 (quick win): contextual hint on each staged reveal.** Reuse the existing hint component + the `onboardingStep` counter (already in state) to fire a one-liner the first time each tab reveals — Staff → "Hire staff to automate — earn while you're away", Upgrades → "Permanent boosts for your businesses", Ascend → "Reset for permanent bonuses". Dismiss-once, persisted. No new framework. (Still worth a fresh-save live pass to time-to-first-automation once the preview tab is visible.)
+- [ ] **D7 (primary): a once-per-real-day claimable.** Bonus cash scaled to current income (or a free Golden Deal / daily event card). `Date`-based day-bucketing **persisted in the save**; **harness-safe** (the sim/bot never advances wall-clock → inert in tests); accept minor clock-change abuse (no server). Mobile: a claimable badge on the nav + a small "Daily Bonus" card on open.
 
 **Task 6 (mobile polish / celebrations / sound / haptics)** stays a parallel *incremental*
 track — feel is already strong (playtests confirm clean cues, tap targets, no overflow), so
