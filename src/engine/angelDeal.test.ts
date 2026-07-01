@@ -28,7 +28,7 @@ import {
   EXIT_INTERVAL_MS,
 } from './angelDeal'
 import { COMBINATOR_ID } from '../content/businesses'
-import { LEASE_SHOWDOWN, ENGINE_POACH } from '../content/mogulStories'
+import { LEASE_SHOWDOWN, ENGINE_POACH, VIRAL_MOMENT } from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -328,6 +328,47 @@ describe('Mogul Story #3 — The Poach (Tech): another story, zero new resolutio
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
+  })
+})
+
+describe('Mogul Story #4 — Gone Viral (Food): a crisis-opportunity on the shared runtime', () => {
+  function foodState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.lemonade.owned = 1 // a Food business
+    s.businesses.lemonade.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Food + clears the cash floor', () => {
+    expect(storyEligible(foodState(), VIRAL_MOMENT)).toBe(true)
+    const noFood = initialGameState(0)
+    noFood.cash = 1e9
+    noFood.businesses.lemonade.owned = 0 // owns no Food business
+    expect(storyEligible(noFood, VIRAL_MOMENT)).toBe(false)
+  })
+
+  it('a graceful finish boosts FOOD only and never unlocks the Combinator', () => {
+    const s = foodState()
+    s.angelDeal.storyId = VIRAL_MOMENT.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'dec_ride', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false)
+    expect(s.angelDeal.boostIndustryId).toBe('food')
+    expect(mogulStoryBoostMult(s, 'food')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'tech')).toBe(1)
+  })
+
+  it('letting it fade resolves neutral', () => {
+    const s = foodState()
+    s.angelDeal.storyId = VIRAL_MOMENT.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    expect(chooseAngelChoice(s, 'dec_fade', new Set())).toBe(true)
     expect(s.angelDeal.outcome).toBe('neutral')
   })
 })

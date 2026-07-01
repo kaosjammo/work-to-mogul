@@ -179,7 +179,9 @@ never nagging.
 - **Logistics** — a dockworkers' dispute during peak season.
 - **Energy** — a regulator's inspection with a buried compliance flaw.
 - **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
-- **Food** — a viral-review moment that can make or sink a location.
+- ✅ **Food** — a viral-review moment that can make or sink a location. *(Shipped: "Gone
+  Viral", `viral_copper_spoon`, a 5-stage `short` crisis-opportunity —
+  `content/mogulStories/viralMoment.ts`.)*
 
 Each can pick its own length, score variables, tone, outcome logic, and reward — the
 framework only asks that they conform to the `MogulStory` shape and stay bot-inert.

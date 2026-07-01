@@ -4,6 +4,34 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #4 — "Gone Viral" (Food), a crisis-opportunity beat
+
+The fourth story — and the first non-negotiation one — still lands as **content +
+registration only**. Food is the starting industry, so this reaches players earliest.
+
+- **New story** `content/mogulStories/viralMoment.ts` — "Gone Viral" (`viral_copper_spoon`,
+  Food): a punchy **5-stage `short`** crisis-opportunity. A clip of your diner's "Copper
+  Melt" explodes overnight; ride the wave with grace (honest scarcity, grace under a
+  backlash, a keeper dish) or squeeze it dry (shrinkflation, public brawls, flimsy merch) and
+  torch the goodwill. Fictional influencer *Margo Vane* is the recurring foil. Reuses the
+  shared negotiation scores (reframed as read-the-room / control-the-narrative / don't-
+  overreach); registered in `index.ts`.
+- **No new engine code:** auto-triggers via `storyEligible` (owns Food + cash floor), rotates
+  into the offer queue, resolves through the shared resolution — a graceful finish → cash + a
+  timed **Food** boost; a greedy fumble → a Food dip; let it fade → neutral. Proves the
+  generic resolution isn't limited to literal negotiations.
+- **Harness-inert** (player-triggered). Length range now spans Angel 10 / Poach 8 / Lease 7 /
+  **Viral 5** (the short end).
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **313 tests** (+3: Food eligibility,
+graceful→Food-boost-not-Combinator, fade→neutral; framework-integrity test auto-covers the new
+story; all prior stories + harness + balance + progression unchanged). Browser-verified 375px:
+Food-owning state → "💼 …make your diner blow up overnight" offer → modal renders *Gone Viral*
+/ "The Spike · **1/5**" → choice → consequence beat → Continue advances to "· 2/5" (Margo Vane
+speaking) with authored score deltas, no overflow, no console errors.
+
+---
+
 ## Mogul Story #3 — "The Poach" (Tech), zero new resolution code
 
 Proof that the generic runtime pays off: a third story shipped as **content + registration
