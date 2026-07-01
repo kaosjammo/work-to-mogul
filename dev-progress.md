@@ -4,6 +4,45 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UI uplift #1 — elevation + shared `.card` token layer (depth that lifts every screen)
+
+**Context (user-directed):** the user redirected the loop to focus on **UI uplift**. Ran a
+multi-agent audit (6 senior-designer agents, one per UI surface, + adversarial synthesis) to
+ground the pass. Verdict: excellent bones (disciplined tokens, 44px tap targets, tabular-nums,
+a real reduced-motion-gated juice library) but a ceiling of **uniform flatness** — every
+card/panel/HUD/nav/modal is the identical flat `var(--surface)` + 1px border + `rounded-2xl`,
+with **no elevation/shadow token, no type scale, no motion tokens** (and dead `--radius` tokens
+with zero consumers). Full ranked plan saved to [`docs/UI_UPLIFT_BACKLOG.md`](docs/UI_UPLIFT_BACKLOG.md).
+
+**Implemented the #1 lever (highest impact-per-risk, reusable, presentation-only):**
+- `tokens.css`: an **elevation scale** (`--shadow-sm/-card/-pop`), a **warmed card surface**
+  (`--surface-card` = a whisper of top-lit gradient over `--surface`) + `--hairline-top` inset
+  highlight; and reconciled the dead radius tokens to honest values (`--radius` 14→16px,
+  `--radius-sm` 10→12px, added `--radius-pill`) so they match the shipping `rounded-2xl/-xl`.
+- `global.css`: one shared **`.card`** utility (surface gradient + border + 16px radius + card
+  shadow + hairline) — no padding/gap, so callers keep controlling spacing. Every screen can
+  adopt it in later iterations; it also consolidates ~10 ad-hoc inline shadows.
+- Applied to the two most-visible surfaces first: `BusinessCard` (dropped its duplicated inline
+  `background`/`border` → `.card`) and `WorkCard` (both the main card and the retired Board-Advisor
+  strip). WorkCard's **blue accent border is preserved** via an inline `border` override (wins over
+  `.card`) — a deliberate adaptation of the plan so its identity isn't regressed.
+
+**Validation:** `tsc -b` + build clean (supabase still split; CSS 24.0→24.4kB), oxlint clean,
+**244 tests green** (unchanged — presentation only). **Browser-verified at 375px** via computed
+styles: cards now carry `box-shadow: rgba(0,0,0,0.38) 0 4px 14px + hairline`, a surface gradient,
+and 16px radius; **no layout shift** (cards still 351px at left 12, no overflow); WorkCard keeps
+its `rgba(106,169,255,0.33)` accent border while BusinessCard uses neutral `--border`; no console
+errors. (Screenshot hit the known rAF timeout; computed-style measurement is the definitive proof.)
+
+**Files:** ~`ui/styles/tokens.css`, `ui/styles/global.css`, `ui/business/BusinessCard.tsx`,
+`ui/work/WorkCard.tsx`; +`docs/UI_UPLIFT_BACKLOG.md`.
+
+**Next (from the backlog):** frost+elevate the shell chrome (HUD+NavBar), then the typographic
+scale — both high-impact reusable levers. Two real bugs also queued: AssignmentSheet's dead
+affinity-match border (#4) and a sub-44px Bench button (#29).
+
+---
+
 ## Industry identity — Logistics "Just-In-Time Dispatch" (a 4th distinct mechanic)
 
 **Analysed (user-directed):** with the roadmap's buildable list delivered, the user chose (via

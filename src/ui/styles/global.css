@@ -237,6 +237,16 @@ button {
   font-feature-settings: 'tnum';
 }
 
+/* Shared elevated card surface — one source of truth for the panel treatment used
+   across every screen. Presentation only (no padding/gap) so callers keep full
+   control of their own spacing/layout. Lifts cards off the city backdrop. */
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card), var(--hairline-top);
+}
+
 /* Progress-bar fill is GPU-composited via transform: scaleX(). */
 .progress-fill {
   transform-origin: left center;

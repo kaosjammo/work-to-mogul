@@ -18,8 +18,8 @@ export function WorkCard() {
     const canCollect = c.consultingValue > 0
     return (
       <div
-        className="mb-3 flex items-center gap-3 rounded-2xl p-3"
-        style={{ background: 'var(--surface)', border: `1px solid ${WORK_ACCENT}55` }}
+        className="card mb-3 flex items-center gap-3 p-3"
+        style={{ border: `1px solid ${WORK_ACCENT}55` }}
       >
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
@@ -60,11 +60,8 @@ export function WorkCard() {
 
   return (
     <div
-      className="mb-3 flex flex-col gap-2 rounded-2xl p-3"
-      style={{
-        background: 'var(--surface)',
-        border: `1px solid ${WORK_ACCENT}55`,
-      }}
+      className="card mb-3 flex flex-col gap-2 p-3"
+      style={{ border: `1px solid ${WORK_ACCENT}55` }}
     >
       <div className="flex items-center gap-3">
         <div

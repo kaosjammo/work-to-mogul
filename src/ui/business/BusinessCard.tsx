@@ -27,13 +27,7 @@ function BusinessCardImpl({ view, accent }: Props) {
   }, [view.owned])
 
   return (
-    <div
-      className="flex flex-col gap-2 rounded-2xl p-3"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-      }}
-    >
+    <div className="card flex flex-col gap-2 p-3">
       <div className="flex items-center gap-3">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"

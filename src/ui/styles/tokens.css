@@ -32,9 +32,21 @@
   /* Layout */
   --tap: 44px; /* minimum tap target */
   --tap-lg: 56px; /* primary buttons */
-  --radius: 14px;
-  --radius-sm: 10px;
+  --radius: 16px; /* matches the shipping rounded-2xl on cards */
+  --radius-sm: 12px; /* matches rounded-xl on inner controls */
+  --radius-pill: 9999px;
   --gap: 12px;
+
+  /* Elevation — a small deliberate shadow scale so surfaces layer over the city
+     backdrop instead of reading as one flat plane. Replaces ad-hoc inline shadows. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.38);
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  /* Card surface: a whisper of top-lit gradient over --surface + a hairline top
+     highlight, so cards catch light and lift. Consumed by the shared .card utility. */
+  --surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 40%), var(--surface);
+  --hairline-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
   /* Safe-area insets (resolve to 0 on devices without notches) */
   --safe-top: env(safe-area-inset-top, 0px);
