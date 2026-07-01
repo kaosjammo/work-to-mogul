@@ -1,16 +1,22 @@
 import { money, formatDuration } from '../../engine/num'
 import { OFFLINE_CAP_MS } from '../../engine/catchUp'
 import { useUiStore } from '../../store/uiStore'
+import { useDaily } from '../../store/gameStore'
+import { claimDailyBonus } from '../../store/actions'
 import { haptic } from '../../lib/haptics'
 import { ART_GENERATED } from '../../content/artManifest'
 
 export function WelcomeBackBanner() {
   const welcome = useUiStore((s) => s.welcomeBack)
   const dismiss = useUiStore((s) => s.dismissWelcomeBack)
+  const daily = useDaily()
   if (!welcome) return null
 
+  // ONE return moment: if a daily bonus is also waiting, it's folded into this card and
+  // Collect claims both — never a second stacked modal (DailyBonusModal hides behind this).
   const collect = () => {
     haptic(24)
+    if (daily.available) claimDailyBonus()
     dismiss()
   }
 
@@ -52,13 +58,24 @@ export function WelcomeBackBanner() {
           while you were away for {formatDuration(welcome.elapsedMs / 1000)}
           {welcome.elapsedMs >= OFFLINE_CAP_MS && ' (offline earnings cap at 2h)'}
         </p>
+        {daily.available && (
+          <div
+            className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2"
+            style={{ background: 'rgba(245,197,24,0.12)', border: '1px solid var(--accent)' }}
+          >
+            <span className="text-sm font-bold">
+              🎁 Daily Bonus{daily.streak > 0 ? ` · 🔥 Day ${daily.streak + 1}` : ''}
+            </span>
+            <span className="tnum font-bold" style={{ color: 'var(--accent)' }}>+{money(daily.reward)}</span>
+          </div>
+        )}
         <button
           type="button"
           onClick={collect}
           className="mt-1 w-full rounded-xl font-bold transition active:scale-[0.98]"
           style={{ minHeight: 'var(--tap-lg)', background: 'var(--accent)', color: 'var(--accent-ink)' }}
         >
-          Collect
+          {daily.available ? 'Collect all' : 'Collect'}
         </button>
       </div>
     </div>

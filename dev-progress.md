@@ -4,6 +4,33 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## UX follow-up — merge the doubled return moment (Welcome-Back + Daily Bonus)
+
+**Analysed:** reviewer's one follow-up after the roadmap delivered — the D7 daily shipped
+as a separate `DailyBonusModal` rendered alongside `WelcomeBackBanner`, so a daily cold
+return stacked TWO full-screen overlays ("Welcome back, +$X" → then "Daily Bonus"). The
+mechanic is right; the *return moment* was doubled. This is the most-hit retention surface.
+
+**Implemented (presentation-only, no mechanic/test change):** ONE return moment. When a
+Welcome-Back is showing, the daily bonus folds into it as a "🎁 Daily Bonus · 🔥 Day N"
+section and the single button reads "Collect all" — claiming both (offline earnings are
+already applied on load; Collect also runs `claimDailyBonus`). The standalone
+`DailyBonusModal` now returns null while a Welcome-Back is present, so the two never stack;
+it still covers the no-offline case (a new day reached mid-session). Tidied the standalone
+copy so the two surfaces read distinctly (dropped its redundant "Welcome back!").
+
+**Validation:** 231 tests (unchanged — presentation only), build + lint clean. Browser-
+verified at 390px: both-available → exactly ONE overlay (merged card, "Collect all" grants
+cash + stamps the day + dismisses); daily-only (no offline) → the standalone modal still
+shows. Harness untouched.
+
+**Files:** ~`ui/shared/WelcomeBackBanner.tsx`, `ui/shared/DailyBonusModal.tsx`.
+
+**Roadmap status:** the full 7-task retention roadmap + this UX follow-up are now delivered.
+Remaining is Task 6 (incremental polish) + the optional daily streak-multiplier tuning pass.
+
+---
+
 ## Task 7 (D7) — daily return hook (the last untouched retention lever)
 
 **Analysed:** reviewer confirmed D1 reveal-cue done; D7 (a wall-clock return reason) is the

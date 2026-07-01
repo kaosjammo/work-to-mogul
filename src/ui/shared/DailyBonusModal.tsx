@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { money } from '../../engine/num'
 import { useDaily } from '../../store/gameStore'
+import { useUiStore } from '../../store/uiStore'
 import { claimDailyBonus } from '../../store/actions'
 
 /**
@@ -11,8 +12,10 @@ import { claimDailyBonus } from '../../store/actions'
  */
 export function DailyBonusModal() {
   const daily = useDaily()
+  const welcomeBack = useUiStore((s) => s.welcomeBack)
   const [dismissed, setDismissed] = useState(false)
-  if (!daily.available || dismissed) return null
+  // When a Welcome-Back is showing, it folds the daily in (one return moment) — don't stack.
+  if (welcomeBack || !daily.available || dismissed) return null
 
   return (
     <div
@@ -33,7 +36,7 @@ export function DailyBonusModal() {
           </span>
         )}
         <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-          Welcome back! Here's about 2 hours of your empire's income.
+          About 2 hours of your empire's income — come back each day to keep it going.
         </p>
         <p className="tnum text-3xl font-extrabold" style={{ color: 'var(--accent)' }}>
           +{money(daily.reward)}
