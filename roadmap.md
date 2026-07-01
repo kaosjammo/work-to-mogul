@@ -165,12 +165,17 @@ persisted → no save migration). Harness-safe by construction (the bot never cl
 `surgeMsLeft` stays 0 and first-run landmarks don't move); 14 tests green across
 rushHour/harness/balance.
 
-**⚠️ Balance + design call to resolve before extending:** the surge **stacks on** Food's
-existing passive `rush_hour: speed ×2` (still in `SIGNATURE_PERKS`), so a claimed window =
-**×6 Food speed** for 25s. Fine and bounded for one industry, but **decide the pattern now**
-for the rest: does each felt mechanic *layer on* the flat perk (power creep across 8
-industries; the old perks linger as vestigial multipliers) or *replace* it (the mechanic
-becomes the identity, perk table stays clean)? Pick one and apply consistently.
+**⚠️ Balance + design call — reviewer recommendation.** The Rush Hour surge **stacks on**
+Food's passive `rush_hour: speed ×2` (still in `SIGNATURE_PERKS`), so a claimed window =
+**×6 Food speed** for 25s. Bounded/opt-in, so fine for Food. But for the rest, **recommend:
+the felt mechanic *replaces* the flat perk, tuned so its *average* value ≈ the old
+multiplier** — e.g. Finance's `compound_interest` becomes a profit that ramps ~×1.0→×2.0 the
+longer it runs (mean ≈ the old flat ×1.5), *not* a new bonus on top of ×1.5. Why replace:
+(a) no power creep compounding across 8 industries; (b) `balance.test` monotonicity is
+trivially safe if the mean is preserved; (c) the perk table stays meaningful instead of
+vestigial. **Exception — keep-the-baseline:** where the flat perk *is* the identity (Food's
+"fast-cycle" ×2), layer the active bonus on top but keep it modest, so idle players still
+get the baseline and active players get the spike. Apply this rule consistently.
 
 **Acceptance criteria — remaining**
 - [x] An **active-window** mechanic (Food/`rush_hour`), deterministic + harness-safe + mobile cue. ✅ in flight.
