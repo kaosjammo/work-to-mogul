@@ -49,6 +49,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     golden: initialGoldenState(),
     rushHour: initialRushHourState(),
     financeCompoundMs: 0,
+    quantumPhaseMs: 0,
     buyMode: 'x1',
     activeTab: 'business',
     activeIndustryTab: 'food',

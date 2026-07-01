@@ -102,7 +102,9 @@ export const INDUSTRIES: Record<IndustryId, IndustryDef> = {
     // frontier for deeply-prestiged empires beyond the standard arc.
     businessIds: ['quantum_computer', 'antimatter', 'wormhole', 'multiverse'],
     bonus: {
-      signaturePerkId: 'moonshot',
+      // Superposition: profit collapses into periodic jackpots — Quantum's own identity
+      // (no longer sharing Space's moonshot). See engine/economy quantumSuperpositionMult.
+      signaturePerkId: 'superposition',
       preferredChannels: ['profitMult', 'critChance'],
     },
   },

@@ -231,6 +231,7 @@ export interface GameState {
   golden: GoldenState
   rushHour: RushHourState
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
+  quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode
   activeTab: TabId
   activeIndustryTab: IndustryId

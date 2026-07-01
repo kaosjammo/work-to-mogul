@@ -4,6 +4,40 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 4 (industry identity) — Quantum "Superposition" (3rd mechanic; slice complete)
+
+**Analysed:** reviewer confirmed Quantum is the last slice piece — it was still sharing
+Space's `moonshot`, so the 8th industry had no identity of its own.
+
+**Implemented (finished vertical slice):** Quantum's `superposition` — profit sits at ×1
+but on a DETERMINISTIC cadence "collapses" into a ×9 jackpot for a 7.5s window every 60s
+(mean ≈ the old moonshot ×2 → no creep; no RNG). It REPLACES the shared moonshot for
+Quantum (`industries.ts` signaturePerkId `moonshot` → `superposition`; Space keeps
+moonshot); `industryMultipliers` skips it in the flat 500-owned block, applying the
+collapse mult instead. Transient `quantumPhaseMs` oscillator (wraps each cycle in
+`applyTick` while Quantum owned; no save migration). A `⚛️ Superposition` cue on the
+Quantum tab flips between "stable ×1" and "💥 COLLAPSE ×9". This is the THIRD distinct
+mechanic *shape*: Food tap-window (active) · Finance slow ramp (passive-dynamic) ·
+Quantum fast oscillation (auto-jackpot).
+
+**Validation:** 218 tests (+3: collapse/stable, Quantum-only fold w/ Space untouched,
+mean ≈ its SIGNATURE_PERKS value), build + lint + content.test green. **Harness
+byte-identical** ($4.08Qi / 156m / 7 industries) — harness-safe by construction (the bot
+never reaches Quantum, entry $10Qi). Browser-verified: cue reads "💥 COLLAPSE ×9" then
+"stable ×1".
+
+**Task 4 slice COMPLETE** (Food + Finance + Quantum = three industries, three distinct
+felt mechanic shapes). Remaining Task 4 industries (Retail/Tech/Logistics/Energy/Space)
+are backlog — the pattern is proven; extend when prioritised.
+
+**Files:** ~`types/domain.ts`, `engine/economy.ts` (+`economy.test.ts`), `engine/simulate.ts`,
+`content/industries.ts`, `store/{initialState,buildView,gameStore}.ts`, `ui/business/BusinessesScreen.tsx`.
+
+**Next:** Task 5 (business event cards) or extend Task 4 to more industries — per the
+next roadmap review.
+
+---
+
 ## Task 4 (industry identity) — Finance "Compound Interest" (2nd mechanic, passive-dynamic)
 
 **Analysed:** reviewer's firm "layer-vs-replace" recommendation — the felt mechanic should

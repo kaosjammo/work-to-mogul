@@ -10,6 +10,12 @@ import {
   economyMultipliers,
   financeCompoundMult,
   FINANCE_COMPOUND_RAMP_MS,
+  quantumCollapsing,
+  quantumSuperpositionMult,
+  SUPERPOSITION_CYCLE_MS,
+  SUPERPOSITION_COLLAPSE_MS,
+  SUPERPOSITION_COLLAPSE_MULT,
+  SIGNATURE_PERKS,
 } from './economy'
 import { resolveBusiness } from './resolveBusiness'
 import { BUSINESSES } from '../content/businesses'
@@ -141,6 +147,36 @@ describe('Finance Compound Interest — the passive-dynamic signature', () => {
     s.financeCompoundMs = FINANCE_COMPOUND_RAMP_MS // full compound → ×2
     expect(economyMultipliers(s, BUSINESSES.apartments).profit).toBeCloseTo(financeBefore * 2)
     expect(economyMultipliers(s, lemonade).profit).toBeCloseTo(foodBefore) // Food unaffected
+  })
+})
+
+describe('Quantum Superposition — the deterministic collapse signature', () => {
+  it('collapses to ×MULT inside the window, ×1 outside (deterministic, no RNG)', () => {
+    const s = initialGameState(0)
+    s.quantumPhaseMs = 0 // start of cycle → collapsing
+    expect(quantumCollapsing(s)).toBe(true)
+    expect(quantumSuperpositionMult(s)).toBe(SUPERPOSITION_COLLAPSE_MULT)
+    s.quantumPhaseMs = SUPERPOSITION_COLLAPSE_MS + 1000 // past the window → stable
+    expect(quantumCollapsing(s)).toBe(false)
+    expect(quantumSuperpositionMult(s)).toBe(1)
+  })
+
+  it('folds into QUANTUM profit only — Space keeps its own moonshot', () => {
+    const s = initialGameState(0)
+    s.quantumPhaseMs = SUPERPOSITION_COLLAPSE_MS + 1000 // stable
+    const quantumStable = economyMultipliers(s, BUSINESSES.quantum_computer).profit
+    const spaceStable = economyMultipliers(s, BUSINESSES.satellite).profit
+    s.quantumPhaseMs = 0 // collapse
+    expect(economyMultipliers(s, BUSINESSES.quantum_computer).profit).toBeCloseTo(
+      quantumStable * SUPERPOSITION_COLLAPSE_MULT,
+    )
+    expect(economyMultipliers(s, BUSINESSES.satellite).profit).toBeCloseTo(spaceStable) // Space untouched
+  })
+
+  it('mean over a cycle ≈ its SIGNATURE_PERKS value (no creep vs the old moonshot)', () => {
+    const collapseFrac = SUPERPOSITION_COLLAPSE_MS / SUPERPOSITION_CYCLE_MS
+    const mean = (1 - collapseFrac) * 1 + collapseFrac * SUPERPOSITION_COLLAPSE_MULT
+    expect(mean).toBeCloseTo(SIGNATURE_PERKS.superposition.profit ?? 0)
   })
 })
 

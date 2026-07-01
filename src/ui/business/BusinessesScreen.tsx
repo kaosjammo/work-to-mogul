@@ -1,4 +1,4 @@
-import { useGameStore, useActiveIndustry, useFinanceCompound } from '../../store/gameStore'
+import { useGameStore, useActiveIndustry, useFinanceCompound, useQuantumSuperposition } from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money, formatEta } from '../../engine/num'
@@ -63,12 +63,36 @@ function FinanceCompoundCue({ pct, theme }: { pct: number; theme: string }) {
   )
 }
 
+// Quantum's signature cue — profit sits stable, then "collapses" into a jackpot.
+function QuantumSuperpositionCue({ collapsing, mult, theme }: { collapsing: boolean; mult: number; theme: string }) {
+  return (
+    <div
+      className="mb-3 rounded-2xl px-3 py-2"
+      style={{
+        background: collapsing ? 'rgba(244,63,94,0.14)' : 'var(--surface-2)',
+        border: `1px solid ${collapsing ? theme : 'var(--border)'}`,
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span style={{ color: 'var(--text-dim)' }}>⚛️ Superposition</span>
+        <span className="tnum font-bold" style={{ color: collapsing ? theme : 'var(--text-faint)' }}>
+          {collapsing ? `💥 COLLAPSE ×${mult}!` : 'stable ×1'}
+        </span>
+      </div>
+      <div className="mt-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
+        Quantum profit periodically collapses into a jackpot — watch for the spike.
+      </div>
+    </div>
+  )
+}
+
 export function BusinessesScreen() {
   const activeId = useActiveIndustry()
   const ind = INDUSTRIES[activeId]
   const industryView = useGameStore((s) => s.industries.find((i) => i.id === activeId))
   const businesses = useGameStore((s) => s.businesses)
   const financeCompound = useFinanceCompound()
+  const quantumSuperposition = useQuantumSuperposition()
 
   if (!ind || !industryView) return null
 
@@ -98,6 +122,14 @@ export function BusinessesScreen() {
 
       {activeId === financeCompound.industryId && industryView.ownsAny && (
         <FinanceCompoundCue pct={financeCompound.pct} theme={ind.theme} />
+      )}
+
+      {activeId === quantumSuperposition.industryId && industryView.ownsAny && (
+        <QuantumSuperpositionCue
+          collapsing={quantumSuperposition.collapsing}
+          mult={quantumSuperposition.mult}
+          theme={ind.theme}
+        />
       )}
 
       {hasAnyBusiness && (

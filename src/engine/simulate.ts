@@ -4,7 +4,13 @@
 import type { GameState, UnlockCondition } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
 import { resolveBusiness } from './resolveBusiness'
-import { totalOwnedInIndustry, ownsFinance, FINANCE_COMPOUND_RAMP_MS } from './economy'
+import {
+  totalOwnedInIndustry,
+  ownsFinance,
+  FINANCE_COMPOUND_RAMP_MS,
+  ownsQuantum,
+  SUPERPOSITION_CYCLE_MS,
+} from './economy'
 import { applyCareerTick } from './career'
 import { moraleEquilibrium, auditReduction } from './employees/composition'
 import { checkAchievements } from './achievements'
@@ -110,6 +116,10 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
       FINANCE_COMPOUND_RAMP_MS,
       (state.financeCompoundMs ?? 0) + dtMs,
     )
+  }
+  // Quantum's Superposition phase advances while Quantum is owned (wraps each cycle).
+  if (ownsQuantum(state)) {
+    state.quantumPhaseMs = ((state.quantumPhaseMs ?? 0) + dtMs) % SUPERPOSITION_CYCLE_MS
   }
   checkUnlocks(state)
   checkAchievements(state)

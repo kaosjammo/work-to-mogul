@@ -105,7 +105,11 @@ export const SIGNATURE_PERKS: Record<string, { profit?: number; speed?: number }
   compound_interest: { profit: 2 }, // Finance — wealth compounds over time (ramp cap)
   just_in_time: { speed: 2 }, // Logistics — lean, fast turnaround
   grid_surge: { profit: 1.5 }, // Energy — peak-demand pricing
-  moonshot: { profit: 2 }, // Space / Quantum — high-variance payoff
+  moonshot: { profit: 2 }, // Space — high-variance payoff
+  // Quantum's `superposition` is a FELT mechanic (see quantumSuperpositionMult): profit
+  // sits at ×1 but periodically "collapses" into a big jackpot. This value is the mean
+  // over a cycle (≈ the old shared moonshot ×2); read by the mechanic, not applied flat.
+  superposition: { profit: 2 }, // Quantum — deterministic collapse jackpots (mean ×2)
 }
 
 // ----- Late-game pacing dampener -----
@@ -151,6 +155,34 @@ export function ownsFinance(state: GameState): boolean {
   return false
 }
 
+// ----- Quantum's signature: Superposition (deterministic collapse jackpots) -----
+// Quantum profit normally sits at ×1, but on a DETERMINISTIC cadence it "collapses"
+// into a big ×COLLAPSE jackpot for a short window — a high-variance-*feeling* rhythm
+// (no RNG). Duty cycle is tuned so the mean over a cycle ≈ the old shared moonshot ×2,
+// giving Quantum its own identity instead of borrowing Space's. A third distinct
+// mechanic *shape* (fast auto-oscillation) vs Food's tap-window and Finance's slow ramp.
+export const QUANTUM_INDUSTRY_ID = 'quantum'
+export const SUPERPOSITION_CYCLE_MS = 60_000 // one collapse cycle
+export const SUPERPOSITION_COLLAPSE_MS = 7_500 // the jackpot window within a cycle (12.5%)
+export const SUPERPOSITION_COLLAPSE_MULT = 9 // ×9 during a collapse → mean ≈ ×2 over the cycle
+
+/** Is Quantum currently in a "collapse" jackpot window? */
+export function quantumCollapsing(state: GameState): boolean {
+  return (state.quantumPhaseMs ?? 0) < SUPERPOSITION_COLLAPSE_MS
+}
+
+/** Quantum's current profit multiplier — ×COLLAPSE during a collapse, ×1 otherwise. */
+export function quantumSuperpositionMult(state: GameState): number {
+  return quantumCollapsing(state) ? SUPERPOSITION_COLLAPSE_MULT : 1
+}
+
+/** Does the player own any Quantum business? (Gate for advancing the phase.) */
+export function ownsQuantum(state: GameState): boolean {
+  const ids = INDUSTRIES[QUANTUM_INDUSTRY_ID]?.businessIds ?? []
+  for (const id of ids) if ((state.businesses[id]?.owned ?? 0) > 0) return true
+  return false
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
 export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
@@ -168,13 +200,17 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
     // is skipped here — it's a time-ramp mechanic applied below, not a flat 500-owned bonus.
     const perkId = ind?.bonus.signaturePerkId
     const perk = perkId ? SIGNATURE_PERKS[perkId] : undefined
-    if (perk && perkId !== 'compound_interest') {
+    // compound_interest (Finance) and superposition (Quantum) are FELT mechanics applied
+    // below, not flat 500-owned bonuses. Everything else applies here as before.
+    if (perk && perkId !== 'compound_interest' && perkId !== 'superposition') {
       profit *= perk.profit ?? 1
       speed *= perk.speed ?? 1
     }
   }
   // Finance's signature: income compounds the longer the industry has been running.
   if (industryId === FINANCE_INDUSTRY_ID) profit *= financeCompoundMult(state)
+  // Quantum's signature: profit periodically collapses into a jackpot.
+  if (industryId === QUANTUM_INDUSTRY_ID) profit *= quantumSuperpositionMult(state)
   return { profit, speed }
 }
 
