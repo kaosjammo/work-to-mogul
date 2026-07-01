@@ -185,11 +185,12 @@ export function prestige(): void {
   if (prestigeReset(s)) {
     haptic(45) // ascension — a big, satisfying reset
     playSound('prestige')
-    const msgs: string[] = []
-    // Headline payoff: the tokens this ascension banked (base + any milestone bonus).
+    // Headline payoff: the tokens this ascension banked (base + any milestone bonus) —
+    // shown as a full-screen celebration beat, the game's biggest moment.
     const gained = (s.prestige.totalPoints ?? 0) - tokensBefore
-    if (gained > 0) msgs.push(`✦ Empire ascended! +${gained} Empire Token${gained === 1 ? '' : 's'}`)
-    // Plus any ascension-count milestones that just paid out.
+    useUiStore.getState().setAscension(gained)
+    // Any ascension-count milestones that just paid out ride the toast queue.
+    const msgs: string[] = []
     for (const id of s.prestigeMilestonesClaimed) {
       if (before.has(id)) continue
       const name = PRESTIGE_MILESTONE_NAME[id]

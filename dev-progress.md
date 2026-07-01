@@ -4,6 +4,35 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 6 (feel) — ascension celebration (the last clear feel gap)
+
+**Analysed:** reviewer flagged this as the one remaining clear polish — prestige is the
+game's biggest beat but the run reset *quietly* (just toasts + the new prestige sound). A
+brief full-screen moment makes the reset feel earned.
+
+**Implemented (finished vertical slice, UI-only):** on a successful ascend the `prestige`
+action now fires a full-screen `AscensionCelebration` — "✦ Empire Ascended! · +N Empire
+Tokens" with the founder mascot + profit-burst art, a "Rise again" one-tap dismiss (or tap
+backdrop). Reuses the Welcome-Back overlay pattern (verified-clean at 375px) + the existing
+`prestige` sound + haptic(45) that already fire. New transient `ascension` UI state
+(`setAscension`/`dismissAscension`, not persisted); the old "Empire ascended!" toast is
+replaced by the modal, while ascension-milestone toasts still ride the queue.
+
+**Validation:** 236 tests (unchanged — presentation only), build + lint clean. **Harness
+inert by construction:** the sim calls `prestigeReset` directly, never the action, so
+`setAscension` never fires in `harness`/`progressionLoop`. Browser-verified: the celebration
+shows "Empire Ascended! · +7 Empire Tokens", "Rise again" dismisses it, no console errors.
+
+**Files:** +`ui/shared/AscensionCelebration.tsx`; ~`store/uiStore.ts`, `store/actions.ts`,
+`App.tsx`.
+
+**Roadmap status:** with this, the reviewer's one remaining clear polish is done — the
+retention roadmap + all its depth/polish follow-ups are delivered. Everything left in the
+backlog (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty XP) is
+optional; the real next lever is **live player signal**, beyond this docs loop.
+
+---
+
 ## Task 6 (feel) — sound layer (the last feel gap)
 
 **Analysed:** reviewer promoted a restrained SFX layer as the one clearly-missing feel

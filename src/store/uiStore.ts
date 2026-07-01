@@ -28,6 +28,9 @@ interface UiStore {
   welcomeBack: WelcomeBack | null
   setWelcomeBack: (w: WelcomeBack) => void
   dismissWelcomeBack: () => void
+  ascension: { tokens: number } | null // a just-completed prestige, for the celebration overlay
+  setAscension: (tokens: number) => void
+  dismissAscension: () => void
   celebrations: string[]
   pushCelebrations: (msgs: string[]) => void
   shiftCelebration: () => void
@@ -53,6 +56,9 @@ export const useUiStore = create<UiStore>((set) => ({
   welcomeBack: null,
   setWelcomeBack: (welcomeBack) => set({ welcomeBack }),
   dismissWelcomeBack: () => set({ welcomeBack: null }),
+  ascension: null,
+  setAscension: (tokens) => set({ ascension: { tokens } }),
+  dismissAscension: () => set({ ascension: null }),
   celebrations: [],
   pushCelebrations: (msgs) => set((s) => ({ celebrations: [...s.celebrations, ...msgs] })),
   shiftCelebration: () => set((s) => ({ celebrations: s.celebrations.slice(1) })),
