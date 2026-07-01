@@ -298,6 +298,20 @@ meaningfully different" rule).
 Everything else (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty
 XP) stays optional in the backlog — do only if a playtest or metric asks for it.
 
+### When you ship: what to watch (the observation agenda that names the next task)
+
+The build phase is done; this is the *measure* phase's checklist. Each signal maps to a system
+we built and to the fix if it's weak — so the data, not guesswork, picks what's next:
+
+| Watch | Healthy looks like | If weak → likely fix |
+|---|---|---|
+| **Onboarding funnel (D1)** — fresh player → 1st business → 1st automation → 2nd industry | Reaches automation in the first session (harness: <2 min to 1st business) | Players stall pre-automation → strengthen the "hire to automate" prompt |
+| **Employee depth used?** — do players open Staff & pick specs, or just Auto-Assign and forget | A meaningful % change/level specs, reach L5/L10 | Ignored → surface the spec *choice* harder, or it's over-built (leave it) |
+| **Daily return rate + streak length (D7)** — % back next day; streak distribution | Streaks routinely reach Day 3–7 | Streaks die at 1–2 → pull the first milestone earlier (Day 2), add streak-insurance |
+| **Prestige adoption** — do players ascend, and more than once? | Ascend #2 happens; run #2 feels faster (the slope re-tune) | Few ascend → the ascend prompt/why isn't legible; one-and-done → slope still too flat |
+| **Active-beat engagement** — Rush-Hour taps, event-card picks, Golden claims | Players tap the windows/cards | Ignored → cue not noticeable, or the reward isn't worth the interrupt |
+| **Sound adoption** — % who enable it (default off) | Non-trivial opt-in | Near-zero → the enable prompt is missing/buried |
+
 *Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
 test-guarded) — keep an eye it reads as a signature, not a slot machine.
 
