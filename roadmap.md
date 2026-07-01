@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **218 tests / 33 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **225 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -40,30 +40,21 @@ Tokens → run again, faster.
 
 ## Retention diagnosis (what's actually limiting D1/D7)
 
-The prestige loop and employee depth — the two big gaps from earlier passes — are now
-**addressed**. What's left limiting long-term stickiness is **horizontal sameness**:
+All six core systems are now built. The **mid-to-late game is deep, differentiated, and
+decision-rich** — the earlier gaps are closed:
 
-1. ✅ **Prestige loop — fixed.** Now both *rewarding* (the slope re-tune: run output
-   climbs run-over-run, Mastery sink reachable, `748d3c1`) and *varied* (founder perks:
-   a real per-run trade-off decision, `79ecc94`), all guarded by the multi-ascension
-   harness. The "thin second run" is no longer thin. Stay vigilant via `progressionLoop`.
-2. ✅ **Employees — now a decision.** The L10 second-spec "which two?" build with an
-   opportunity cost (`3b2daf4`) turns "hire & forget" into an ongoing choice.
-3. ✅ **Industry sameness — addressed by a 3-mechanic slice.** Food (active window),
-   Finance (passive ramp), and Quantum (passive spike) now *play* differently, not just
-   read differently (`ffc8fe5`/`f09ef29`/`5cea210`). 5 industries still have flat perks,
-   but the pattern is proven and the worst flatness is broken.
-4. ⬅ **The game is light on *active decisions* — the new top gap.** Look at what's now
-   in place: prestige (a per-run perk choice, then idle), employees (a build choice, then
-   idle), industries (mostly *passive* mechanics — only Food's Rush Hour asks for a tap).
-   Between those set-up moments, the player mostly *watches*. There's no recurring "a
-   decision is waiting" hook that makes opening the app rewarding on its own. **Business
-   event cards (Task 5)** fill exactly this — a periodic opportunity/crisis choice across
-   all industries.
+1. ✅ **Prestige loop** — rewarding (slope re-tune `748d3c1`) *and* varied (founder perks `79ecc94`), harness-guarded.
+2. ✅ **Employees** — the L10 "which two?" spec build is a real ongoing choice (`3b2daf4`).
+3. ✅ **Industry identity** — 3-mechanic slice (Food/Finance/Quantum) *plays* differently, playtested on-device (`ffc8fe5`/`f09ef29`/`5cea210`).
+4. ✅ **Active decisions** — event cards add a recurring "a decision is waiting" beat across all industries (`6d5c394`).
 
-Diagnosis in one line: **vertical depth (prestige, employees) and horizontal identity
-(industry slice) are now solid; what's thin is *moment-to-moment active decisions* — add
-recurring event-card choices (Task 5) so idle stretches have a reason to check in.**
+**The gap has moved from *depth* to the *edges of the session* — D1 and D7:**
+- **D1 (first session):** every review + playtest has been mid/late game. Whether a *brand-new* player understands the loop in the first 5 minutes is **unassessed**. For a mobile idle game this is the single biggest retention lever, and it's a blind spot.
+- **D7 (return reason):** all the recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so nothing *pulls* a lapsed player back tomorrow. No daily hook exists.
+
+Diagnosis in one line: **the game is deep and polished in the middle; the untouched
+frontier is the *first session* (does a new player get it?) and a *daily return reason* —
+those are the next retention gains, not more mid-game systems.**
 
 ---
 
@@ -75,11 +66,13 @@ recurring event-card choices (Task 5) so idle stretches have a reason to check i
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
 | **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
-| **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches — the game's mechanics are now 2/3 *passive*, so this adds the missing active-decision layer across all industries | **NEXT — build now** (criteria below) |
-| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
+| **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches | **✅ DONE** (`6d5c394`, 225 tests) — 4 trade-off cards, deterministic, harness byte-identical, modal playtested |
+| 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Incremental (ongoing) |
+| **7** | **Onboarding / first-session (D1) + daily return hooks (D7)** | The 6 core systems are built + mid/late-game is polished — but the *first 5 minutes* and *reason-to-return-tomorrow* have never been reviewed. This is the next real retention frontier | **⬅ NEW — highest-value next** (see below) |
 
-Do **not** add a 9th industry / raw content tier — the existing systems aren't yet
-*differentiated* enough to justify more of them (see Deferred).
+**The original 6-task roadmap is essentially complete** (1–5 done, 6 is ongoing polish).
+Do **not** add a 9th industry / raw content tier. The next retention gains are D1/D7, not
+more mid-game systems — see the new "Next highest-value task".
 
 ---
 
@@ -213,38 +206,53 @@ linger, not early Retail/Tech.
 
 ---
 
-## Next highest-value task → Task 5: Business event cards
+## Task 5 ✅ DONE — Business event cards (`6d5c394`)
 
-**Why now (not more industry mechanics):** the industry slice proves differentiation, but 2
-of its 3 mechanics are *passive* — across the whole game, **Food's Rush Hour is the only
-recurring active decision.** Idle players open the app and mostly watch. Event cards add the
-missing layer: a periodic **opportunity/crisis with a real 2-option choice** that applies to
-*any* industry, so it lifts the flat industries too without bespoke per-industry work. This
-is a *different* retention lever (active decision beats), not more of the same.
+The active-decision layer shipped to spec: **4 cards** (Supply Glut, Investor Offer, Surprise
+Audit, Viral Moment — opportunity/crisis/gamble/trade), on a deterministic 5-min cadence
+(golden.ts tick-counter + `nextIndex` deck rotation, **no RNG**), gated on `automatedIncome > 0`
+(no decision offered before there's income worth deciding over), bounded transient effects
+layered on top (base curve untouched), data-driven `eventCards.ts` + a `content.test` guard,
+and an `EventCardModal`. **Harness byte-identical** (the dev verified $4.08Qi / 156m / 7
+industries unchanged); suite green at **225**.
 
-**Acceptance criteria (thin, harness-safe, data-driven)**
-- [ ] A card surfaces on a **deterministic cadence** — reuse the `golden.ts`/`rushHour.ts` tick-counter (a `cardCooldownMs` + counter), **no RNG in the spawn or the effect** so `harness`/`balance`/`progressionLoop` stay stable. Card *selection* from the deck may rotate by a deterministic index (like the contract board's `nextIndex`), not `Math.random`.
-- [ ] Each card is a **genuine 2-option choice with a trade-off**, e.g. *Supply glut* — [Stockpile: −cash now, +profit for 60s] vs [Sell off: +cash now, −speed for 60s]; *Investor offer* — [Take the deal: instant cash, skip next Golden] vs [Decline: keep the Golden]. Both options should be *situationally* better — no dominant pick.
-- [ ] **Effects are bounded + transient** (short timed buffs/debuffs or one-off cash), layered on top like Rush Hour/founder perks — **never touch the base curve** (monotonicity stays green). Resolve/expire deterministically.
-- [ ] **Harness-safe:** the greedy bot ignores cards (never picks), so pacing is unchanged — same pattern as Golden Deals. Confirm `harness.test.ts` + `progressionLoop` unmoved.
-- [ ] **Data-driven + tested:** a `CARDS` table (id, prompt, 2 options, effects) + a `content.test` guard that every option's effect is wired (dead-perk history — `1ee29c1`). Save-safe: any persisted card state defaults cleanly on old saves.
-- [ ] **Mobile:** the card is a one-tap-per-option modal at 375px with clear effect text; dismissible; doesn't block the idle loop behind it.
+**Modal playtested on-device (dev bridge):** forcing `supply_glut` renders "Supply Glut ·
+OPPORTUNITY · 15s" with flavor + two genuine trade-off options — *Stockpile* (pay 30s income
+→ +60% profit 60s) vs *Sell* (+40s income → −30% speed 60s), no dominant pick. Clicking
+Stockpile applied `profitMult 1.6` for 60s and cleared the offer. ✅ (Couldn't pixel-measure
+the modal at 375px — the preview tab went `hidden` (0×0 viewport) mid-session — but content +
+resolution are correct and the layout is `w-full` buttons in a `max-w-sm` card. Worth a
+visible-tab layout check next time the server's up.)
 
-Scope guard: **3–5 cards** to prove the loop (opportunity + crisis + a neutral gamble), not a
-big deck. Reuse the Golden-Deal spawn + the contract-board data pattern; ship the smallest
-version that makes "should I open the app? there might be a decision waiting" true.
+---
 
-**Playtest gate ✅ PASSED (reviewer, on-device at 375px, dev bridge).** All three industry
-cues fire and render legibly, no overflow, no console errors:
-- 🍔 **Rush Hour** — a tappable **238×53px** button "Food ×3 speed · tap! (11s)" (clear effect + live countdown).
-- 📈 **Compound Interest** — passive cue "+50% profit" (shows the live ramp value).
-- ⚛️ **Superposition** — passive cue "💥 COLLAPSE ×9!" during the spike window.
+## Next highest-value task → Onboarding (D1) + daily return hooks (D7)
 
-The mid/late game genuinely *feels* differentiated now — the mechanics are visible and read
-well on mobile. So **Task 5 (event cards) is confirmed as next**, not a late-tier industry
-mechanic. (Balance note: Quantum's spike shows ×9 — a dramatic swing; the mean-preservation
-is test-guarded, but keep an eye that the ×9 flash doesn't feel like a slot machine vs a
-signature.)
+**The 6-task roadmap is essentially built** (1–5 done; 6 is ongoing polish). Every review so
+far — and every playtest — has been *mid/late game*. The two biggest retention levers for a
+mobile idle game have **never been looked at**, and they're now the highest-value work:
+
+1. **First-session / onboarding (D1).** Does a brand-new player (fresh save, no prestige)
+   understand the loop in the first 2–5 minutes? Work → first business → automate → industries.
+   The game has a first-run hint, but the *whole* onboarding arc is unassessed. **Next reviewer
+   action: playtest a FRESH save** (`__game` from a cleared state) and audit the first 5 min for
+   clarity, first "aha", and time-to-first-automation.
+2. **Daily return hook (D7).** There is currently **no reason tied to wall-clock to come back
+   tomorrow** — contracts/golden deals refresh on play-time, not real time. This is the
+   long-deferred "daily/weekly time-gated content" item. Even a light **daily bonus / daily
+   contract** (claimable once per real day, deterministic) gives a reason to reopen.
+
+**Acceptance criteria — pick D1 first (cheaper, higher-certainty win)**
+- [ ] **Onboarding audit + fixes:** from a fresh save, the first business + first automation are reachable in ≲2 min with clear prompts; each core system (industries, staff, upgrades, prestige) is *introduced* the first time it's relevant (a one-line contextual hint), not dumped at once. No new tutorial framework — reuse the existing hint/celebration components.
+- [ ] **Daily hook (if D1 is solid):** a once-per-real-day claimable (bonus cash scaled to income, or a free Golden Deal / a daily event card). Uses `Date`-based day-bucketing **persisted in the save**; must be **harness-safe** (the sim/bot never advances wall-clock, so it's inert in tests) and not exploitable by clock-changing (accept minor abuse; no server). Mobile: a claimable badge on open.
+
+**Task 6 (mobile polish / celebrations / sound / haptics)** stays a parallel *incremental*
+track — feel is already strong (playtests confirm clean cues, tap targets, no overflow), so
+it's small ongoing wins (e.g. sound behind the FX toggle, an ascension celebration), not a
+blocking task.
+
+*Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
+test-guarded) — keep an eye it reads as a signature, not a slot machine.
 
 ---
 
