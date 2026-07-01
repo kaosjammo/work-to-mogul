@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mobile QA — completed the app-wide 375px tap-target audit (no change warranted)
+
+**Analysed:** the prior tap-target passes covered action buttons on
+AssignmentSheet/EmployeesScreen/UpgradesScreen (`da223e9`) and the two overlay dismiss buttons
+(`9ecf504`). Two screens had **never** been tap-target audited — **Prestige/Ascend and Stats** —
+and those carry real *action* buttons (talent buys, founder-perk picks, contract Claim). Closed
+that gap by measuring every visible interactive control on both screens (plus a re-sweep of the
+main Business screen) at 375px via DOM `getBoundingClientRect`.
+
+**Result — the app is tap-target-clean under the documented policy:**
+- **Business screen:** 22 of 23 controls ≥44px. Prestige/Ascend: **0** undersized. Stats: **0**
+  undersized. Combined with `da223e9` + `9ecf504`, **every screen and overlay is now audited.**
+- **The lone sub-44px element anywhere is the BusinessCard staff info-chip** (94×30px). Left
+  **unchanged, deliberately** — this is the exact case the documented policy from `da223e9`
+  excludes ("dense secondary chips left as-is"): it's a compact pill packing 👤count + ⚙️ +
+  profit%/speed%/crit%/focus%/synergy, the plan mandates "ONE **compact** staff chip" on the
+  card, it carries a full `aria-label` (`938dd54`), and it has larger redundant paths (the Staff
+  tab always; the "Assign an Operator" button on manual cards). Forcing 44px would either bloat
+  the compact card or create a hit-area overlapping the dense info rows directly below it (★
+  milestone / ⏳ affordability) — a usability regression. Flagged here for the reviewer rather
+  than changed, since overriding documented design intent is a reviewer call.
+
+**Validation:** verification-only — no code touched, 236 tests still green, build/lint unaffected.
+This entry records the completed audit so the thread is closed and the staff-chip decision isn't
+re-litigated by a future loop.
+
+**Files:** none (audit + decision log only).
+
+---
+
 ## Mobile QA — 375px overlay audit + two sub-44px tap-target fixes
 
 **Analysed:** the reviewer left two overlays flagged for a 375px device check they couldn't
