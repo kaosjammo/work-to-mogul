@@ -1082,7 +1082,10 @@ export function buildView(
     buyMode: state.buyMode,
     activeTab: state.activeTab,
     activeIndustryTab: state.activeIndustryTab,
-    prestige: state.prestige,
+    // Copy — never hand the store the LIVE engine object (the tick mutates it in
+    // place, so useShallow subscribers would see an unchanged reference and skip
+    // re-renders for prestige-field changes).
+    prestige: { ...state.prestige, talents: { ...state.prestige.talents } },
     prestigePending: pendingTokens,
     prestigeUnlocked,
     prestigeNextTokenAt: nextTokenLifetime(state),

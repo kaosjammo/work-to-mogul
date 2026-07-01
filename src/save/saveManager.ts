@@ -4,10 +4,32 @@
 //  private mode / quota can throw) so the game keeps running in-memory.
 // ============================================================
 import { getEngineState, setEngineState } from '../engine/engineState'
+import { resetPublishTracking } from '../loop/publisher'
 import { serialize, deserialize, SAVE_KEY, type SaveEnvelope } from './serialize'
 
 const AUTOSAVE_MS = 20_000
 let timer: ReturnType<typeof setInterval> | null = null
+let listenersAttached = false
+// While another tab owns the game (tab-guard takeover), this tab must not write
+// the save — its state is stale and a late write would clobber the active tab.
+let savingPaused = false
+
+export function pauseSaving(): void {
+  savingPaused = true
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
+export function resumeSaving(): void {
+  savingPaused = false
+  startAutosave()
+}
+
+export function isSavingPaused(): boolean {
+  return savingPaused
+}
 
 // Optional hook fired after every successful local save (used by cloud sync to
 // piggyback an upload on autosave). Decoupled so the engine never imports cloud.
@@ -32,6 +54,7 @@ export function loadGame(): boolean {
 }
 
 export function saveGame(): void {
+  if (savingPaused) return // another tab owns the game — never clobber its save
   try {
     localStorage.setItem(SAVE_KEY, serialize(getEngineState(), Date.now()))
   } catch {
@@ -66,6 +89,9 @@ export function applyEnvelope(obj: unknown): boolean {
   const state = deserialize(JSON.stringify(obj))
   if (!state) return false
   setEngineState(state)
+  // Re-sync toast tracking to the restored state — without this, a cloud restore
+  // with more unlocked achievements queues a toast (+ haptic) for every OLD unlock.
+  resetPublishTracking()
   saveGame()
   return true
 }
@@ -84,8 +110,9 @@ export function summarizeEnvelope(obj: unknown): SaveSummary | null {
 }
 
 export function startAutosave(): void {
-  if (timer) return
-  timer = setInterval(saveGame, AUTOSAVE_MS)
+  if (!timer && !savingPaused) timer = setInterval(saveGame, AUTOSAVE_MS)
+  if (listenersAttached) return // resumeSaving() re-enters — never stack listeners
+  listenersAttached = true
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') saveGame()
   })

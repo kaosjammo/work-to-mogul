@@ -45,12 +45,16 @@ export function purchase(state: GameState, businessId: BusinessId, qty: number):
   return true
 }
 
-/** Start a manual cycle on tap. No-op when automated (rule #10) or idle-invalid. */
-export function tapBusiness(state: GameState, businessId: BusinessId): void {
+/** Start a manual cycle on tap. No-op when automated (rule #10), idle-invalid, or
+ *  already running. Returns whether a cycle actually STARTED — the UI must only
+ *  show payout feedback for taps that did something. */
+export function tapBusiness(state: GameState, businessId: BusinessId): boolean {
   const def = BUSINESSES[businessId]
   const bs = state.businesses[businessId]
-  if (!def || !bs || !bs.unlocked || bs.owned <= 0) return
+  if (!def || !bs || !bs.unlocked || bs.owned <= 0) return false
   const r = resolveBusiness(state, def)
-  if (r.isAutomated) return
-  if (bs.cycleProgressMs <= 0) bs.cycleProgressMs = START_EPSILON
+  if (r.isAutomated) return false
+  if (bs.cycleProgressMs > 0) return false // already running — a tap changes nothing
+  bs.cycleProgressMs = START_EPSILON
+  return true
 }

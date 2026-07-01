@@ -1,5 +1,6 @@
 import type { BusinessDef } from '../../types/domain'
 import { BUSINESSES } from '../../content/businesses'
+import { money } from '../../engine/num'
 import { Icon } from '../shared/Icon'
 import { businessArt } from '../shared/art'
 
@@ -11,7 +12,7 @@ function unlockText(def: BusinessDef): string {
     case 'industryProgress':
       return `Own ${u.totalOwned} across the industry`
     case 'cash':
-      return `Reach $${u.amount}`
+      return `Reach ${money(u.amount)}`
     case 'free':
       return ''
   }

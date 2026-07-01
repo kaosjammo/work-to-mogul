@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { money } from '../../engine/num'
 import { useDaily } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
@@ -16,6 +16,12 @@ export function DailyBonusModal() {
   const daily = useDaily()
   const welcomeBack = useUiStore((s) => s.welcomeBack)
   const [dismissed, setDismissed] = useState(false)
+  // "Later" suppresses the modal only for TODAY's bonus. The component never
+  // unmounts (it lives in App), so in a long-lived session/PWA a new day's bonus
+  // must clear the dismissal or it would never re-show.
+  useEffect(() => {
+    if (daily.available) setDismissed(false)
+  }, [daily.available])
   // When a Welcome-Back is showing, it folds the daily in (one return moment) — don't stack.
   if (welcomeBack || !daily.available || dismissed) return null
 

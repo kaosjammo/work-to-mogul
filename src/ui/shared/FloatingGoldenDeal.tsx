@@ -23,9 +23,11 @@ export function FloatingGoldenDeal() {
     <button
       type="button"
       onClick={(e) => {
-        // Pop the payout right where you tapped, then claim the Time Warp.
-        useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(g.warpValue)}`)
-        claimGolden()
+        // Claim FIRST, then pop what was actually banked — the offer can expire
+        // between the (throttled) snapshot and the tap, or a double-tap can race;
+        // a "+$" float for a claim that returned 0 would be a lie.
+        const earned = claimGolden()
+        if (earned > 0) useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(earned)}`)
       }}
       aria-label={`${g.mega ? 'MEGA ' : ''}Golden Deal: Time Warp for ${money(g.warpValue)}`}
       // Centered with auto-margins (not a translate) so the pulse animation's

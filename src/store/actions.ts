@@ -88,9 +88,11 @@ export function buyBusiness(id: BusinessId): void {
   }
 }
 
-export function tap(id: BusinessId): void {
-  tapBusiness(getEngineState(), id)
-  publishNow()
+/** Tap a manual business. Returns whether a cycle actually started. */
+export function tap(id: BusinessId): boolean {
+  const started = tapBusiness(getEngineState(), id)
+  if (started) publishNow()
+  return started
 }
 
 /** Quick-spend: pour spare cash into the best-value business buys (optimised). */
@@ -234,8 +236,9 @@ export function claimContract(id: string): void {
   }
 }
 
-/** Tap the active Golden Deal → Time Warp (instant idle income). */
-export function claimGolden(): void {
+/** Tap the active Golden Deal → Time Warp (instant idle income).
+ *  Returns the cash actually earned (0 if the offer had already expired). */
+export function claimGolden(): number {
   const earned = claimGoldenDeal(getEngineState())
   if (earned > 0) {
     haptic(24)
@@ -243,6 +246,7 @@ export function claimGolden(): void {
     useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
     publishNow()
   }
+  return earned
 }
 
 /** Tap the active Food Rush Hour window → start a Food speed surge (×3 for 25s). */
