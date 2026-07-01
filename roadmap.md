@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **231 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **233 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -54,8 +54,9 @@ decision-rich** — the earlier gaps are closed:
 
 Diagnosis in one line: **every retention lever the roadmap set out to build now exists and is
 polished — depth (prestige/employees), identity (industries), active decisions (events),
-onboarding (D1), a daily return reason (D7). The only *net-new* retention gain left is streak
-milestones (make the daily a goal); everything else is incremental feel (Task 6).**
+onboarding (D1), a daily return reason with streak *milestones* (D7). The net-new work is
+done; what's left is one feel gap (a sound layer, Task 6) and then *live player signal* to
+find the next real priorities.**
 
 ---
 
@@ -260,25 +261,35 @@ return beat. 231 tests (presentation-only).
 
 ---
 
-## Task: Streak long-term payoff (D7 depth) — 🔨 in progress (uncommitted)
+## Streak long-term payoff (D7 depth) ✅ DONE (`0fbf326`)
 
-**Design review of the WIP — strong and to-spec.** `dailyMilestones.ts` adds **4 milestones
-(Day 3/7/14/30)** mixing income-scaled cash (6× / 40× the daily) and modest Empire Tokens
-(3 / 12) — **no new currency, no RNG**, with `nextMilestone`/`prevMilestoneDay` helpers for a
-progress cue. Granted inside `claimDaily(state, now)` (player-triggered).
+4 milestones (Day 3/7/14/30) mixing income-scaled cash (6× / 40× the daily) + modest Empire
+Tokens (3 / 12), no new currency / no RNG, granted in `claimDaily` (player-triggered →
+harness-safe), balance-sized so the daily can't out-earn a prestige run. Shipped **with** the
+things I flagged: a milestone test + a `content.test` wired-effect guard, and a
+`DailyStreakProgress` cue ("next reward at Day N" + bar) on the welcome-back / daily / stats
+surfaces. **233 tests green.** The streak is now a goal, not just a multiplier.
 
-**Status of the acceptance criteria**
-- [x] Milestone rewards at Day 3/7/14/30, reusing cash + Empire Tokens (no new currency). ✅
-- [x] **No double-grant, cleanly** — fires only when `dailyStreak` *exactly* equals a milestone day, and `claimDaily` stamps `dailyClaimDay` (once per real day). No separate claimed-set needed — a simpler correct approach than I suggested. Re-earns on a fresh streak after a break (intended).
-- [x] **Harness-safe** — the token/cash grant is inside `claimDaily`, which only the *player* calls; the bot never claims dailies → `harness`/`progressionLoop` untouched (same class as Golden Deals). ✅
-- [x] **Balance-aware** — token amounts sized "so the daily can't out-earn a prestige run's yield" (≈3 tokens/week ceiling even farming break-rebuild) — doesn't undermine the tuned prestige economy. Good instinct.
-- [ ] ⚠️ **Add a milestone test before commit** — `daily.test.ts` has none yet. Cover: a milestone fires at exactly its day; a token milestone adds to `prestige.totalPoints`; a cash milestone adds N× the daily; re-earn after a streak break; no fire on non-milestone days.
-- [ ] **Visible progress cue** — `buildView.ts` is in the change set; confirm the daily card shows "🔥 Day 3 · next reward at Day 7" + a thin progress bar (the helpers exist for it). Verify at 375px.
+---
 
-Scope guard holding: 4 milestones, existing reward types, no new currency. Good.
+## Next highest-value task → Task 6: Sound layer (the last feel gap)
 
-**Then → Task 6 feel polish** (the last open, incremental track): a **sound layer** behind the
-FX toggle (biggest remaining feel gap), an **ascension celebration**, brand glyphs. Not blocking.
+The retention *systems* are complete. The one clearly-missing *feel* element is **audio** —
+haptics + visual FX exist, but the game is silent. A small, restrained SFX layer is the most
+noticeable polish left. Idle-game audio has real gotchas, so:
+
+**Acceptance criteria (small, gated, no heavy deps)**
+- [ ] **Add a `sound` toggle** to Settings (alongside haptics/FX), **persisted**. **Default OFF** (opt-in) — mobile players often play muted/in public; don't blast audio on first run. A one-time "🔊 Enable sound?" nudge is fine.
+- [ ] **Web-Audio-unlock aware:** browsers block audio until a user gesture — initialise/resume the `AudioContext` on the first tap and no-ops gracefully before that (no console errors).
+- [ ] **Only *meaningful beats*, never per-cycle income** — a machine-gun of tick sounds is the #1 idle-audio mistake. Play on: cash **collect/claim**, **Golden Deal**, **Rush Hour** tap, **milestone/celebration**, **purchase/upgrade**, **prestige**. Reuse the existing FX event points.
+- [ ] **Lightweight:** synthesized Web-Audio tones OR a handful of tiny (~5–10 kB) compressed clips — **no sound library dep**, keep the bundle lean (it's a PWA; supabase already added weight). If clips, lazy-load them.
+- [ ] **Respectful:** debounce/throttle rapid triggers (mass-buy shouldn't stack 100 blips); tie volume to the toggle only (no per-sound sliders — scope).
+- [ ] **Mobile-verified:** works after first tap on a phone viewport; silent when the toggle is off.
+
+**Then — the game is retention-feature-complete.** Remaining backlog (ascension celebration,
+brand glyphs, late-tier industry mechanics, supabase code-split) is all optional. The real
+next lever after sound is **live signal** — put it in front of players and watch D1/D7/session
+length — which is beyond this docs-only loop but is where the next *real* priorities come from.
 
 *Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
 test-guarded) — keep an eye it reads as a signature, not a slot machine.
@@ -314,11 +325,10 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 
 ## Backlog (the roadmap is feature-complete — these are polish + marginal gains)
 
-*Ordered by retention value. The **next task** (merge the two return modals) is above; after
-that:*
+*Ordered by retention value. The **next task** (Task 6 sound layer) is above; after that all of
+these are optional:*
 
-- **Streak long-term payoff** — now the **Next highest-value task** (promoted; see above).
-- **Sound layer (biggest Task-6 feel gap):** haptics + visual FX exist, but there's no audio — a satisfying "cha-ching" on income/claim, behind the existing FX/settings toggle (respect silent mode). The single most-noticeable feel upgrade left.
+- **Sound layer** — now the **Next highest-value task** (promoted; see above).
 - **Ascension celebration moment:** prestige is a big beat but resets quietly; a short celebration (reuse the milestone/celebration components) would mark it.
 - **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty. **Watch for bloat** — they already carry cash-levels + 2 specs + capstone; only if it's a *light* touch (feeds the existing level, not a parallel track).
 - **Extend industry mechanics to the dampened late tiers** (Logistics→Space) *if* a playtest shows the mid/late game still feels flat — else leave the 5 flat industries (the 3-mechanic slice already broke the worst sameness).
