@@ -272,19 +272,20 @@ surfaces. **233 tests green.** The streak is now a goal, not just a multiplier.
 
 ---
 
-## Next highest-value task → Task 6: Sound layer (the last feel gap)
+## Task 6: Sound layer — 🔨 in progress (uncommitted)
 
-The retention *systems* are complete. The one clearly-missing *feel* element is **audio** —
-haptics + visual FX exist, but the game is silent. A small, restrained SFX layer is the most
-noticeable polish left. Idle-game audio has real gotchas, so:
+**Infrastructure done + to-spec (excellent).** `src/lib/sound.ts` is a synthesized Web-Audio
+SFX engine — **zero assets, zero deps** (tiny oscillator envelopes: coin/buy/chime/tap/prestige),
+gated on a `sound` setting that **defaults OFF** + persists (`settingsStore`), **unlock-aware**
+(`unlockAudio` resumes the `AudioContext` on the first `pointerdown` in `App.tsx`), **throttled**
+(50 ms, mass-buy-safe), and a **silent no-op** before unlock / when unsupported (no console
+noise). Suite green at 233.
 
-**Acceptance criteria (small, gated, no heavy deps)**
-- [ ] **Add a `sound` toggle** to Settings (alongside haptics/FX), **persisted**. **Default OFF** (opt-in) — mobile players often play muted/in public; don't blast audio on first run. A one-time "🔊 Enable sound?" nudge is fine.
-- [ ] **Web-Audio-unlock aware:** browsers block audio until a user gesture — initialise/resume the `AudioContext` on the first tap and no-ops gracefully before that (no console errors).
-- [ ] **Only *meaningful beats*, never per-cycle income** — a machine-gun of tick sounds is the #1 idle-audio mistake. Play on: cash **collect/claim**, **Golden Deal**, **Rush Hour** tap, **milestone/celebration**, **purchase/upgrade**, **prestige**. Reuse the existing FX event points.
-- [ ] **Lightweight:** synthesized Web-Audio tones OR a handful of tiny (~5–10 kB) compressed clips — **no sound library dep**, keep the bundle lean (it's a PWA; supabase already added weight). If clips, lazy-load them.
-- [ ] **Respectful:** debounce/throttle rapid triggers (mass-buy shouldn't stack 100 blips); tie volume to the toggle only (no per-sound sliders — scope).
-- [ ] **Mobile-verified:** works after first tap on a phone viewport; silent when the toggle is off.
+**Status of the acceptance criteria**
+- [x] Default-OFF persisted toggle; Web-Audio-unlock aware; lightweight (synth, no dep); throttled; safe no-op. ✅ All met.
+- [ ] ⚠️ **The remaining half — wire the call sites (this is where the #1 mistake lives).** `playSound` is defined but **not called anywhere yet**. Hook it into the **existing `haptic()` call sites** — those already fire on *meaningful beats only* (collect/claim, Golden Deal, Rush-Hour tap, milestone, purchase, prestige) and **never per automated cycle**. Reusing that exact trigger set guarantees no machine-gun income blips — do **NOT** add a `playSound` in the income/economy fold.
+- [ ] **Add the Settings row + first-run nudge** — `StatsScreen` is in the change set; confirm the toggle is labelled and a one-time "🔊 Enable sound?" prompt (optional) reads well at 375px.
+- [ ] **Mobile-verified:** after enabling + first tap, the meaningful beats play; silent when off. (A quick on-device pass once the preview tab is visible.)
 
 **Then — the game is retention-feature-complete.** Remaining backlog (ascension celebration,
 brand glyphs, late-tier industry mechanics, supabase code-split) is all optional. The real
