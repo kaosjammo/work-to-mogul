@@ -292,8 +292,8 @@ more mid-game systems now would be padding (and against the loop's own "don't ex
 meaningfully different" rule).
 
 **So the honest priority order from here:**
-1. **Ascension celebration — 🔨 in flight (uncommitted), reviewed ✅ to-spec.** `AscensionCelebration.tsx` shows a brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on a successful ascend, reusing the Welcome-Back pattern + founder mascot, one-tap (44px+), reassuring copy ("your talents, tokens and progress carry over"), harness-inert (UI-only, player-triggered), with the `prestige` sound + haptic firing in the action. 236 tests green. Nothing to fix — verify at 375px on device once the preview tab is visible. **When it lands, the polish backlog is genuinely exhausted.**
-2. **Then it's live signal, not more building.** The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. Ship it; measure; let the data name the next task.
+1. **Ascension celebration ✅ DONE (`86ff4c7`).** `AscensionCelebration.tsx` shows a brief dismissible "✦ Empire Ascended! · +N Empire Tokens" overlay on a successful ascend, reusing the Welcome-Back pattern + founder mascot, one-tap (44px+), reassuring copy ("your talents, tokens and progress carry over"), harness-inert (UI-only, player-triggered), with the `prestige` sound + haptic in the action. 236 tests green. Reviewed to-spec — just a 375px device check when convenient. **The polish backlog is now exhausted.**
+2. **From here it's live signal, not building.** The roadmap *and* every clear polish item are delivered. Inventing more would be padding. The next *real* priorities come from putting this in front of players and watching D1 / D7 / session length / where they stall — which is beyond this docs-only loop. **Ship it; measure; let the data name the next task.**
 
 Everything else (brand glyphs, late-tier industry mechanics, supabase code-split, active-duty
 XP) stays optional in the backlog — do only if a playtest or metric asks for it.
