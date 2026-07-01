@@ -176,7 +176,9 @@ never nagging.
   `lease_thorne_plaza`, a 7-stage `short` story — `content/mogulStories/leaseShowdown.ts`.)*
 - ✅ **Tech** — a rival poaching your star engineer (retention negotiation). *(Shipped: "The
   Poach", `poach_nakamura`, an 8-stage `standard` story — `content/mogulStories/enginePoach.ts`.)*
-- **Logistics** — a dockworkers' dispute during peak season.
+- ✅ **Logistics** — a dockworkers' dispute during peak season. *(Shipped: "The Walkout",
+  `walkout_pier_nine`, an 8-stage `standard` labour negotiation —
+  `content/mogulStories/dockDispute.ts`.)*
 - **Energy** — a regulator's inspection with a buried compliance flaw.
 - **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
 - ✅ **Food** — a viral-review moment that can make or sink a location. *(Shipped: "Gone

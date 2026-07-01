@@ -28,7 +28,7 @@ import {
   EXIT_INTERVAL_MS,
 } from './angelDeal'
 import { COMBINATOR_ID } from '../content/businesses'
-import { LEASE_SHOWDOWN, ENGINE_POACH, VIRAL_MOMENT } from '../content/mogulStories'
+import { LEASE_SHOWDOWN, ENGINE_POACH, VIRAL_MOMENT, DOCK_DISPUTE } from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -369,6 +369,46 @@ describe('Mogul Story #4 — Gone Viral (Food): a crisis-opportunity on the shar
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     expect(chooseAngelChoice(s, 'dec_fade', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
+  })
+})
+
+describe('Mogul Story #5 — The Walkout (Logistics): a labour negotiation on the shared runtime', () => {
+  function logisticsState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.courier.owned = 1 // a Logistics business
+    s.businesses.courier.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Logistics + clears the cash floor', () => {
+    expect(storyEligible(logisticsState(), DOCK_DISPUTE)).toBe(true)
+    const noLogistics = initialGameState(0)
+    noLogistics.cash = 1e9
+    expect(storyEligible(noLogistics, DOCK_DISPUTE)).toBe(false)
+  })
+
+  it('a fair settlement boosts LOGISTICS only and never unlocks the Combinator', () => {
+    const s = logisticsState()
+    s.angelDeal.storyId = DOCK_DISPUTE.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'dec_settle', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false)
+    expect(s.angelDeal.boostIndustryId).toBe('logistics')
+    expect(mogulStoryBoostMult(s, 'logistics')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'food')).toBe(1)
+  })
+
+  it('letting the crew walk resolves neutral', () => {
+    const s = logisticsState()
+    s.angelDeal.storyId = DOCK_DISPUTE.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)
     expect(s.angelDeal.outcome).toBe('neutral')
   })
 })

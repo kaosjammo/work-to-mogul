@@ -4,6 +4,33 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #5 — "The Walkout" (Logistics), a labour negotiation
+
+Fifth story, content + registration only again. Fills the mid-late timeline gap (Logistics
+is the 5th industry).
+
+- **New story** `content/mogulStories/dockDispute.ts` — "The Walkout" (`walkout_pier_nine`,
+  Logistics): an **8-stage `standard`** labour negotiation. Peak season, a dawn strike vote,
+  and one night to read the real grievance (it's rarely just pay), unbundle the cheap wins
+  (safety winch, mandatory doubles, respect) from the expensive one (across-the-board pay),
+  refuse the cheap union-busting trick, and keep the cargo moving. Fictional steward *Sal
+  Rourke* over *Pier 9*. Reuses the shared negotiation scores; registered in `index.ts`.
+- **No new engine code:** auto-triggers via `storyEligible` (owns Logistics + cash floor),
+  rotates in, resolves through the shared resolution — a fair settlement → cash + a timed
+  **Logistics** boost; a strike (threaten / split the crew / lowball) → a Logistics dip; let
+  them walk → neutral.
+- **Harness-inert** (player-triggered). Length range: Angel 10 / Poach 8 / **Walkout 8** /
+  Lease 7 / Viral 5. **4 of 7 industry ideas shipped; Energy + Space remain.**
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **316 tests** (+3: Logistics
+eligibility, settle→Logistics-boost-not-Combinator, walk→neutral; framework-integrity test
+auto-covers the new story; all prior stories + harness + balance + progression unchanged).
+Browser-verified 375px: Logistics-owning state → "💼 …threatening to strike" offer → modal
+renders *Pier 9* / "The Threat · **1/8**" → choice → consequence beat → Continue advances to
+"· 2/8" (Sal Rourke speaking) with authored score deltas, no overflow, no console errors.
+
+---
+
 ## Mogul Story #4 — "Gone Viral" (Food), a crisis-opportunity beat
 
 The fourth story — and the first non-negotiation one — still lands as **content +
