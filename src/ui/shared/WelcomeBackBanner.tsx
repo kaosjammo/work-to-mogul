@@ -5,6 +5,7 @@ import { useDaily } from '../../store/gameStore'
 import { claimDailyBonus } from '../../store/actions'
 import { DailyStreakProgress } from './DailyStreakProgress'
 import { haptic } from '../../lib/haptics'
+import { playSound } from '../../lib/sound'
 import { ART_GENERATED } from '../../content/artManifest'
 
 export function WelcomeBackBanner() {
@@ -17,6 +18,7 @@ export function WelcomeBackBanner() {
   // Collect claims both — never a second stacked modal (DailyBonusModal hides behind this).
   const collect = () => {
     haptic(24)
+    playSound('coin')
     if (daily.available) claimDailyBonus()
     dismiss()
   }

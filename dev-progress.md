@@ -4,6 +4,39 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 6 (feel) — sound layer (the last feel gap)
+
+**Analysed:** reviewer promoted a restrained SFX layer as the one clearly-missing feel
+element (haptics + visual FX exist; the game was silent).
+
+**Implemented (finished vertical slice, no deps):** `lib/sound.ts` — synthesized Web-Audio
+tones (zero assets, zero library dep): each sound is a tiny oscillator envelope
+(`coin`/`buy`/`chime`/`tap`/`prestige`). Gated on a new persisted `sound` setting **default
+OFF (opt-in)** — mobile players often play muted. Unlock-aware: `App` resumes the
+`AudioContext` on the first `pointerdown`; `playSound` no-ops silently (no console noise)
+before unlock / when unsupported (jsdom, older browsers), and **throttles** on the audio
+clock (50 ms) so a mass-buy can't machine-gun blips. Wired only to MEANINGFUL beats (reusing
+the existing haptic points) — purchase/upgrade (`buy`), Golden Deal + daily + welcome-back
+collect (`coin`), Rush Hour + event-card resolve (`tap`), milestone/industry/fusion/contract
+(`chime`), prestige (`prestige`) — never per-cycle income. A Sound toggle sits in Settings
+between Haptics and Floating-numbers.
+
+**Validation:** 236 tests (+3: default-off, safe no-op with no AudioContext, toggle
+flip+persist), build + lint clean. Engine/harness untouched (UI-only). Browser-verified at
+390px: Sound toggle renders default-off, flips on + persists to localStorage; a gesture then
+a Buy fires `playSound('buy')` with NO console errors (audio can't be *heard* headless, but
+the layer runs clean).
+
+**Files:** +`lib/sound.ts` (+`.test.ts`); ~`store/settingsStore.ts`, `store/actions.ts`,
+`App.tsx`, `ui/stats/StatsScreen.tsx`, `ui/shared/WelcomeBackBanner.tsx`.
+
+**Roadmap status:** the retention roadmap (Tasks 1–7) + the D7 streak depth + this sound
+layer are all delivered. The game is **retention-feature-complete**; remaining backlog
+(ascension celebration, brand glyphs, late-tier industry mechanics, supabase code-split) is
+optional. The real next lever is live player signal (out of scope for this docs loop).
+
+---
+
 ## D7 depth — daily-streak milestones (turn "I claimed" into "don't break my streak")
 
 **Analysed:** reviewer promoted streak milestones next. The daily streak was a hidden

@@ -8,6 +8,7 @@ const KEY = 'tycoon:settings'
 interface Settings {
   haptics: boolean
   effects: boolean // floating "+$" pops
+  sound: boolean // synthesized SFX on meaningful beats — DEFAULT OFF (opt-in; mobile players often play muted)
 }
 
 function load(): Settings {
@@ -15,12 +16,12 @@ function load(): Settings {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const p = JSON.parse(raw) as Partial<Settings>
-      return { haptics: p.haptics !== false, effects: p.effects !== false }
+      return { haptics: p.haptics !== false, effects: p.effects !== false, sound: p.sound === true }
     }
   } catch {
     // ignore (private mode / corrupt) — fall through to defaults
   }
-  return { haptics: true, effects: true }
+  return { haptics: true, effects: true, sound: false }
 }
 
 function save(s: Settings): void {
@@ -34,18 +35,27 @@ function save(s: Settings): void {
 interface SettingsStore extends Settings {
   toggleHaptics: () => void
   toggleEffects: () => void
+  toggleSound: () => void
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   ...load(),
   toggleHaptics: () => {
-    const next = { haptics: !get().haptics, effects: get().effects }
+    const s = get()
+    const next = { haptics: !s.haptics, effects: s.effects, sound: s.sound }
     save(next)
     set({ haptics: next.haptics })
   },
   toggleEffects: () => {
-    const next = { haptics: get().haptics, effects: !get().effects }
+    const s = get()
+    const next = { haptics: s.haptics, effects: !s.effects, sound: s.sound }
     save(next)
     set({ effects: next.effects })
+  },
+  toggleSound: () => {
+    const s = get()
+    const next = { haptics: s.haptics, effects: s.effects, sound: !s.sound }
+    save(next)
+    set({ sound: next.sound })
   },
 }))

@@ -26,6 +26,7 @@ import { claimGoldenDeal } from '../engine/golden'
 import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { claimDaily } from '../engine/daily'
+import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
@@ -53,14 +54,17 @@ export function buyBusiness(id: BusinessId): void {
     !!ind && ind.businessIds.every((bid) => (s.businesses[bid]?.owned ?? 0) === 0)
   if (purchase(s, id, qty)) {
     haptic(8) // light tactile click on a successful buy
+    playSound('buy')
     const msgs: string[] = []
     if (enteringIndustry && ind) {
       msgs.push(`🏭 Welcome to ${ind.name}!`)
       haptic(26)
+      playSound('chime')
     }
     const fresh = newlyReached(before, s.milestonesReached)
     if (fresh.length) {
       haptic(26) // a milestone crossed — celebratory buzz
+      playSound('chime')
       msgs.push(
         ...fresh
           .map(describeMilestone)
@@ -90,6 +94,7 @@ export function spendCash(): void {
     .map((m) => m.text)
   msgs.push(`💸 Spent ${money(spent)} · +${units} ${units === 1 ? 'unit' : 'units'}`)
   haptic(24)
+  playSound('buy')
   useUiStore.getState().pushCelebrations(msgs)
   publishNow()
 }
@@ -99,6 +104,7 @@ export function buyAllUpgrades(): void {
   const s = getEngineState()
   const { count, spent } = buyAllAffordableUpgrades(s)
   if (count <= 0) return
+  playSound('buy')
   useUiStore
     .getState()
     .pushCelebrations([`⚡ ${count} upgrade${count === 1 ? '' : 's'} · ${money(spent)}`])
@@ -153,6 +159,7 @@ export function fuse(keepId: string, consumeId: string): void {
   const promoted = fuseEmployees(getEngineState(), keepId, consumeId)
   if (promoted) {
     haptic(22)
+    playSound('chime')
     useUiStore.getState().pushCelebrations([`✨ Promoted to ${promoted}!`])
     publishNow()
   }
@@ -165,7 +172,10 @@ export function autoAssign(): void {
 // ----- Upgrades & prestige -----
 
 export function buyUpgrade(id: UpgradeId): void {
-  if (buyUpgradeFn(getEngineState(), id)) publishNow()
+  if (buyUpgradeFn(getEngineState(), id)) {
+    playSound('buy')
+    publishNow()
+  }
 }
 
 export function prestige(): void {
@@ -174,6 +184,7 @@ export function prestige(): void {
   const tokensBefore = s.prestige.totalPoints ?? 0
   if (prestigeReset(s)) {
     haptic(45) // ascension — a big, satisfying reset
+    playSound('prestige')
     const msgs: string[] = []
     // Headline payoff: the tokens this ascension banked (base + any milestone bonus).
     const gained = (s.prestige.totalPoints ?? 0) - tokensBefore
@@ -204,6 +215,8 @@ export function claimContract(id: string): void {
   const name = CONTRACT_BY_ID[id]?.name ?? 'Contract'
   const tokens = claimContractFn(getEngineState(), id)
   if (tokens > 0) {
+    haptic(20)
+    playSound('chime')
     useUiStore.getState().pushCelebrations([`📋 ${name} — +${tokens} ✦`])
     publishNow()
   }
@@ -214,6 +227,7 @@ export function claimGolden(): void {
   const earned = claimGoldenDeal(getEngineState())
   if (earned > 0) {
     haptic(24)
+    playSound('coin')
     useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
     publishNow()
   }
@@ -223,6 +237,7 @@ export function claimGolden(): void {
 export function claimRush(): void {
   if (claimRushHour(getEngineState())) {
     haptic(20)
+    playSound('tap')
     useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed`])
     publishNow()
   }
@@ -233,6 +248,7 @@ export function resolveCard(choice: 'a' | 'b'): void {
   const opt = resolveEventCard(getEngineState(), choice)
   if (opt) {
     haptic(18)
+    playSound('tap')
     useUiStore.getState().pushCelebrations([`📋 ${opt.label}`])
     publishNow()
   }
@@ -249,6 +265,7 @@ export function claimDailyBonus(): void {
   const { cash, milestone } = claimDaily(getEngineState(), Date.now())
   if (cash > 0 || milestone) {
     haptic(milestone ? 40 : 24)
+    playSound(milestone ? 'chime' : 'coin')
     const msgs = [`🎁 Daily Bonus! +${money(cash)}`]
     if (milestone) msgs.push(`🔥 Day ${milestone.day} streak · ${milestone.label}!`)
     useUiStore.getState().pushCelebrations(msgs)

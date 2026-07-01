@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { unlockAudio } from './lib/sound'
 import { TopHUD } from './ui/shell/TopHUD'
 import { NavBar } from './ui/shell/NavBar'
 import { TabRouter } from './ui/shell/TabRouter'
@@ -14,6 +16,14 @@ import { AccountModal } from './ui/account/AccountModal'
 import { ART_GENERATED } from './content/artManifest'
 
 export function App() {
+  // Browsers block audio until a user gesture — unlock the AudioContext on the first tap
+  // (harmless if sound is off; the sound layer stays silent until the player enables it).
+  useEffect(() => {
+    const unlock = () => unlockAudio()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    return () => window.removeEventListener('pointerdown', unlock)
+  }, [])
+
   return (
     <>
       <div className="app-backdrop" aria-hidden="true">

@@ -126,8 +126,10 @@ export function StatsScreen() {
   const bonusPct = s.prestigeProfitBonusPct
   const haptics = useSettingsStore((st) => st.haptics)
   const effects = useSettingsStore((st) => st.effects)
+  const sound = useSettingsStore((st) => st.sound)
   const toggleHaptics = useSettingsStore((st) => st.toggleHaptics)
   const toggleEffects = useSettingsStore((st) => st.toggleEffects)
+  const toggleSound = useSettingsStore((st) => st.toggleSound)
 
   return (
     <div className="flex flex-col gap-4">
@@ -198,6 +200,12 @@ export function StatsScreen() {
           hint="Vibration feedback on taps & rewards"
           on={haptics}
           onToggle={toggleHaptics}
+        />
+        <ToggleRow
+          label="Sound"
+          hint="Short SFX on rewards, buys & prestige"
+          on={sound}
+          onToggle={toggleSound}
         />
         <ToggleRow
           label="Floating numbers"
