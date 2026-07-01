@@ -50,12 +50,12 @@ decision-rich** — the earlier gaps are closed:
 
 **The gap has moved from *depth* to the *edges of the session* — D1 and D7:**
 - **D1 (first session): solid now.** Clear first-moment hint (tap Work Shift → buy a business), a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige), and — new this iteration — a "new" pulse dot so those reveals get *noticed* (`aa4e2b5`). The onboarding arc is guided end-to-end.
-- **D7 (return reason): now built (`2ceff30`).** A once-per-real-day Daily Bonus (~2h idle income) with a "🔥 Day N" streak now gives a wall-clock reason to return. The one rough edge: it lands as a *second* modal on the return, stacked on Welcome-Back (see Next task).
+- **D7 (return reason): built + polished (`2ceff30` + `8e0a762`).** A once-per-real-day Daily Bonus (~2h idle income) with a "🔥 Day N" streak, folded into a single clean return moment. Gives a wall-clock reason to return. **The one thing that would deepen it: streak *milestones* (Day 7/30 rewards)** so the streak is a goal, not just a multiplier (see Next task).
 
-Diagnosis in one line: **every retention lever the roadmap set out to build now exists —
-depth (prestige/employees), identity (industries), active decisions (events), onboarding
-(D1), and a daily return reason (D7). The remaining work is *polish*: merge the doubled
-return moment, then incremental feel (Task 6). No new systems needed.**
+Diagnosis in one line: **every retention lever the roadmap set out to build now exists and is
+polished — depth (prestige/employees), identity (industries), active decisions (events),
+onboarding (D1), a daily return reason (D7). The only *net-new* retention gain left is streak
+milestones (make the daily a goal); everything else is incremental feel (Task 6).**
 
 ---
 
@@ -227,7 +227,7 @@ visible-tab layout check next time the server's up.)
 
 ---
 
-## Next highest-value task → Onboarding (D1) + daily return hooks (D7)
+## Task 7 ✅ DONE — Onboarding (D1) + daily return hook (D7)
 
 **The 6-task roadmap is essentially built** (1–5 done; 6 is ongoing polish). The remaining
 retention frontier is the *edges of the session* — D1 and D7. **Onboarding audit this pass
@@ -250,24 +250,35 @@ back tomorrow.** No daily hook exists at all.
 **Task 7 complete → the whole roadmap (1–7) is delivered.** One concrete UX follow-up and
 Task 6 remain; both are polish, not new systems.
 
-## Next highest-value task → merge the two return-moment modals (UX)
+## Return-moment merge ✅ DONE (`8e0a762`)
 
-The daily hook shipped as a **separate `DailyBonusModal`**, and `App.tsx` renders it
-*alongside* `WelcomeBackBanner` (both `fixed inset-0 z-50`, no gating between them). So on a
-**daily cold return the player taps through two sequential full-screen overlays** —
-"Welcome back, you earned {cash}" → then "Daily Bonus" — instead of one satisfying beat. The
-mechanic is correct; the return *moment* is doubled. This is the single most-hit retention
-surface, so it's worth fixing.
+Fixed cleanly: `WelcomeBackBanner` now **folds the daily bonus in** as a distinct gold
+"🎁 Daily Bonus · 🔥 Day N +$X" section, and Collect becomes **"Collect all"** (claims offline
++ daily in one tap); `DailyBonusModal` gates on `if (welcomeBack) return null` so it only shows
+standalone (no automated income to catch up) — **never two stacked overlays**. One satisfying
+return beat. 231 tests (presentation-only).
 
-**Acceptance criteria (small, no mechanic change)**
-- [ ] **One return moment.** Either merge the daily bonus into `WelcomeBackBanner` as a "🔥 Daily Bonus · Day N" section with a single Collect, **or** sequence them so only one shows at a time (daily after welcome-back is dismissed) — never two stacked overlays.
-- [ ] **De-dupe the feel** so it doesn't read as "collect cash" twice: lean on the streak framing / a visually distinct treatment for the daily part.
-- [ ] Keep the claim logic + tests unchanged (this is presentation only); re-verify on a fresh save at 375px once the preview tab is visible.
+---
 
-**Then → Task 6 (mobile polish / celebrations / sound / haptics)** — the last open track,
-purely *incremental*: feel is already strong (playtests confirm clean cues, tap targets, no
-overflow). Small ongoing wins — sound behind the FX toggle, an ascension celebration, an
-optional streak-multiplier tuning pass — not a blocking task.
+## Next highest-value task → Streak long-term payoff (D7 depth)
+
+The daily hook works, but the streak (`dailyStreak`) currently **only multiplies cash** — that
+plateaus fast and gives no *reason* to protect a long run. Milestone rewards turn "I opened it
+today" into **"I don't want to break my streak"** — the strongest D7 mechanic in the genre,
+and cheap here because the counter already exists.
+
+**Acceptance criteria (small, harness-safe, reuse existing systems)**
+- [ ] **Milestone rewards at streak thresholds** — e.g. Day 3 / 7 / 14 / 30: a bigger one-off (a **free Golden Deal / Time-Warp**, a chunk of **Empire Tokens**, or a large cash multiple). **No new currency** — reuse Golden Deals / tokens / cash.
+- [ ] **Make the next milestone *visible*** — on the daily card, "🔥 Day 3 · next reward at Day 7" with a thin progress bar, so the streak is a *goal*, not a hidden counter.
+- [ ] **Deterministic + save-tracked:** reuse `dailyStreak`; track claimed milestones (a small set or a high-water mark) so a reward isn't granted twice. No RNG.
+- [ ] **Harness-safe:** player-triggered on claim, wall-clock only → inert in `harness`/`progressionLoop` (same class as the daily bonus). Confirm the bot never claims.
+- [ ] **Mobile:** the milestone reward + progress read clearly at 375px within the existing daily card / return modal.
+
+Scope guard: 3–4 milestones, reusing existing reward types. Ship the milestone bonus first;
+a "streak insurance" (one free skip) is a fast-follow only if retention data asks for it.
+
+**Then → Task 6 feel polish** (the last open, incremental track): a **sound layer** behind the
+FX toggle (biggest remaining feel gap), an **ascension celebration**, brand glyphs. Not blocking.
 
 *Balance watch carried forward:* Quantum's ×9 collapse flash is dramatic (mean is
 test-guarded) — keep an eye it reads as a signature, not a slot machine.
@@ -306,7 +317,7 @@ with a `founderPerks.test.ts` guard. That matches the spec well.
 *Ordered by retention value. The **next task** (merge the two return modals) is above; after
 that:*
 
-- **Streak long-term payoff (highest marginal D7 gain):** the daily streak (`dailyStreak`, already tracked) currently just multiplies cash — that plateaus. Add **milestone rewards at day 7 / day 30** (a bigger bonus, a free Golden Deal, a cosmetic) so the streak is a *goal*, not just a multiplier. Deterministic, save-tracked (the counter exists). This is what turns "I opened it today" into "I don't want to break my run."
+- **Streak long-term payoff** — now the **Next highest-value task** (promoted; see above).
 - **Sound layer (biggest Task-6 feel gap):** haptics + visual FX exist, but there's no audio — a satisfying "cha-ching" on income/claim, behind the existing FX/settings toggle (respect silent mode). The single most-noticeable feel upgrade left.
 - **Ascension celebration moment:** prestige is a big beat but resets quietly; a short celebration (reuse the milestone/celebration components) would mark it.
 - **Task 3b — active-duty XP (optional attachment hook):** employees gain a little XP from active duty. **Watch for bloat** — they already carry cash-levels + 2 specs + capstone; only if it's a *light* touch (feeds the existing level, not a parallel track).
