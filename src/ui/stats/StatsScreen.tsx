@@ -5,6 +5,7 @@ import { useStats, useContracts, useDaily } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { ContractView } from '../../store/buildView'
 import { claimContract, claimDailyBonus } from '../../store/actions'
+import { DailyStreakProgress } from '../shared/DailyStreakProgress'
 
 function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string; on: boolean; onToggle: () => void }) {
   return (
@@ -134,21 +135,26 @@ export function StatsScreen() {
         <button
           type="button"
           onClick={claimDailyBonus}
-          className="flex items-center gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+          className="flex flex-col gap-2 rounded-2xl p-3 text-left transition active:scale-[0.99]"
           style={{ background: 'rgba(245,197,24,0.12)', border: '1px solid var(--accent)' }}
         >
-          <span className="text-2xl">🎁</span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-bold">
-              Daily Bonus{daily.streak > 0 ? ` · 🔥 Day ${daily.streak + 1}` : ''}
+          <span className="flex w-full items-center gap-3">
+            <span className="text-2xl">🎁</span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold">Claim Daily Bonus</span>
+              <span className="block text-xs" style={{ color: 'var(--text-dim)' }}>
+                About 2h of income — comes back every day.
+              </span>
             </span>
-            <span className="block text-xs" style={{ color: 'var(--text-dim)' }}>
-              About 2h of income — comes back every day.
+            <span className="tnum shrink-0 font-bold" style={{ color: 'var(--accent)' }}>
+              +{money(daily.reward)}
             </span>
           </span>
-          <span className="tnum shrink-0 font-bold" style={{ color: 'var(--accent)' }}>
-            +{money(daily.reward)}
-          </span>
+          <DailyStreakProgress
+            streak={daily.streak}
+            nextMilestone={daily.nextMilestone}
+            milestoneProgress={daily.milestoneProgress}
+          />
         </button>
       )}
 

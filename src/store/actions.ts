@@ -244,12 +244,14 @@ export function dismissCard(): void {
   publishNow()
 }
 
-/** Claim today's daily bonus (~2h of idle income). */
+/** Claim today's daily bonus (~2h of idle income) + any streak milestone reward. */
 export function claimDailyBonus(): void {
-  const earned = claimDaily(getEngineState(), Date.now())
-  if (earned > 0) {
-    haptic(24)
-    useUiStore.getState().pushCelebrations([`🎁 Daily Bonus! +${money(earned)}`])
+  const { cash, milestone } = claimDaily(getEngineState(), Date.now())
+  if (cash > 0 || milestone) {
+    haptic(milestone ? 40 : 24)
+    const msgs = [`🎁 Daily Bonus! +${money(cash)}`]
+    if (milestone) msgs.push(`🔥 Day ${milestone.day} streak · ${milestone.label}!`)
+    useUiStore.getState().pushCelebrations(msgs)
     publishNow()
   }
 }

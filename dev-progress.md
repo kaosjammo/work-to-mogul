@@ -4,6 +4,37 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## D7 depth — daily-streak milestones (turn "I claimed" into "don't break my streak")
+
+**Analysed:** reviewer promoted streak milestones next. The daily streak was a hidden
+counter with no payoff; milestone rewards make it a *goal* — the strongest D7 mechanic.
+
+**Implemented (finished vertical slice, harness-safe):** streak milestones at Day 3/7/14/30
+(`content/dailyMilestones.ts`), each a one-off on top of the normal daily — reusing existing
+systems only (income-scaled cash multiples, or a modest chunk of Empire Tokens; NO new
+currency, NO RNG). Because the streak advances by exactly 1 per real day (once-per-day
+guarded), a milestone fires exactly when `streak === milestone.day` — **no new persisted
+state**, and it re-earns on a fresh streak-run after a break (the break pressure). `claimDaily`
+now returns `{ cash, milestone }` and grants the reward; the celebration calls out the
+milestone. The streak is now *visible*: a shared `DailyStreakProgress` ("🔥 N-day streak ·
+next: {reward} · Day M" + a thin progress bar) on all three daily surfaces (return modal,
+merged Welcome-Back section, Stats claim row).
+
+**Validation:** 233 tests (+2: milestone fires at its day w/ cash then tokens; content guard
+that milestones ascend + every reward is wired), build + lint clean. **Harness + progressionLoop
+byte-identical** ($4.08Qi / 156m; cum 60 at run #6) — player-triggered, bot never claims, so
+milestone cash/tokens never leak into the sim's economy. Browser-verified at 390px: card shows
+"2-day streak · next: +6× bonus cash · Day 3"; claiming reached Day 3 and paid daily + 6× bonus.
+
+**Files:** +`content/dailyMilestones.ts`, +`ui/shared/DailyStreakProgress.tsx`;
+~`engine/daily.ts` (+`.test.ts`), `content/content.test.ts`, `store/{actions,buildView}.ts`,
+`ui/shared/{DailyBonusModal,WelcomeBackBanner}.tsx`, `ui/stats/StatsScreen.tsx`.
+
+**Next:** Task 6 feel polish (sound behind the FX toggle / ascension celebration) — the last
+incremental track — per the next roadmap review.
+
+---
+
 ## UX follow-up — merge the doubled return moment (Welcome-Back + Daily Bonus)
 
 **Analysed:** reviewer's one follow-up after the roadmap delivered — the D7 daily shipped

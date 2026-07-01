@@ -10,6 +10,7 @@
 // ============================================================
 import type { GameState } from '../types/domain'
 import { automatedIncomePerSec } from './catchUp'
+import { milestoneAt, type DailyMilestone } from '../content/dailyMilestones'
 
 export const DAILY_INCOME_SECONDS = 2 * 3600 // reward ≈ 2h of current idle income
 
@@ -34,20 +35,35 @@ export function canClaimDaily(state: GameState, now: number): boolean {
   return localDayIndex(now) > (state.dailyClaimDay ?? -1)
 }
 
+export interface DailyClaimResult {
+  cash: number // total cash granted (the daily bonus + any cash-type milestone)
+  milestone: DailyMilestone | null // a streak milestone reached this claim, for the celebration
+}
+
 /**
  * Claim today's bonus. Grants the reward, advances the streak (consecutive day → +1,
- * a gap → reset to 1), and stamps `dailyClaimDay` so it can't be claimed again today.
- * Returns the cash granted (0 if not currently claimable).
+ * a gap → reset to 1), stamps `dailyClaimDay` so it can't be claimed again today, and
+ * grants a streak MILESTONE reward if the new streak reaches one. Returns the cash
+ * granted + the milestone hit (both zero/null if not currently claimable).
  */
-export function claimDaily(state: GameState, now: number): number {
-  if (!canClaimDaily(state, now)) return 0
+export function claimDaily(state: GameState, now: number): DailyClaimResult {
+  if (!canClaimDaily(state, now)) return { cash: 0, milestone: null }
   const today = localDayIndex(now)
-  const reward = dailyReward(state)
+  let cash = dailyReward(state)
   state.dailyStreak = state.dailyClaimDay === today - 1 ? (state.dailyStreak ?? 0) + 1 : 1
   state.dailyClaimDay = today
-  if (reward > 0 && Number.isFinite(reward)) {
-    state.cash += reward
-    state.lifetimeEarnings += reward
+  // A milestone fires exactly when the streak reaches its day (advance-by-1 guarantees
+  // each day is hit once; re-earns on a fresh streak-run after a break).
+  const milestone = milestoneAt(state.dailyStreak)
+  if (milestone) {
+    if (milestone.reward.kind === 'cash') cash += dailyReward(state) * milestone.reward.dailyMult
+    else if (milestone.reward.kind === 'tokens') {
+      state.prestige.totalPoints = (state.prestige.totalPoints ?? 0) + milestone.reward.amount
+    }
   }
-  return reward
+  if (cash > 0 && Number.isFinite(cash)) {
+    state.cash += cash
+    state.lifetimeEarnings += cash
+  }
+  return { cash, milestone }
 }

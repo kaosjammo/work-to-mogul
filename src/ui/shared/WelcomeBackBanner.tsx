@@ -3,6 +3,7 @@ import { OFFLINE_CAP_MS } from '../../engine/catchUp'
 import { useUiStore } from '../../store/uiStore'
 import { useDaily } from '../../store/gameStore'
 import { claimDailyBonus } from '../../store/actions'
+import { DailyStreakProgress } from './DailyStreakProgress'
 import { haptic } from '../../lib/haptics'
 import { ART_GENERATED } from '../../content/artManifest'
 
@@ -60,13 +61,18 @@ export function WelcomeBackBanner() {
         </p>
         {daily.available && (
           <div
-            className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2"
+            className="flex w-full flex-col gap-1.5 rounded-xl px-3 py-2"
             style={{ background: 'rgba(245,197,24,0.12)', border: '1px solid var(--accent)' }}
           >
-            <span className="text-sm font-bold">
-              🎁 Daily Bonus{daily.streak > 0 ? ` · 🔥 Day ${daily.streak + 1}` : ''}
-            </span>
-            <span className="tnum font-bold" style={{ color: 'var(--accent)' }}>+{money(daily.reward)}</span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold">🎁 Daily Bonus</span>
+              <span className="tnum font-bold" style={{ color: 'var(--accent)' }}>+{money(daily.reward)}</span>
+            </div>
+            <DailyStreakProgress
+              streak={daily.streak}
+              nextMilestone={daily.nextMilestone}
+              milestoneProgress={daily.milestoneProgress}
+            />
           </div>
         )}
         <button

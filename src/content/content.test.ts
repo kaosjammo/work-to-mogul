@@ -8,6 +8,7 @@ import { initialGameState } from '../store/initialState'
 import { SIGNATURE_PERKS } from '../engine/economy'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from './employeeTemplates'
 import { EVENT_CARDS } from './eventCards'
+import { DAILY_MILESTONES } from './dailyMilestones'
 
 describe('content integrity', () => {
   it('passes referential validation with all industries', () => {
@@ -43,6 +44,17 @@ describe('content integrity', () => {
           if (eff.kind !== 'cash') expect(eff.durationMs).toBeGreaterThan(0)
         }
       }
+    }
+  })
+
+  it('daily-streak milestones ascend by day and every reward is wired (no dead milestone)', () => {
+    for (let i = 0; i < DAILY_MILESTONES.length; i++) {
+      const m = DAILY_MILESTONES[i]
+      expect(m.day).toBeGreaterThan(0)
+      if (i > 0) expect(m.day).toBeGreaterThan(DAILY_MILESTONES[i - 1].day) // strictly ascending
+      expect(m.label.length).toBeGreaterThan(0)
+      if (m.reward.kind === 'cash') expect(m.reward.dailyMult).toBeGreaterThan(0)
+      else expect(m.reward.amount).toBeGreaterThan(0)
     }
   })
 

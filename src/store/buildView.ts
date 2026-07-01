@@ -53,6 +53,7 @@ import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engi
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { canClaimDaily, dailyReward } from '../engine/daily'
+import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
 import {
   financeCompoundMult,
   FINANCE_INDUSTRY_ID,
@@ -307,7 +308,13 @@ export interface ViewSnapshot {
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
-  daily: { available: boolean; reward: number; streak: number }
+  daily: {
+    available: boolean
+    reward: number
+    streak: number
+    nextMilestone: { day: number; label: string } | null
+    milestoneProgress: number
+  }
   contracts: ContractView[]
   contractsClaimable: number
   buyMode: BuyMode
@@ -788,10 +795,17 @@ export function buildView(
 
   // Daily return hook — availability is a runtime (wall-clock) check; the harness never
   // reads buildView, so a Date.now() here is UI-only and inert in the sims.
+  const dailyStreakVal = Math.max(0, state.dailyStreak ?? 0)
+  const nm = nextDailyMilestone(dailyStreakVal)
+  const prevDay = prevMilestoneDay(dailyStreakVal)
   const daily = {
     available: canClaimDaily(state, Date.now()),
     reward: dailyReward(state),
-    streak: Math.max(0, state.dailyStreak ?? 0),
+    streak: dailyStreakVal,
+    // The next streak reward, so the streak reads as a goal (not a hidden counter).
+    nextMilestone: nm ? { day: nm.day, label: nm.label } : null,
+    // Progress from the last milestone toward the next (0..1), for the card's thin bar.
+    milestoneProgress: nm && nm.day > prevDay ? (dailyStreakVal - prevDay) / (nm.day - prevDay) : 0,
   }
 
   // Event card currently on offer (null when none) — the active-decision modal reads this.

@@ -3,6 +3,7 @@ import { money } from '../../engine/num'
 import { useDaily } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
 import { claimDailyBonus } from '../../store/actions'
+import { DailyStreakProgress } from './DailyStreakProgress'
 
 /**
  * The daily return hook (D7): a "Daily Bonus" card that appears on open when a new
@@ -30,17 +31,17 @@ export function DailyBonusModal() {
       >
         <span className="text-5xl">🎁</span>
         <h2 className="text-lg font-bold">Daily Bonus</h2>
-        {daily.streak > 0 && (
-          <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
-            🔥 Day {daily.streak + 1} streak
-          </span>
-        )}
         <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
           About 2 hours of your empire's income — come back each day to keep it going.
         </p>
         <p className="tnum text-3xl font-extrabold" style={{ color: 'var(--accent)' }}>
           +{money(daily.reward)}
         </p>
+        <DailyStreakProgress
+          streak={daily.streak}
+          nextMilestone={daily.nextMilestone}
+          milestoneProgress={daily.milestoneProgress}
+        />
         <button
           type="button"
           onClick={claimDailyBonus}
