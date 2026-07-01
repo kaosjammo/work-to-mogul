@@ -52,6 +52,7 @@ import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
+import { canClaimDaily, dailyReward } from '../engine/daily'
 import {
   financeCompoundMult,
   FINANCE_INDUSTRY_ID,
@@ -306,6 +307,7 @@ export interface ViewSnapshot {
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
+  daily: { available: boolean; reward: number; streak: number }
   contracts: ContractView[]
   contractsClaimable: number
   buyMode: BuyMode
@@ -784,6 +786,14 @@ export function buildView(
     mult: quantumSuperpositionMult(state),
   }
 
+  // Daily return hook — availability is a runtime (wall-clock) check; the harness never
+  // reads buildView, so a Date.now() here is UI-only and inert in the sims.
+  const daily = {
+    available: canClaimDaily(state, Date.now()),
+    reward: dailyReward(state),
+    streak: Math.max(0, state.dailyStreak ?? 0),
+  }
+
   // Event card currently on offer (null when none) — the active-decision modal reads this.
   const ec = state.eventCards
   const offerCard = ec?.offerCardId ? EVENT_CARD_BY_ID[ec.offerCardId] : undefined
@@ -855,7 +865,9 @@ export function buildView(
   // Tab badges for actionable rewards — claimable contracts (Stats) and a
   // worthwhile ascension (Ascend). Only unambiguous "go claim this" signals.
   const navBadges: Partial<Record<TabId, number>> = {}
-  if (contractsClaimable > 0) navBadges.stats = contractsClaimable
+  // The daily bonus + any ready contracts both surface on the Stats tab.
+  const statsBadge = contractsClaimable + (daily.available ? 1 : 0)
+  if (statsBadge > 0) navBadges.stats = statsBadge
   if (prestigeUnlocked && pendingTokens > 0) navBadges.prestige = pendingTokens
 
   // "Assign → +$X/s" previews for the open assignment sheet: resolve the business
@@ -893,6 +905,7 @@ export function buildView(
     financeCompound,
     quantumSuperposition,
     eventCard,
+    daily,
     contracts,
     contractsClaimable,
     buyMode: state.buyMode,

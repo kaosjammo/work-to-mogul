@@ -25,6 +25,7 @@ import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks
 import { claimGoldenDeal } from '../engine/golden'
 import { claimRushHour, RUSH_SPEED_MULT } from '../engine/rushHour'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
+import { claimDaily } from '../engine/daily'
 import { claimContract as claimContractFn } from '../engine/contracts'
 import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
@@ -241,6 +242,16 @@ export function resolveCard(choice: 'a' | 'b'): void {
 export function dismissCard(): void {
   declineEventCard(getEngineState())
   publishNow()
+}
+
+/** Claim today's daily bonus (~2h of idle income). */
+export function claimDailyBonus(): void {
+  const earned = claimDaily(getEngineState(), Date.now())
+  if (earned > 0) {
+    haptic(24)
+    useUiStore.getState().pushCelebrations([`🎁 Daily Bonus! +${money(earned)}`])
+    publishNow()
+  }
 }
 
 /** Wipe the save and start a brand-new game (destructive; hold-to-confirm in UI). */

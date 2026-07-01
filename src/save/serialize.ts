@@ -147,6 +147,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   s.visitedTabs = Array.isArray(loaded.visitedTabs)
     ? (loaded.visitedTabs.filter((t): t is TabId => ALL_TAB_IDS.includes(t as TabId)))
     : [...ALL_TAB_IDS]
+  // Daily return hook — old saves default to "never claimed" (claimable on next open).
+  s.dailyClaimDay = Math.floor(num(loaded.dailyClaimDay, -1))
+  s.dailyStreak = Math.max(0, Math.floor(num(loaded.dailyStreak)))
   s.onboardingStep = num(loaded.onboardingStep)
   s.nextEmployeeSeq = Math.max(1, num(loaded.nextEmployeeSeq, 1))
 

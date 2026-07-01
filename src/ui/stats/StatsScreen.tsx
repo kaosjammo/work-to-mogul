@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { money, formatRate, format } from '../../engine/num'
 import { CAREER_LEVELS } from '../../content/career'
-import { useStats, useContracts } from '../../store/gameStore'
+import { useStats, useContracts, useDaily } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { ContractView } from '../../store/buildView'
-import { claimContract } from '../../store/actions'
+import { claimContract, claimDailyBonus } from '../../store/actions'
 
 function ToggleRow({ label, hint, on, onToggle }: { label: string; hint: string; on: boolean; onToggle: () => void }) {
   return (
@@ -120,6 +120,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function StatsScreen() {
   const s = useStats()
   const contracts = useContracts()
+  const daily = useDaily()
   const careerTitle = CAREER_LEVELS[s.stats.careerLevel]?.title ?? '—'
   const bonusPct = s.prestigeProfitBonusPct
   const haptics = useSettingsStore((st) => st.haptics)
@@ -129,6 +130,28 @@ export function StatsScreen() {
 
   return (
     <div className="flex flex-col gap-4">
+      {daily.available && (
+        <button
+          type="button"
+          onClick={claimDailyBonus}
+          className="flex items-center gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+          style={{ background: 'rgba(245,197,24,0.12)', border: '1px solid var(--accent)' }}
+        >
+          <span className="text-2xl">🎁</span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-bold">
+              Daily Bonus{daily.streak > 0 ? ` · 🔥 Day ${daily.streak + 1}` : ''}
+            </span>
+            <span className="block text-xs" style={{ color: 'var(--text-dim)' }}>
+              About 2h of income — comes back every day.
+            </span>
+          </span>
+          <span className="tnum shrink-0 font-bold" style={{ color: 'var(--accent)' }}>
+            +{money(daily.reward)}
+          </span>
+        </button>
+      )}
+
       {contracts.list.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-bold" style={{ color: 'var(--text-dim)' }}>

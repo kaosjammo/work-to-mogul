@@ -55,6 +55,8 @@ export function initialGameState(now: number = Date.now()): GameState {
     buyMode: 'x1',
     activeTab: 'business',
     visitedTabs: ['business'],
+    dailyClaimDay: -1,
+    dailyStreak: 0,
     activeIndustryTab: 'food',
     industries,
     businesses,

@@ -4,6 +4,42 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 7 (D7) — daily return hook (the last untouched retention lever)
+
+**Analysed:** reviewer confirmed D1 reveal-cue done; D7 (a wall-clock return reason) is the
+last real lever — all recurring content refreshed on play-time, so nothing pulled a lapsed
+player back tomorrow. Built the de-risked spec.
+
+**Implemented (finished vertical slice):** a once-per-real-day **Daily Bonus** worth ~2h of
+current idle income (`engine/daily.ts`, reusing `automatedIncomePerSec` so it auto-scales
+across prestige tiers). Day-bucketing via a persisted `dailyClaimDay` (local-day index);
+`claimDaily(state, now)` takes an explicit `now` so it's unit-testable without real time. A
+`dailyStreak` counter tracks consecutive days (shown as "🔥 Day N"); the streak *multiplier*
+is the documented fast-follow (shipped flat first per spec). Claim gated on having idle
+income (so the reward is meaningful, like Golden Deals). Surfaces: a `DailyBonusModal` on
+open (Welcome-Back-style, one-tap Claim + Later), a claim row on the Stats tab, and a nav
+badge on Stats (reuses `navBadges`).
+
+**Validation:** 231 tests (+4: day-bucketing, no-claim-without-income, once-per-day +
+no-double-claim, streak advance/reset), build + lint clean. **Save-safe:** old saves default
+`dailyClaimDay = -1` (claimable next open), `dailyStreak = 0`. **Harness byte-identical**
+($4.08Qi / 156m) — player-triggered + the bot never advances wall-clock, so it's inert in
+the sims (same class as Golden Deals). Browser-verified: modal shows the reward → Claim
+grants cash, sets the day + streak, modal dismisses, not re-claimable same day.
+
+**Anti-abuse:** accepts minor clock-change exploitation (no server); never grants
+retroactive/multiple days.
+
+**Files:** +`engine/daily.ts` (+`.test.ts`), +`ui/shared/DailyBonusModal.tsx`;
+~`types/domain.ts`, `store/{initialState,actions,buildView,gameStore}.ts`, `save/serialize.ts`,
+`ui/stats/StatsScreen.tsx`, `App.tsx`.
+
+**Task 7 (D1 + D7) complete.** Next: streak-multiplier fast-follow, or Task 6 incremental
+polish — per the next roadmap review. The original 6-task roadmap + the D1/D7 frontier are
+now all shipped.
+
+---
+
 ## Task 7 (D1 onboarding) — "new tab" reveal cue
 
 **Analysed:** reviewer pivoted to Task 7 (D1 first-session + D7 daily hook), do D1 first.

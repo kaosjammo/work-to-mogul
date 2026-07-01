@@ -249,6 +249,8 @@ export interface GameState {
   buyMode: BuyMode
   activeTab: TabId
   visitedTabs: TabId[] // tabs the player has opened — a freshly-revealed, unvisited tab pulses "new"
+  dailyClaimDay: number // local-day index of the last daily-bonus claim (-1 = never)
+  dailyStreak: number // consecutive-day claim streak (for the "Day N" display)
   activeIndustryTab: IndustryId
   industries: Record<IndustryId, IndustryState>
   businesses: Record<BusinessId, BusinessState>
