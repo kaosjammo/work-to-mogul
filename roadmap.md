@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **225 tests / 35 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
+- **227 tests / 34 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - **On-device playtest ✅ (this pass, dev server + `__game` bridge @ 375px):** the game boots clean (no console errors) and all **3 industry mechanics render legible mobile cues with no overflow** — 🍔 Rush Hour (tappable 238×53px), 📈 Compound Interest (+50% at mid-ramp), ⚛️ Superposition (💥 ×9 spike). Industry differentiation is real and *visible*, not just on paper.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
@@ -49,12 +49,12 @@ decision-rich** — the earlier gaps are closed:
 4. ✅ **Active decisions** — event cards add a recurring "a decision is waiting" beat across all industries (`6d5c394`).
 
 **The gap has moved from *depth* to the *edges of the session* — D1 and D7:**
-- **D1 (first session): audited this pass — mostly solid.** There's a clear first-moment hint (tap Work Shift → buy a business) and a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige). The one gap: the *subsequent* reveals are **silent** — a new tab appears with no note on why to use it. Cheap fix (contextual hints).
-- **D7 (return reason): a true zero — the bigger lever.** All recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so **nothing pulls a lapsed player back tomorrow.** No daily hook exists.
+- **D1 (first session): solid now.** Clear first-moment hint (tap Work Shift → buy a business), a staged tab reveal (Staff/Stats after the 1st business, Upgrades at $10k, Ascend at prestige), and — new this iteration — a "new" pulse dot so those reveals get *noticed* (`aa4e2b5`). The onboarding arc is guided end-to-end.
+- **D7 (return reason): a true zero — the last untouched lever.** All recurring content (contracts, golden deals, event cards) refreshes on **play-time**, not wall-clock — so **nothing pulls a lapsed player back tomorrow.** No daily hook exists.
 
-Diagnosis in one line: **the game is deep and polished, and even onboarding is well-staged;
-the real untouched retention lever is a *daily return reason* (D7) — plus a cheap D1 polish
-(hint each staged reveal). Not more mid-game systems.**
+Diagnosis in one line: **the game is deep, polished, and now well-onboarded; the single
+remaining untouched retention lever is a *daily return reason* (D7) — a once-per-real-day
+claimable. Not more mid-game systems.**
 
 ---
 
@@ -68,7 +68,7 @@ the real untouched retention lever is a *daily return reason* (D7) — plus a ch
 | **4** | **Stronger industry identity / unique mechanics** | Differentiates the mid-late game beyond numbers | **✅ SLICE DONE** — Food (`ffc8fe5`) + Finance (`f09ef29`) + Quantum (`5cea210`), all cued; 5 flat industries deferred |
 | **5** | **Business event cards (opportunities / crises / choices)** | Active-play decision beats between idle stretches | **✅ DONE** (`6d5c394`, 225 tests) — 4 trade-off cards, deterministic, harness byte-identical, modal playtested |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Incremental (ongoing) |
-| **7** | **Daily return hook (D7) + onboarding hint polish (D1)** | D7: nothing pulls a lapsed player back tomorrow (all content refreshes on play-time). D1 audited this pass — already well-staged; just needs a hint on each silent tab reveal | **⬅ NEXT** — D7 is the real lever; D1 is a cheap polish (see below) |
+| **7** | **Daily return hook (D7)** — D1 onboarding polish ✅ done | D7: nothing pulls a lapsed player back tomorrow (all content refreshes on play-time). D1 reveal-cue shipped (`aa4e2b5`) | **⬅ NEXT** — D7 daily claimable is the last real retention lever (de-risked spec below) |
 
 **The original 6-task roadmap is essentially complete** (1–5 done, 6 is ongoing polish).
 Do **not** add a 9th industry / raw content tier. The next retention gains are D1/D7, not
@@ -243,8 +243,13 @@ event cards) refreshes on **play-time**, not wall-clock, so **nothing pulls a la
 back tomorrow.** No daily hook exists at all.
 
 **Acceptance criteria**
-- [ ] **D1 (quick win): contextual hint on each staged reveal.** Reuse the existing hint component + the `onboardingStep` counter (already in state) to fire a one-liner the first time each tab reveals — Staff → "Hire staff to automate — earn while you're away", Upgrades → "Permanent boosts for your businesses", Ascend → "Reset for permanent bonuses". Dismiss-once, persisted. No new framework. (Still worth a fresh-save live pass to time-to-first-automation once the preview tab is visible.)
-- [ ] **D7 (primary): a once-per-real-day claimable.** Bonus cash scaled to current income (or a free Golden Deal / daily event card). `Date`-based day-bucketing **persisted in the save**; **harness-safe** (the sim/bot never advances wall-clock → inert in tests); accept minor clock-change abuse (no server). Mobile: a claimable badge on the nav + a small "Daily Bonus" card on open.
+- [x] **D1 — reveal cue ✅ DONE (`aa4e2b5`).** A newly-revealed-but-unvisited tab pulses a "new" dot in the nav; opening it clears it (persisted `visitedTabs`, save-migrated so veterans see no false "new", tested + browser-verified at 390px). A lighter touch than a per-reveal hint, but it works alongside the existing card guidance ("💡 Assign an Operator to automate"). D1 onboarding is now solid end-to-end.
+- [ ] **D7 (the remaining lever): a once-per-real-day claimable.** Concrete de-risked spec:
+  - **Reward = ~2h of current idle income** (reuse the existing offline-catch-up value math so it auto-scales across prestige tiers and can't be a fixed pittance late-game). Optionally a **consecutive-day streak** multiplier (day 2 = ×1.2, … capped) — the classic "don't break the streak" D7 amplifier; ship the flat version first, streak as a fast-follow.
+  - **Day-bucketing:** a `dailyClaimDay` integer (local-day index) persisted in the save; claimable when `todayIndex > dailyClaimDay`. The claim function **takes a `now` param** (like `initialGameState(now)`) so it's unit-testable without real time.
+  - **Harness-safe:** it's *player-triggered* (a claim tap) and the sim/bot never advances wall-clock, so it's inert in `harness`/`progressionLoop` — same safety class as Golden Deals. Confirm the bot never claims.
+  - **Anti-abuse:** accept minor clock-change exploitation (no server, no fight). Don't grant retroactive/multiple days.
+  - **Mobile:** a claimable badge on the nav (reuse the `navBadges` pattern) + a small "Daily Bonus · Day N" card on open with a one-tap claim + the streak state.
 
 **Task 6 (mobile polish / celebrations / sound / haptics)** stays a parallel *incremental*
 track — feel is already strong (playtests confirm clean cues, tap targets, no overflow), so
