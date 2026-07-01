@@ -15,7 +15,7 @@ Tokens → run again, faster.
 
 ## Current state (verified this pass)
 
-- **208 tests / 32 files green** (`npx vitest run`, verified this pass — incl. the uncommitted dampener WIP), oxlint clean, production build boots.
+- **215 tests / 33 files green** (`npx vitest run`, verified this pass), oxlint clean, production build boots.
 - Deployed static on Vercel; committed + pushed to `origin/main` (`kaosjammo/work-to-mogul`), auto-deploys. A **parallel Claude dev session also commits here** — fetch/rebase and stage only your own files before pushing.
 - **Prestige economy converged (`c038473` → `673dbdc` → `748d3c1`):** the token yield went sqrt (exploded, 1.48B overnight) → fifth-root `0.2` (over-corrected, flat loop) → **`0.26` + ~2× talent strength** (the measured middle ground). The harness now shows run output climbing run-over-run and the Mastery sink reachable, with no blowup (see the balance-pass section). **The prestige balance question is resolved.**
 - **Late-game pacing dampener — landed (`722c386`, `economy.ts`):** a runtime profit multiplier (`lateGameDampen`, ×0.85 compounding from tier 3 / Logistics onward) that slows the mid/late game per a "slow it down significantly" steer. Cleanly layered on top (base curve untouched, so `balance.test` monotonicity holds). **Verified harness-safe this pass:** first-run landmarks still in-band (7 industries, prestige unlock ~3h) and the prestige slope still climbs ($10.2Qi at run #6, no plateau) with the Mastery sink still reachable; full suite green at 208. ⚠️ But it shrank the token margin over that sink (cum 67 → 54 at #6) — see Risks.
@@ -68,7 +68,7 @@ give 2–3 industries a felt, name-matching mechanic before adding any more cont
 | **1** | **Progression harness v2 ✅ + prestige *slope* balance pass ✅** | Harness (`673dbdc`) + slope re-tune (`748d3c1`) fixed the flat loop — run output now climbs run-over-run, Mastery sink reachable | **✅ DONE** |
 | **2** | **Prestige v1: founder perk choices** | Gives each ascension divergent flavour → reason to start run #2, #3… (the core idle retention loop) | **✅ DONE** (`79ecc94`; harness-wiring closed `8e91e5d`) |
 | **3** | **Employee depth v2: spec-fork build decision** | Turns the signature mechanic from "hire & forget" into ongoing choices | **✅ DONE** (`3b2daf4`, 206 tests) — active-duty XP deferred to 3b |
-| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food window ✅ (`ffc8fe5`) + Finance compounding (in flight, ⚠️ needs UI cue); Quantum signature next |
+| **4** | **Stronger industry identity / unique mechanics** | The 8 industries are still "same-but-numbers" (2 reskinned multipliers) — felt mechanics differentiate the whole mid-late game | **🔨 IN PROGRESS** — Food window ✅ (`ffc8fe5`) + Finance compounding ✅ (`f09ef29`, cued); Quantum signature = last slice mechanic |
 | 5 | Business event cards (opportunities / crises / choices) | Active-play decision beats between idle stretches | Backlog |
 | 6 | Mobile polish, art callouts, celebrations, sound/haptics | Feel — already strong; diminishing returns | Backlog (incremental) |
 
@@ -177,33 +177,27 @@ vestigial. **Exception — keep-the-baseline:** where the flat perk *is* the ide
 "fast-cycle" ×2), layer the active bonus on top but keep it modest, so idle players still
 get the baseline and active players get the spike. Apply this rule consistently.
 
-**Finance "Compound Interest" — 2nd mechanic, in flight (uncommitted).** The dev took the
+**Finance "Compound Interest" ✅ DONE (`f09ef29`) — with the cue.** The dev took the
 `replace-and-preserve-mean` recommendation exactly: `financeCompoundMult` ramps profit
 **1.0 → ×2 over ~90 min of Finance runtime** (mean ≈ the old flat ×1.5, cap read from
-`SIGNATURE_PERKS`), **replaces** the flat perk (skipped in the flat-perk fold), accrues only
-while Finance is owned, is persisted (`serialize.ts`) + resets on prestige, and is
-deterministic. A genuinely *different shape* from Food's tap-window (passive-dynamic curve).
-**18 guard tests green** (balance monotonicity held, harness landmarks held). Good work.
+`SIGNATURE_PERKS`), **replaces** the flat perk, accrues only while Finance is owned, is
+persisted + resets on prestige, deterministic — a genuinely *different shape* from Food's
+tap-window. **And they closed the legibility gap I flagged**: a `FinanceCompoundCue`
+("📈 Compound Interest" + live %) on the Business screen, driven by `buildView.financeCompound`.
+Shipped with mechanic + save-migration tests; full suite green at **215**. Two mechanic
+shapes (active window, passive ramp) now proven, both visible.
 
-**⚠️ Top gap — the compound is invisible (no UI cue).** `financeCompoundMult` isn't
-surfaced anywhere (`buildView`/UI untouched). A *passive* ramp needs a cue **more** than an
-active one: Food's Rush Hour announces itself (a button + countdown appear), but a slow
-background profit ramp the player can't see means Finance still *feels* like "just another
-industry" — which defeats the whole point of Task 4 even though the mechanic works. **Before
-commit: surface it** — e.g. on the Finance banner/entry, `Compound ×1.4 ↗ (→ ×2.0)` with a
-thin progress bar to the cap, at 375px. This is the difference between "differentiated" and
-"differentiated on paper".
+**Next → the 3rd and final slice mechanic: Quantum's own signature.**
+- [x] Active-window (Food/`rush_hour`) — `FloatingRushHour` cue. ✅ (`ffc8fe5`).
+- [x] Passive-dynamic (Finance/`compound_interest`) — `FinanceCompoundCue`. ✅ (`f09ef29`).
+- [ ] **Quantum — a high-variance "superposition" signature** (stop sharing Space's `moonshot`): e.g. each cycle rolls a boosted crit — big spikes, same *mean* as the old ×2 (replace-and-preserve-mean). A **third distinct shape** (volatility, vs window / ramp). ⚠️ **Determinism caveat:** "high-variance" must NOT be RNG in the income fold (breaks harness/`balance`) — drive the variance from a deterministic per-tick counter/phase so the sim stays stable, and keep the *mean* on the monotonic line. Needs a visible cue (a "⚛ Superposition ×N" flash on a spike).
+- [ ] **Data-driven + tested:** a `content.test`-style guard that each of the 3 signatures fires (no dead perks — `1ee29c1`).
 
-**Acceptance criteria — remaining**
-- [x] An **active-window** mechanic (Food/`rush_hour`) — deterministic, harness-safe, with the `FloatingRushHour` cue. ✅ shipped (`ffc8fe5`).
-- [~] A **passive-dynamic** mechanic (Finance/`compound_interest`) — mechanic ✅ (in flight, harness-safe); **UI cue still missing** (see gap above).
-- [ ] **Give Quantum its own signature** (stop sharing Space's `moonshot`) — e.g. a high-variance "superposition" crit mechanic — so the 8th industry has identity. Use the same replace-and-preserve-mean rule + a visible cue.
-- [ ] **Data-driven + tested:** a `content.test`-style guard that each industry's signature actually fires (we've shipped dead industry perks before — `1ee29c1`).
-- [ ] **Mobile-legible for *every* signature** — not just the active ones. If a player can't see it happening, it isn't differentiation. This is now the recurring risk for the passive mechanics.
-
-Scope guard: 2–3 industries as a slice, not all 8 at once. Food (active) + Finance (passive)
-prove the two mechanic shapes; Quantum's signature completes the slice, then the rest follow
-the pattern (replace-and-preserve-mean + a visible cue).
+**After the slice — decision for the reviewer/dev:** 5 of 8 industries (Retail, Tech,
+Logistics, Energy, Space) still have flat perks. The late ones (Logistics→Space) are exactly
+where the **dampener makes players linger**, so extending felt mechanics *there* is higher
+retention value than Task 5 (event cards) — but it's more of the same work. Reassess once
+Quantum lands and the 3-mechanic slice reads well on device.
 
 ---
 
