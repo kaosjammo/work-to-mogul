@@ -305,6 +305,7 @@ const STAGES: MogulStoryStage[] = [
 export const LAUNCH: MogulStory = {
   id: 'launch_meridian',
   industryId: 'space',
+  icon: '🚀',
   title: 'Scrub or Fly',
   hook: 'Your launch window is closing and a sensor won’t behave.',
   subject: 'Meridian-1',

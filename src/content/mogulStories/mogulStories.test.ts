@@ -49,4 +49,13 @@ describe('Mogul Stories — framework integrity', () => {
   it('the registry is keyed correctly', () => {
     for (const s of MOGUL_STORIES) expect(MOGUL_STORY_BY_ID[s.id]).toBe(s)
   })
+
+  it('every registered story defines its own (distinct) offer icon', () => {
+    const icons = MOGUL_STORIES.map((s) => {
+      expect(typeof s.icon).toBe('string') // each ships an explicit icon, not the fallback
+      expect((s.icon ?? '').length).toBeGreaterThan(0)
+      return s.icon
+    })
+    expect(new Set(icons).size).toBe(icons.length) // and no two share the same one
+  })
 })

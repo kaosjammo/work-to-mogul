@@ -355,6 +355,7 @@ const STAGES: MogulStoryStage[] = [
 export const ANGEL_DEAL: MogulStory = {
   id: 'angel_fridgemind',
   industryId: 'finance',
+  icon: '💼',
   title: 'Angel Investment',
   hook: 'A founder wants to pitch you',
   subject: 'FridgeMind',

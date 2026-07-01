@@ -275,6 +275,7 @@ const STAGES: MogulStoryStage[] = [
 export const INSPECTION: MogulStory = {
   id: 'inspection_voss',
   industryId: 'energy',
+  icon: '⚛️',
   title: 'The Inspection',
   hook: 'A regulator showed up for a surprise reactor audit.',
   subject: 'The Inspection',

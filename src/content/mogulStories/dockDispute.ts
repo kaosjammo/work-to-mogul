@@ -276,6 +276,7 @@ const STAGES: MogulStoryStage[] = [
 export const DOCK_DISPUTE: MogulStory = {
   id: 'walkout_pier_nine',
   industryId: 'logistics',
+  icon: '🏗️',
   title: 'The Walkout',
   hook: 'Your dockworkers are threatening to strike at peak season.',
   subject: 'Pier 9',

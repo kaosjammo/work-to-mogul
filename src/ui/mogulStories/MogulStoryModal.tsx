@@ -67,7 +67,7 @@ export function MogulStoryModal() {
           className="golden-pulse flex items-center gap-2 rounded-full px-4 py-2 font-bold shadow-lg"
           style={{ background: 'linear-gradient(135deg,#2bd47a,#46d369)', color: '#06231a', border: '2px solid #bff3d6' }}
         >
-          <span className="text-xl">💼</span>
+          <span className="text-xl">{STORY.icon ?? '💼'}</span>
           <span className="flex flex-col items-start leading-tight">
             <span className="text-sm">{STORY.hook}</span>
             <span className="text-[10px] font-semibold opacity-80">tap to hear them out</span>
@@ -141,7 +141,7 @@ export function MogulStoryModal() {
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-sm font-extrabold" style={{ color: 'var(--accent)' }}>
-              💼 {STORY.subject}
+              {STORY.icon ?? '💼'} {STORY.subject}
             </div>
             <div className="truncate text-[10px]" style={{ color: 'var(--text-faint)' }}>
               {STORY.hook}

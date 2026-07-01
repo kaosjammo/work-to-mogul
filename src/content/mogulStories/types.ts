@@ -60,6 +60,7 @@ export interface MogulStory {
   id: string
   industryId: string // which industry this story belongs to (trigger context)
   title: string // e.g. "Angel Investment"
+  icon?: string // a distinct emoji for the floating offer + modal header (defaults to 💼)
   hook: string // one-line teaser for the floating offer + subtitle
   subject: string // the story's subject (a startup / rival / supplier / relic …)
   protagonist: string // the NPC's name (founder / CEO / critic / captain …)

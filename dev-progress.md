@@ -4,6 +4,30 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Stories — distinct per-story icons (finishing polish)
+
+A small presentational finish now that the 7-story set is complete: each story had been
+sharing one generic 💼 in the floating offer + modal header. Gave each its own emoji.
+
+- **Optional `icon?: string`** on the `MogulStory` type (defaults to 💼). Set per story:
+  💼 Angel · 🏢 Lease · 👔 Poach · 📱 Gone Viral · 🏗️ Walkout · ⚛️ Inspection · 🚀 Scrub or Fly.
+- **Rendered** in both the floating-offer button and the modal header
+  (`ui/mogulStories/MogulStoryModal.tsx`) as `STORY.icon ?? '💼'` — no story-specific code,
+  layout unchanged, 44px tap area preserved.
+- **Test:** `mogulStories.test.ts` now asserts every registered story ships its own icon and
+  that no two stories share one (guards against a future story forgetting one / colliding).
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **324 tests** (+1 icon test). Browser-
+verified 375px: the Space offer + header show 🚀 (not 💼) and the Energy offer shows ⚛️, no
+overflow, no console errors.
+
+> **🏁 Mogul Stories: DONE + polished.** 7 stories (all industries), two bespoke rewards
+> (Angel→Combinator, Space→empire-wide halo), distinct icons, generic negotiation resolution
+> for the rest, save/cloud/harness-safe, documented. No further Mogul-Stories work is worth
+> doing without a real user signal.
+
+---
+
 ## Mogul Story #7 — "Scrub or Fly" (Space), the finale + a bespoke reward 🏁
 
 The seventh and final industry story — and the first to use a **bespoke reward** beyond the

@@ -245,6 +245,7 @@ const STAGES: MogulStoryStage[] = [
 export const LEASE_SHOWDOWN: MogulStory = {
   id: 'lease_thorne_plaza',
   industryId: 'retail',
+  icon: '🏢',
   title: 'The Lease',
   hook: 'A landlord wants to sign you to a flagship lease.',
   subject: 'Thorne Plaza',

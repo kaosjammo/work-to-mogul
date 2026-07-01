@@ -180,6 +180,7 @@ const STAGES: MogulStoryStage[] = [
 export const VIRAL_MOMENT: MogulStory = {
   id: 'viral_copper_spoon',
   industryId: 'food',
+  icon: '📱',
   title: 'Gone Viral',
   hook: 'An influencer just made your diner blow up overnight.',
   subject: 'Gone Viral',

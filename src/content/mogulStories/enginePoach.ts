@@ -273,6 +273,7 @@ const STAGES: MogulStoryStage[] = [
 export const ENGINE_POACH: MogulStory = {
   id: 'poach_nakamura',
   industryId: 'tech',
+  icon: '👔',
   title: 'The Poach',
   hook: 'A rival lab is trying to poach your star engineer.',
   subject: 'The Counter-Offer',

@@ -153,9 +153,11 @@ never nagging.
 ## How to add a new story
 
 1. **Author the content** — create `src/content/mogulStories/<yourStory>.ts` exporting a
-   `MogulStory` (see `angelInvestment.ts` as the template). Pick an `industryId`, a `hook`,
-   a `subject`/`protagonist`, your stages (each with 2–4 choices, one `walkAway`), and the
-   four `outcome` copy blocks. Choose your own hidden score names.
+   `MogulStory` (see `angelInvestment.ts` as the template). Pick an `industryId`, a distinct
+   `icon` emoji (shown on the floating offer + modal header; defaults to 💼 but the framework
+   test requires every registered story to set its own, unique one), a `hook`, a
+   `subject`/`protagonist`, your stages (each with 2–4 choices, one `walkAway`), and the four
+   `outcome` copy blocks. Choose your own hidden score names.
 2. **Register it** — add it to `MOGUL_STORIES` in
    [`index.ts`](../src/content/mogulStories/index.ts).
 3. **Write its logic** — decide the trigger/cooldown, the score→band mapping, and what each
