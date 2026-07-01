@@ -98,7 +98,11 @@ export const SIGNATURE_PERKS: Record<string, { profit?: number; speed?: number }
   rush_hour: { speed: 2 }, // Food — fast cycles
   franchise: { profit: 1.5 }, // Retail — the chain scales
   network_effect: { profit: 1.25 }, // Tech — audience compounds
-  compound_interest: { profit: 1.5 }, // Finance — wealth compounds
+  // Finance's `compound_interest` is now a FELT mechanic, not a flat perk: its profit
+  // COMPOUNDS the longer Finance runs (see financeCompoundMult). This value is the
+  // ramp's cap/peak (mean over a run ≈ the old flat ×1.5) — it's read by the mechanic,
+  // and industryMultipliers no longer applies it as a flat 500-owned bonus.
+  compound_interest: { profit: 2 }, // Finance — wealth compounds over time (ramp cap)
   just_in_time: { speed: 2 }, // Logistics — lean, fast turnaround
   grid_surge: { profit: 1.5 }, // Energy — peak-demand pricing
   moonshot: { profit: 2 }, // Space / Quantum — high-variance payoff
@@ -123,6 +127,30 @@ export function lateGameDampen(industryId: IndustryId): number {
   return Math.pow(1 - LATE_DAMPEN_PER_TIER, past)
 }
 
+// ----- Finance's signature: Compound Interest (a passive-DYNAMIC profit ramp) -----
+// Finance income actually *compounds* the longer the industry runs this run: a profit
+// multiplier that ramps 1.0 → cap over FINANCE_COMPOUND_RAMP_MS of Finance runtime,
+// then holds. This REPLACES the old flat ×1.5 signature perk (mean over a run ≈ the old
+// ×1.5, so no power creep); the cap is read from SIGNATURE_PERKS so the table stays the
+// source of truth. Deterministic (time-accumulated, no RNG). Resets on prestige (fresh
+// initialGameState). A different mechanic *shape* from Food's tap-window, by design.
+export const FINANCE_INDUSTRY_ID = 'finance'
+export const FINANCE_COMPOUND_RAMP_MS = 90 * 60_000 // ~90 min of Finance runtime to reach the cap
+
+/** Finance's current compound profit multiplier (1.0 → cap as `financeCompoundMs` grows). */
+export function financeCompoundMult(state: GameState): number {
+  const cap = SIGNATURE_PERKS.compound_interest?.profit ?? 2
+  const t = Math.min(1, Math.max(0, (state.financeCompoundMs ?? 0) / FINANCE_COMPOUND_RAMP_MS))
+  return 1 + (cap - 1) * t
+}
+
+/** Does the player own any Finance business? (Gate for accruing the compound.) */
+export function ownsFinance(state: GameState): boolean {
+  const ids = INDUSTRIES[FINANCE_INDUSTRY_ID]?.businessIds ?? []
+  for (const id of ids) if ((state.businesses[id]?.owned ?? 0) > 0) return true
+  return false
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
 export function industryMultipliers(state: GameState, industryId: IndustryId) {
   const ind = INDUSTRIES[industryId]
@@ -136,13 +164,17 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
   if (total >= 250) profit *= 1.5
   if (total >= 500) {
     profit *= 1.5
-    // Signature perk at the deep specialisation threshold.
-    const perk = ind ? SIGNATURE_PERKS[ind.bonus.signaturePerkId] : undefined
-    if (perk) {
+    // Signature perk at the deep specialisation threshold. Finance's `compound_interest`
+    // is skipped here — it's a time-ramp mechanic applied below, not a flat 500-owned bonus.
+    const perkId = ind?.bonus.signaturePerkId
+    const perk = perkId ? SIGNATURE_PERKS[perkId] : undefined
+    if (perk && perkId !== 'compound_interest') {
       profit *= perk.profit ?? 1
       speed *= perk.speed ?? 1
     }
   }
+  // Finance's signature: income compounds the longer the industry has been running.
+  if (industryId === FINANCE_INDUSTRY_ID) profit *= financeCompoundMult(state)
   return { profit, speed }
 }
 

@@ -51,6 +51,7 @@ import {
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
+import { financeCompoundMult, FINANCE_INDUSTRY_ID } from '../engine/economy'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
 import type { EffectChannel, EmployeeInstance } from '../types/domain'
@@ -283,6 +284,7 @@ export interface ViewSnapshot {
   revealedTabs: RevealedTabs
   golden: GoldenView
   rushHour: RushHourView
+  financeCompound: { industryId: string; pct: number }
   contracts: ContractView[]
   contractsClaimable: number
   buyMode: BuyMode
@@ -739,6 +741,12 @@ export function buildView(
     speedMult: RUSH_SPEED_MULT,
   }
 
+  // Finance's Compound Interest — its current profit bonus (for the industry cue).
+  const financeCompound = {
+    industryId: FINANCE_INDUSTRY_ID,
+    pct: Math.round((financeCompoundMult(state) - 1) * 100),
+  }
+
   const contracts: ContractView[] = (state.contracts?.active ?? [])
     .map((id) => CONTRACT_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
@@ -827,6 +835,7 @@ export function buildView(
     revealedTabs,
     golden,
     rushHour,
+    financeCompound,
     contracts,
     contractsClaimable,
     buyMode: state.buyMode,

@@ -1,4 +1,4 @@
-import { useGameStore, useActiveIndustry } from '../../store/gameStore'
+import { useGameStore, useActiveIndustry, useFinanceCompound } from '../../store/gameStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money, formatEta } from '../../engine/num'
@@ -42,11 +42,33 @@ function IndustryBonusCue({ totalOwned, theme }: { totalOwned: number; theme: st
   )
 }
 
+// Finance's signature cue — its Compound Interest bonus grows the longer Finance runs.
+function FinanceCompoundCue({ pct, theme }: { pct: number; theme: string }) {
+  return (
+    <div className="mb-3 rounded-2xl px-3 py-2" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span style={{ color: 'var(--text-dim)' }}>📈 Compound Interest</span>
+        <span className="tnum font-bold" style={{ color: pct > 0 ? 'var(--good)' : 'var(--text-faint)' }}>
+          +{pct}% profit
+        </span>
+      </div>
+      <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+        {/* +0%→+100% maps the ramp toward the ×2 cap. */}
+        <div className="h-full rounded-full" style={{ background: theme, width: `${Math.min(100, pct)}%` }} />
+      </div>
+      <div className="mt-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
+        Grows the longer Finance keeps running — resets when you ascend.
+      </div>
+    </div>
+  )
+}
+
 export function BusinessesScreen() {
   const activeId = useActiveIndustry()
   const ind = INDUSTRIES[activeId]
   const industryView = useGameStore((s) => s.industries.find((i) => i.id === activeId))
   const businesses = useGameStore((s) => s.businesses)
+  const financeCompound = useFinanceCompound()
 
   if (!ind || !industryView) return null
 
@@ -72,6 +94,10 @@ export function BusinessesScreen() {
 
       {industryView.totalOwned > 0 && (
         <IndustryBonusCue totalOwned={industryView.totalOwned} theme={ind.theme} />
+      )}
+
+      {activeId === financeCompound.industryId && industryView.ownsAny && (
+        <FinanceCompoundCue pct={financeCompound.pct} theme={ind.theme} />
       )}
 
       {hasAnyBusiness && (

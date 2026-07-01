@@ -8,6 +8,8 @@ import {
   PRESTIGE_SCALE,
   lateGameDampen,
   economyMultipliers,
+  financeCompoundMult,
+  FINANCE_COMPOUND_RAMP_MS,
 } from './economy'
 import { resolveBusiness } from './resolveBusiness'
 import { BUSINESSES } from '../content/businesses'
@@ -117,6 +119,28 @@ describe('late-game pacing dampener', () => {
     // Skyscraper's profit multiplier carries the dampen factor; lemonade's does not.
     expect(foodProfit).toBeCloseTo(1) // no milestones/talents/dampen on a fresh food business
     expect(lateProfit).toBeCloseTo(lateGameDampen('finance'))
+  })
+})
+
+describe('Finance Compound Interest — the passive-dynamic signature', () => {
+  it('ramps profit 1.0 → cap over the runtime, capped', () => {
+    const s = initialGameState(0)
+    expect(financeCompoundMult(s)).toBe(1) // fresh run → no compound yet
+    s.financeCompoundMs = FINANCE_COMPOUND_RAMP_MS / 2
+    expect(financeCompoundMult(s)).toBeCloseTo(1.5) // halfway → halfway to the ×2 cap
+    s.financeCompoundMs = FINANCE_COMPOUND_RAMP_MS
+    expect(financeCompoundMult(s)).toBeCloseTo(2) // full → the cap
+    s.financeCompoundMs = FINANCE_COMPOUND_RAMP_MS * 10
+    expect(financeCompoundMult(s)).toBeCloseTo(2) // never exceeds the cap
+  })
+
+  it('folds into FINANCE profit only, and REPLACES the old flat perk (no double-count)', () => {
+    const s = initialGameState(0)
+    const financeBefore = economyMultipliers(s, BUSINESSES.apartments).profit // Finance biz
+    const foodBefore = economyMultipliers(s, lemonade).profit
+    s.financeCompoundMs = FINANCE_COMPOUND_RAMP_MS // full compound → ×2
+    expect(economyMultipliers(s, BUSINESSES.apartments).profit).toBeCloseTo(financeBefore * 2)
+    expect(economyMultipliers(s, lemonade).profit).toBeCloseTo(foodBefore) // Food unaffected
   })
 })
 

@@ -114,8 +114,10 @@ describe('full-state round-trip', () => {
     s.achievementsUnlocked = ['first_business', 'millionaire']
     s.milestonesReached = ['lemonade_25']
     s.prestige = { totalPoints: 8, spentPoints: 4, talents: { magnate: 2, efficiency: 1 }, multiplier: 1, resets: 2 }
+    s.financeCompoundMs = 1_800_000 // 30 min of Finance compound accrued
 
     const r = deserialize(serialize(s, 100))!
+    expect(r.financeCompoundMs).toBe(1_800_000) // the compound buildup survives a refresh
     expect(r.businesses.lemonade.owned).toBe(30)
     expect(r.businesses.apartments.risk).toBe(73)
     expect(r.businesses.apartments.riskEventMsLeft).toBe(12000)

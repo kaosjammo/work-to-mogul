@@ -13,6 +13,7 @@ import { ROLE_DEFS, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { TRAIT_DEFS } from '../content/traits'
 import { TALENTS } from '../content/talents'
 import { talentCostAt } from '../engine/talents'
+import { FINANCE_COMPOUND_RAMP_MS } from '../engine/economy'
 import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
@@ -134,6 +135,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   s.cash = Math.max(0, num(loaded.cash))
   s.lifetimeEarnings = Math.max(0, num(loaded.lifetimeEarnings))
   s.lastWallClock = num(loaded.lastWallClock, now)
+  // Finance's compound accrual — a per-run buildup that survives refresh (old saves
+  // default to 0, so they load with a fresh compound; clamped to the ramp cap).
+  s.financeCompoundMs = clamp(num(loaded.financeCompoundMs), 0, FINANCE_COMPOUND_RAMP_MS)
   if (loaded.buyMode) s.buyMode = loaded.buyMode
   if (loaded.activeTab) s.activeTab = loaded.activeTab
   if (loaded.activeIndustryTab) s.activeIndustryTab = loaded.activeIndustryTab

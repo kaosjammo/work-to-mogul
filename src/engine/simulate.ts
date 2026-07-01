@@ -4,7 +4,7 @@
 import type { GameState, UnlockCondition } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
 import { resolveBusiness } from './resolveBusiness'
-import { totalOwnedInIndustry } from './economy'
+import { totalOwnedInIndustry, ownsFinance, FINANCE_COMPOUND_RAMP_MS } from './economy'
 import { applyCareerTick } from './career'
 import { moraleEquilibrium, auditReduction } from './employees/composition'
 import { checkAchievements } from './achievements'
@@ -104,6 +104,13 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
 
   tickGolden(state, dtMs)
   tickRushHour(state, dtMs)
+  // Finance's Compound Interest accrues while Finance is owned (capped at the ramp).
+  if (ownsFinance(state)) {
+    state.financeCompoundMs = Math.min(
+      FINANCE_COMPOUND_RAMP_MS,
+      (state.financeCompoundMs ?? 0) + dtMs,
+    )
+  }
   checkUnlocks(state)
   checkAchievements(state)
 }

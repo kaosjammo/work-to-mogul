@@ -230,6 +230,7 @@ export interface GameState {
   career: CareerState
   golden: GoldenState
   rushHour: RushHourState
+  financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   buyMode: BuyMode
   activeTab: TabId
   activeIndustryTab: IndustryId

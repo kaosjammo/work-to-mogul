@@ -4,6 +4,43 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Task 4 (industry identity) — Finance "Compound Interest" (2nd mechanic, passive-dynamic)
+
+**Analysed:** reviewer's firm "layer-vs-replace" recommendation — the felt mechanic should
+*replace* the flat perk (mean-preserving, no creep), and the second one should be a
+*different shape* (passive-dynamic curve) from Food's tap-window.
+
+**Implemented (finished vertical slice):** Finance income now *actually compounds* — a
+profit multiplier that ramps ×1.0 → ×2.0 over ~90 min of Finance runtime, then holds
+(`financeCompoundMult` in `economy.ts`, deterministic/time-accumulated). It **replaces**
+the old flat `compound_interest: ×1.5` perk: `industryMultipliers` skips it in the flat
+500-owned block, and the ramp cap is read from `SIGNATURE_PERKS.compound_interest` so the
+table stays the source of truth (content.test's dead-perk guard still passes). New
+persisted `financeCompoundMs` (accrues in `applyTick` while Finance owned; resets on
+prestige; save round-trip + old-save-default tested). A `📈 Compound Interest +X%` cue on
+the Finance tab (`BusinessesScreen`) with a ramp bar + "grows the longer Finance runs".
+
+**Validation:** 215 tests (+3: compound ramp/fold + save round-trip), build + lint clean,
+content.test green. **Harness measured** (Finance is late, so early landmarks unchanged;
+this is a bot-visible boost since it replaces a perk the bot never reached): first business
+10s / prestige 156m (was 179m, in-band) / final $4.08Qi (was $2.83Qi). progressionLoop
+green — cum tokens at #6 **54 → 60** (Mastery-sink margin *widened*), slope still climbs.
+Browser-verified: cue reads "+50% profit" at half-ramp.
+
+**Design note:** the +44% single-run boost overstates real play (players prestige and reset
+the compound); the 4h-per-run sim shows ~+30%. Net still ~-35% vs pre-dampener, and the
+reviewer frames dampener + differentiation as complementary. Cap/ramp are two constants for
+a playtest tune.
+
+**Files:** ~`types/domain.ts`, `engine/economy.ts` (+`economy.test.ts`), `engine/simulate.ts`,
+`store/{initialState,buildView,gameStore}.ts`, `save/serialize.ts` (+`serialize.test.ts`),
+`ui/business/BusinessesScreen.tsx`.
+
+**Next:** Task 4's third — give Quantum its own signature (stop sharing Space's `moonshot`),
+a high-variance deterministic mechanic; harness-safe since the bot never reaches Quantum.
+
+---
+
 ## Task 4 (industry identity) — Food "Rush Hour" felt mechanic (engine/depth track)
 
 **Analysed:** roadmap Task 4 flagged "build now" — the 8 industries are 2 reskinned
