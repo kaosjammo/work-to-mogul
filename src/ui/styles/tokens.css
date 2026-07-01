@@ -80,3 +80,17 @@
 
   color-scheme: dark;
 }
+
+/* Desktop-compact sizing (the roadmap's "overly large desktop buttons" fix).
+   Mouse-precision pointers don't need finger-sized controls, so the tap tokens
+   shrink behind a media query — one lever, zero component edits. Gated on
+   BOTH (pointer: fine) AND a desktop width so a touchscreen laptop / phone
+   that misreports pointer type never drops below the 44px touch floor. Base
+   :root values above stay untouched for every coarse-pointer device. */
+@media (pointer: fine) and (min-width: 1024px) {
+  :root {
+    --tap: 36px; /* was 44px — mouse precision */
+    --tap-lg: 44px; /* was 56px — compact primary buttons */
+    --nav-h: 52px; /* was 60px — trim the tall footer */
+  }
+}

@@ -17,6 +17,7 @@ import { FINANCE_COMPOUND_RAMP_MS, SUPERPOSITION_CYCLE_MS } from '../engine/econ
 import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
 import { CONTRACTS, CONTRACT_BY_ID, CONTRACT_BOARD_SIZE } from '../content/contracts'
+import { REPEATABLE_UPGRADES } from '../content/upgrades'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
@@ -227,6 +228,14 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
 
   // Arrays (filter to valid milestone/upgrade/unlock ids loosely)
   s.upgradesPurchased = strArray(loaded.upgradesPurchased)
+  // Executive Program ranks: keep only known program ids with sane integer ranks.
+  if (loaded.repeatableRanks && typeof loaded.repeatableRanks === 'object') {
+    for (const [id, rank] of Object.entries(loaded.repeatableRanks)) {
+      if (!REPEATABLE_UPGRADES[id]) continue
+      const r = Math.floor(num(rank))
+      if (r > 0) s.repeatableRanks[id] = r
+    }
+  }
   s.milestonesReached = strArray(loaded.milestonesReached)
   s.achievementsUnlocked = strArray(loaded.achievementsUnlocked)
   s.prestigeMilestonesClaimed = strArray(loaded.prestigeMilestonesClaimed)

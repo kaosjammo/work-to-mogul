@@ -16,7 +16,8 @@ import type {
 } from '../types/domain'
 import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { BUSINESSES } from '../content/businesses'
-import { UPGRADES, UPGRADE_ORDER } from '../content/upgrades'
+import { UPGRADES, UPGRADE_ORDER, REPEATABLE_UPGRADES, REPEATABLE_ORDER } from '../content/upgrades'
+import { repeatableRank, repeatableCost } from '../engine/upgrades'
 import { careerLevelDef, MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { SYNERGY_LABEL } from '../content/synergies'
@@ -241,6 +242,18 @@ export interface UpgradeView {
   iconSrc: string
 }
 
+export interface RepeatableView {
+  id: string
+  name: string
+  blurb: string
+  icon: string
+  rank: number
+  cost: number // next rank's cost
+  affordable: boolean
+  effectLabel: string // e.g. "+2% profit / rank"
+  currentLabel: string | null // cumulative bonus at the current rank (null at rank 0)
+}
+
 export interface TalentView {
   id: string
   name: string
@@ -424,6 +437,8 @@ export interface ViewSnapshot {
   employees: EmployeeView[]
   hireOptions: HireOptionView[]
   upgrades: UpgradeView[]
+  repeatables: RepeatableView[]
+  repeatablesUnlocked: boolean
   achievements: AchievementView[]
   achievementsUnlockedCount: number
   prestigeMilestones: PrestigeMilestoneView[]
@@ -761,6 +776,31 @@ export function buildView(
       iconSrc: ART_UPGRADES[uid]?.icon ?? ART_MILESTONE[up.effect.kind],
     }
   })
+
+  // Executive Programs (repeatable upgrades) — visible once the empire is within
+  // sight of the cheapest program (or a rank is already owned), so the section
+  // doesn't clutter the early game.
+  const repeatables: RepeatableView[] = REPEATABLE_ORDER.map((rid) => {
+    const def = REPEATABLE_UPGRADES[rid]
+    const rank = repeatableRank(state, rid)
+    const cost = repeatableCost(state, rid)
+    const pct = Math.round((def.effect.factorPerRank - 1) * 100)
+    const channel = def.effect.kind === 'profitMult' ? 'profit' : 'speed'
+    const cum = Math.round((Math.pow(def.effect.factorPerRank, rank) - 1) * 100)
+    return {
+      id: rid,
+      name: def.name,
+      blurb: def.blurb,
+      icon: def.icon,
+      rank,
+      cost,
+      affordable: state.cash >= cost,
+      effectLabel: `+${pct}% ${channel} / rank`,
+      currentLabel: rank > 0 ? `now +${cum}% ${channel}` : null,
+    }
+  })
+  const repeatablesUnlocked =
+    state.lifetimeEarnings >= 1e8 || repeatables.some((r) => r.rank > 0)
 
   const pendingTokens = prestigePending(state)
   const prestigeUnlocked = state.lifetimeEarnings >= PRESTIGE_UNLOCK_LIFETIME
@@ -1101,6 +1141,8 @@ export function buildView(
     employees,
     hireOptions,
     upgrades,
+    repeatables,
+    repeatablesUnlocked,
     achievements,
     achievementsUnlockedCount: unlockedAch.size,
     prestigeMilestones,

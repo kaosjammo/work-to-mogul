@@ -167,7 +167,7 @@ describe('persistence policy', () => {
     'cash', 'lifetimeEarnings', 'lastWallClock', 'career', 'angelDeal',
     'financeCompoundMs', 'quantumPhaseMs', 'buyMode', 'activeTab', 'visitedTabs',
     'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
-    'employees', 'purchasedUnlocks', 'upgradesPurchased', 'milestonesReached',
+    'employees', 'purchasedUnlocks', 'upgradesPurchased', 'repeatableRanks', 'milestonesReached',
     'achievementsUnlocked', 'prestigeMilestonesClaimed', 'contracts', 'spaceShooter',
     'prestige', 'onboardingStep', 'nextEmployeeSeq',
   ])

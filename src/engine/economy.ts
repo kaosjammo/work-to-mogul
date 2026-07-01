@@ -13,6 +13,7 @@ import type {
 import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
+import { repeatableMultipliers } from './upgrades'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
 import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
 import { logisticsDispatchProfitMult, LOGISTICS_INDUSTRY_ID } from './logistics'
@@ -349,10 +350,13 @@ export function economyMultipliers(
   }
 }
 
-// Upgrades fold in here (populated in M5; safe no-op until then).
+// Upgrades fold in here (populated in M5; safe no-op until then). Executive
+// Programs (repeatable upgrades) fold in as GLOBAL profit/speed alongside the
+// one-shots — same layer, same semantics, just rank-scaled.
 function upgradeMultipliers(state: GameState, def: BusinessDef) {
-  let profit = 1
-  let speed = 1
+  const rep = repeatableMultipliers(state)
+  let profit = rep.profit
+  let speed = rep.speed
   let costRed = 1
   for (const id of state.upgradesPurchased) {
     const up = UPGRADE_LOOKUP[id]

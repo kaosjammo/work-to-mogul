@@ -19,7 +19,7 @@ import {
   fuseEmployees,
 } from '../engine/employees/roster'
 import { autoAssignBest } from '../engine/employees/autoAssign'
-import { buyUpgrade as buyUpgradeFn } from '../engine/upgrades'
+import { buyUpgrade as buyUpgradeFn, buyRepeatable as buyRepeatableFn } from '../engine/upgrades'
 import { prestigeReset } from '../engine/prestige'
 import { buyTalent as buyTalentFn } from '../engine/talents'
 import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
@@ -186,6 +186,14 @@ export function autoAssign(): void {
 
 export function buyUpgrade(id: UpgradeId): void {
   if (buyUpgradeFn(getEngineState(), id)) {
+    playSound('buy')
+    publishNow()
+  }
+}
+
+/** Buy the next rank of a repeatable Executive Program. */
+export function buyRepeatableProgram(id: string): void {
+  if (buyRepeatableFn(getEngineState(), id)) {
     playSound('buy')
     publishNow()
   }

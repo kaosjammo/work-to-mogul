@@ -1,11 +1,11 @@
 import { money } from '../../engine/num'
-import { useUpgrades } from '../../store/gameStore'
-import { buyUpgrade, buyAllUpgrades } from '../../store/actions'
-import { Placeholder } from '../shared/Placeholder'
+import { useUpgrades, useRepeatables } from '../../store/gameStore'
+import { buyUpgrade, buyAllUpgrades, buyRepeatableProgram } from '../../store/actions'
 import { Icon } from '../shared/Icon'
 
 export function UpgradesScreen() {
   const upgrades = useUpgrades()
+  const { list: repeatables, unlocked: programsUnlocked } = useRepeatables()
 
   // Available (affordable-or-not, unowned) first — cheapest first — then owned.
   const sorted = [...upgrades].sort((a, b) => {
@@ -16,24 +16,75 @@ export function UpgradesScreen() {
   const allOwned = upgrades.length > 0 && upgrades.every((u) => u.purchased)
   const affordableCount = upgrades.filter((u) => !u.purchased && u.affordable).length
 
-  if (allOwned) {
-    return (
-      <Placeholder
-        art="/assets/states/state_empty_upgrades.svg"
-        title="All upgrades owned"
-        body="You've bought every upgrade available in this build. More arrive with future content."
-      />
-    )
-  }
-
   return (
     <div>
+      {/* Executive Programs — repeatable, endlessly-buyable ranks (a late-game cash
+          sink), so this tab keeps paying off after every one-shot is owned. */}
+      {programsUnlocked && (
+        <>
+          <div className="section mb-2 flex items-center justify-between">
+            <h2>Executive Programs</h2>
+            <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
+              repeatable
+            </span>
+          </div>
+          <div className="card mb-4 overflow-hidden">
+            {repeatables.map((p) => (
+              <div key={p.id} className="list-row py-2.5 pl-3 pr-3">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl"
+                  style={{ background: 'var(--surface-2)' }}
+                  aria-hidden
+                >
+                  {p.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold">{p.name}</span>
+                    {p.rank > 0 && (
+                      <span className="tnum shrink-0 text-xs font-bold" style={{ color: 'var(--accent)' }}>
+                        Rk {p.rank}
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate text-xs">
+                    <span className="font-bold" style={{ color: 'var(--good)' }}>
+                      {p.effectLabel}
+                    </span>
+                    <span style={{ color: 'var(--text-faint)' }}>
+                      {p.currentLabel ? ` · ${p.currentLabel}` : ` · ${p.blurb}`}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={!p.affordable}
+                  onClick={() => buyRepeatableProgram(p.id)}
+                  className={`btn btn-md shrink-0 ${p.affordable ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ minWidth: '72px' }}
+                >
+                  <span>{p.rank > 0 ? 'Rank up' : 'Start'}</span>
+                  <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+                    {money(p.cost)}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="section mb-2 flex items-center justify-between">
         <h2>Upgrades</h2>
         {affordableCount > 0 && (
           <button type="button" onClick={buyAllUpgrades} className="btn btn-secondary btn-sm" style={{ color: 'var(--accent)' }}>
             Buy all affordable ({affordableCount})
           </button>
+        )}
+        {allOwned && (
+          <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
+            all owned ✓
+          </span>
         )}
       </div>
 
