@@ -179,7 +179,9 @@ never nagging.
 - ✅ **Logistics** — a dockworkers' dispute during peak season. *(Shipped: "The Walkout",
   `walkout_pier_nine`, an 8-stage `standard` labour negotiation —
   `content/mogulStories/dockDispute.ts`.)*
-- **Energy** — a regulator's inspection with a buried compliance flaw.
+- ✅ **Energy** — a regulator's inspection with a buried compliance flaw. *(Shipped: "The
+  Inspection", `inspection_voss`, an 8-stage `standard` compliance drama —
+  `content/mogulStories/inspection.ts`.)*
 - **Space** — a launch-window gamble with a flaky supplier ("scrub or fly").
 - ✅ **Food** — a viral-review moment that can make or sink a location. *(Shipped: "Gone
   Viral", `viral_copper_spoon`, a 5-stage `short` crisis-opportunity —

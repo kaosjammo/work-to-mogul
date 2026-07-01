@@ -4,6 +4,33 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Mogul Story #6 — "The Inspection" (Energy), a compliance drama
+
+Sixth story, content + registration only. **6 of 7 industry ideas shipped — only the Space
+launch gamble remains.**
+
+- **New story** `content/mogulStories/inspection.ts` — "The Inspection" (`inspection_voss`,
+  Energy): an **8-stage `standard`** compliance drama. A regulator (fictional *Della Voss*)
+  arrives unannounced; there's a real buried flaw — a three-week gap in the reactor's
+  containment logs. Meet it with transparency + a concrete fix (and refuse the bribe) to turn
+  her into an ally, or charm/lie/bribe your way toward a shutdown. Reuses the shared
+  negotiation scores; registered in `index.ts`.
+- **No new engine code:** auto-triggers via `storyEligible` (owns Energy + cash floor),
+  rotates in, resolves through the shared resolution — a clean honest handling → cash + a
+  timed **Energy** boost; a caught cover-up (lie / bribe / lowball) → an Energy dip; lawyer up
+  and say nothing → neutral.
+- **Harness-inert** (player-triggered). Length range: Angel 10 / Poach 8 / Walkout 8 /
+  **Inspection 8** / Lease 7 / Viral 5.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **319 tests** (+3: Energy eligibility,
+clean-handling→Energy-boost-not-Combinator, lawyer-up→neutral; framework-integrity test
+auto-covers the new story; all prior stories + harness + balance + progression unchanged).
+Browser-verified 375px: Energy-owning state → "💼 …surprise reactor audit" offer → modal
+renders *The Inspection* / "The Knock · **1/8**" → choice → consequence beat → Continue
+advances to "· 2/8" with authored score deltas, no overflow, no console errors.
+
+---
+
 ## Mogul Story #5 — "The Walkout" (Logistics), a labour negotiation
 
 Fifth story, content + registration only again. Fills the mid-late timeline gap (Logistics

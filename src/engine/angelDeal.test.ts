@@ -28,7 +28,13 @@ import {
   EXIT_INTERVAL_MS,
 } from './angelDeal'
 import { COMBINATOR_ID } from '../content/businesses'
-import { LEASE_SHOWDOWN, ENGINE_POACH, VIRAL_MOMENT, DOCK_DISPUTE } from '../content/mogulStories'
+import {
+  LEASE_SHOWDOWN,
+  ENGINE_POACH,
+  VIRAL_MOMENT,
+  DOCK_DISPUTE,
+  INSPECTION,
+} from '../content/mogulStories'
 
 function scores(partial: Partial<Scores>): Scores {
   return { ...initialScores(), ...partial }
@@ -409,6 +415,46 @@ describe('Mogul Story #5 — The Walkout (Logistics): a labour negotiation on th
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     expect(chooseAngelChoice(s, 'dec_walk', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('neutral')
+  })
+})
+
+describe('Mogul Story #6 — The Inspection (Energy): a compliance drama on the shared runtime', () => {
+  function energyState() {
+    const s = initialGameState(0)
+    s.cash = 1e9
+    s.businesses.solar_farm.owned = 1 // an Energy business
+    s.businesses.solar_farm.unlocked = true
+    return s
+  }
+
+  it('is eligible only when the player owns Energy + clears the cash floor', () => {
+    expect(storyEligible(energyState(), INSPECTION)).toBe(true)
+    const noEnergy = initialGameState(0)
+    noEnergy.cash = 1e9
+    expect(storyEligible(noEnergy, INSPECTION)).toBe(false)
+  })
+
+  it('a clean handling boosts ENERGY only and never unlocks the Combinator', () => {
+    const s = energyState()
+    s.angelDeal.storyId = INSPECTION.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'ruling'
+    s.angelDeal.scores = scores({ dueDiligence: 8, valuationDiscipline: 5, leverage: 4, risk: 1 })
+    expect(chooseAngelChoice(s, 'rul_sign', new Set())).toBe(true)
+    expect(s.angelDeal.outcome).toBe('great')
+    expect(s.angelDeal.combinatorUnlocked).toBe(false)
+    expect(s.angelDeal.boostIndustryId).toBe('energy')
+    expect(mogulStoryBoostMult(s, 'energy')).toBeGreaterThan(1)
+    expect(mogulStoryBoostMult(s, 'logistics')).toBe(1)
+  })
+
+  it('lawyering up resolves neutral', () => {
+    const s = energyState()
+    s.angelDeal.storyId = INSPECTION.id
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'ruling'
+    expect(chooseAngelChoice(s, 'rul_lawyer', new Set())).toBe(true)
     expect(s.angelDeal.outcome).toBe('neutral')
   })
 })
