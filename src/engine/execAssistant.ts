@@ -18,8 +18,8 @@ import type { MogulStory } from '../content/mogulStories/types'
 import type { OutcomeBand } from './angelDeal'
 import { automatedIncomePerSec } from './catchUp'
 
-/** The EA character + the rival CEO they work for (all fictional). */
-export const EA_PARTNER_NAME = 'Wes Vaughn'
+/** The EA character + the rival CEO she works for (all fictional). */
+export const EA_PARTNER_NAME = 'Reyna Vaughn'
 export const EA_RIVAL_NAME = 'Gideon Frost'
 /** The arc's home: it opens when the Investment Fund is first unlocked. */
 export const FUND_BUSINESS_ID = 'fund'
