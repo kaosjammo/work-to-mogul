@@ -53,6 +53,10 @@ export function prestigeReset(state: GameState): boolean {
   const founderPerk = state.prestige.founderPerk ?? null // chosen style persists across runs
   // Meta-progression survives an ascension.
   const achievements = [...state.achievementsUnlocked]
+  // The daily-return hook is wall-clock meta, not run state: ascending must not
+  // re-open today's claim or wipe a multi-day streak.
+  const dailyClaimDay = state.dailyClaimDay
+  const dailyStreak = state.dailyStreak
   const prestigeMilestones = [...(state.prestigeMilestonesClaimed ?? [])]
   const contracts = state.contracts
     ? { active: [...state.contracts.active], nextIndex: state.contracts.nextIndex }
@@ -85,6 +89,8 @@ export function prestigeReset(state: GameState): boolean {
   }
   state.achievementsUnlocked = achievements
   state.prestigeMilestonesClaimed = prestigeMilestones
+  state.dailyClaimDay = dailyClaimDay
+  state.dailyStreak = dailyStreak
   if (contracts) state.contracts = contracts // the missions board persists too
   if (salvageCampaign) state.spaceShooter = { ...state.spaceShooter, ...salvageCampaign }
   // Reaching an ascension-count milestone banks bonus tokens (one-time).

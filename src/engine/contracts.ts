@@ -22,6 +22,19 @@ export function initialContractsState(): ContractsState {
   }
 }
 
+/**
+ * Deal pool contracts into free board slots (never re-dealing something already
+ * on the board). The ONE board-dealing rule — claimContract deals singles through
+ * the same pool pointer; the save loader calls this after a content change
+ * removed active ids, so persistence never grows its own (drifting) dealer.
+ */
+export function refillBoard(c: ContractsState): void {
+  while (c.active.length < CONTRACT_BOARD_SIZE && c.nextIndex < CONTRACTS.length) {
+    const candidate = CONTRACTS[c.nextIndex++].id
+    if (!c.active.includes(candidate)) c.active.push(candidate)
+  }
+}
+
 /** Current value of a contract's tracked metric. */
 export function contractMetric(state: GameState, metric: ContractMetric): number {
   switch (metric) {

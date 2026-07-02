@@ -32,6 +32,8 @@ export const useCareer = () => useGameStore((s) => s.career)
 export const useEmployees = () => useGameStore(useShallow((s) => s.employees))
 export const useHireOptions = () => useGameStore(useShallow((s) => s.hireOptions))
 export const useUpgrades = () => useGameStore(useShallow((s) => s.upgrades))
+export const useRepeatables = () =>
+  useGameStore(useShallow((s) => ({ list: s.repeatables, unlocked: s.repeatablesUnlocked })))
 export const useStats = () =>
   useGameStore(
     useShallow((s) => ({

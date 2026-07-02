@@ -193,7 +193,10 @@ export function resolveMission(
   }
 
   const reward = stage?.reward
-  if (reward) {
+  // ALL rewards fire only on the advancing pass — a stale/replayed/double submit of
+  // an already-cleared stage must be a true no-op (not just for the unlocks), or a
+  // replayed submit mints a fresh cash payout + buff each time.
+  if (reward && isNextStage) {
     // Cash: seconds-of-idle-income × band — bounded + scale-appropriate (like event
     // cards / golden deals), so a payout stays meaningful at any point in the game.
     const perSec = automatedIncomePerSec(state)
@@ -213,12 +216,11 @@ export function resolveMission(
       result.buffMult = s.buffMult
       result.buffMs = s.buffMsLeft
     }
-    // Permanent unlocks fire only on the advancing pass (never on a would-be replay).
-    if (isNextStage && reward.unlockYard) {
+    if (reward.unlockYard) {
       s.orbitalYardUnlocked = true
       result.unlockedYard = true
     }
-    if (isNextStage && reward.unlockAiPilot) {
+    if (reward.unlockAiPilot) {
       s.aiPilotUnlocked = true
       s.aiSalvageCooldownMs = AI_SALVAGE_INTERVAL_MS
       result.unlockedAiPilot = true

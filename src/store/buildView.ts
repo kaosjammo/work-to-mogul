@@ -16,7 +16,15 @@ import type {
 } from '../types/domain'
 import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { BUSINESSES } from '../content/businesses'
-import { UPGRADES, UPGRADE_ORDER } from '../content/upgrades'
+import { UPGRADES, UPGRADE_ORDER, REPEATABLE_UPGRADES, REPEATABLE_ORDER } from '../content/upgrades'
+import { repeatableRank, repeatableCost } from '../engine/upgrades'
+
+// Cheapest Executive Program entry price (static content; computed once).
+let cheapestRepeatable: number | null = null
+function cheapestRepeatableCost(): number {
+  cheapestRepeatable ??= Math.min(...REPEATABLE_ORDER.map((id) => REPEATABLE_UPGRADES[id].baseCost))
+  return cheapestRepeatable
+}
 import { careerLevelDef, MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { SYNERGY_LABEL } from '../content/synergies'
@@ -65,7 +73,7 @@ import { getMogulStory } from '../content/mogulStories'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
-import { canClaimDaily, dailyReward } from '../engine/daily'
+import { canClaimDaily, dailyReward, localDayIndex } from '../engine/daily'
 import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
 import {
   financeCompoundMult,
@@ -241,6 +249,18 @@ export interface UpgradeView {
   iconSrc: string
 }
 
+export interface RepeatableView {
+  id: string
+  name: string
+  blurb: string
+  icon: string
+  rank: number
+  cost: number // next rank's cost
+  affordable: boolean
+  effectLabel: string // e.g. "+2% profit / rank"
+  currentLabel: string | null // cumulative bonus at the current rank (null at rank 0)
+}
+
 export interface TalentView {
   id: string
   name: string
@@ -398,6 +418,7 @@ export interface ViewSnapshot {
   spaceShooter: SpaceShooterView
   daily: {
     available: boolean
+    dayIndex: number // today's local-day index (keys per-day UI dismissals)
     reward: number
     streak: number
     nextMilestone: { day: number; label: string } | null
@@ -424,6 +445,8 @@ export interface ViewSnapshot {
   employees: EmployeeView[]
   hireOptions: HireOptionView[]
   upgrades: UpgradeView[]
+  repeatables: RepeatableView[]
+  repeatablesUnlocked: boolean
   achievements: AchievementView[]
   achievementsUnlockedCount: number
   prestigeMilestones: PrestigeMilestoneView[]
@@ -565,7 +588,7 @@ export function buildView(
     const def = BUSINESSES[id]
     const r = resolveBusiness(state, def)
     const emp = computeEmployeeEffects(state, def, bs)
-    const qty = resolveQuantity(state.buyMode, def, bs.owned, state.cash)
+    const qty = resolveQuantity(state.buyMode, def, bs.owned, state.cash, r.buyCostMult)
     const cost = totalCost(def, bs.owned, Math.max(qty, 1)) * r.buyCostMult
     const nm = nextMilestone(def, bs.owned)
 
@@ -762,6 +785,33 @@ export function buildView(
     }
   })
 
+  // Executive Programs (repeatable upgrades) — visible once the empire is within
+  // sight of the cheapest program (or a rank is already owned), so the section
+  // doesn't clutter the early game.
+  const repeatables: RepeatableView[] = REPEATABLE_ORDER.map((rid) => {
+    const def = REPEATABLE_UPGRADES[rid]
+    const rank = repeatableRank(state, rid)
+    const cost = repeatableCost(state, rid)
+    const pct = Math.round((def.effect.factorPerRank - 1) * 100)
+    const channel = def.effect.kind === 'profitMult' ? 'profit' : 'speed'
+    const cum = Math.round((Math.pow(def.effect.factorPerRank, rank) - 1) * 100)
+    return {
+      id: rid,
+      name: def.name,
+      blurb: def.blurb,
+      icon: def.icon,
+      rank,
+      cost,
+      affordable: state.cash >= cost,
+      effectLabel: `+${pct}% ${channel} / rank`,
+      currentLabel: rank > 0 ? `now +${cum}% ${channel}` : null,
+    }
+  })
+  // Reveal threshold derives from content (a tenth of the cheapest program) so a
+  // rebalanced cost table can't silently gate a purchasable program out of view.
+  const repeatablesUnlocked =
+    state.lifetimeEarnings >= cheapestRepeatableCost() / 10 || repeatables.some((r) => r.rank > 0)
+
   const pendingTokens = prestigePending(state)
   const prestigeUnlocked = state.lifetimeEarnings >= PRESTIGE_UNLOCK_LIFETIME
 
@@ -929,6 +979,9 @@ export function buildView(
   const prevDay = prevMilestoneDay(dailyStreakVal)
   const daily = {
     available: canClaimDaily(state, Date.now()),
+    // Today's local-day index — lets the UI key a dismissal to THIS day's bonus
+    // (a session-long boolean would suppress tomorrow's bonus in a long-lived PWA).
+    dayIndex: localDayIndex(Date.now()),
     reward: dailyReward(state),
     streak: dailyStreakVal,
     // The next streak reward, so the streak reads as a goal (not a hidden counter).
@@ -1000,6 +1053,10 @@ export function buildView(
   const cdef = careerLevelDef(c.level)
   const isMaxLevel = c.level >= MAX_CAREER_LEVEL
   const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
+  // STEADY rate — these feed the shift/consulting payout PREVIEWS, and the engine
+  // settles those claims at the steady rate (career.ts). Advertising the live
+  // buffed rate here would promise 2× what collecting actually pays. (The HUD's
+  // live income readout is totalPps from the per-business fold, not this.)
   const passivePerSec = automatedIncomePerSec(state)
   const retired = isRetired(state)
   const drawValue = shiftPayout(state, passivePerSec)
@@ -1081,7 +1138,10 @@ export function buildView(
     buyMode: state.buyMode,
     activeTab: state.activeTab,
     activeIndustryTab: state.activeIndustryTab,
-    prestige: state.prestige,
+    // Copy — never hand the store the LIVE engine object (the tick mutates it in
+    // place, so useShallow subscribers would see an unchanged reference and skip
+    // re-renders for prestige-field changes).
+    prestige: { ...state.prestige, talents: { ...state.prestige.talents } },
     prestigePending: pendingTokens,
     prestigeUnlocked,
     prestigeNextTokenAt: nextTokenLifetime(state),
@@ -1097,6 +1157,8 @@ export function buildView(
     employees,
     hireOptions,
     upgrades,
+    repeatables,
+    repeatablesUnlocked,
     achievements,
     achievementsUnlockedCount: unlockedAch.size,
     prestigeMilestones,

@@ -72,6 +72,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     hirePool: [],
     purchasedUnlocks: [],
     upgradesPurchased: [],
+    repeatableRanks: {},
     milestonesReached: [],
     achievementsUnlocked: [],
     prestigeMilestonesClaimed: [],

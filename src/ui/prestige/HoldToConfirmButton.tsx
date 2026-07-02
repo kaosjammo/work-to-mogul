@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   label: string
@@ -23,6 +23,15 @@ export function HoldToConfirmButton({
 }: Props) {
   const [holding, setHolding] = useState(false)
   const timer = useRef<number | null>(null)
+
+  // A destructive onConfirm must never fire after the button is gone (e.g. the
+  // screen unmounts mid-hold) — clear any pending hold timer on unmount.
+  useEffect(
+    () => () => {
+      if (timer.current != null) clearTimeout(timer.current)
+    },
+    [],
+  )
 
   const start = () => {
     if (disabled) return

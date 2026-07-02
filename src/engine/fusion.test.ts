@@ -58,4 +58,22 @@ describe('fusion', () => {
     expect(fuseEmployees(s, 'a', 'b')).toBeNull()
     expect(s.employees.b).toBeDefined()
   })
+
+  it('inherits the consumed spec into an empty slot 1', () => {
+    const s = initialGameState(0)
+    s.employees.a = emp('a', { level: 10 })
+    s.employees.b = emp('b', { level: 10, specialisation: 'sprint_lead' })
+    fuseEmployees(s, 'a', 'b')
+    expect(s.employees.a.specialisation).toBe('sprint_lead')
+  })
+
+  it('never duplicates the kept Mastery spec into slot 1 (two slots must differ)', () => {
+    const s = initialGameState(0)
+    // keep: slot 1 empty, slot 2 = sprint_lead; consume: slot 1 = sprint_lead.
+    s.employees.a = emp('a', { level: 10, specialisation: null, specialisation2: 'sprint_lead' })
+    s.employees.b = emp('b', { level: 10, specialisation: 'sprint_lead' })
+    fuseEmployees(s, 'a', 'b')
+    expect(s.employees.a.specialisation).toBeNull() // NOT sprint_lead in both slots
+    expect(s.employees.a.specialisation2).toBe('sprint_lead')
+  })
 })

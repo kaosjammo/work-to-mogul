@@ -42,21 +42,37 @@ function BusinessCardImpl({ view, accent }: Props) {
   else if (view.nextMilestoneThreshold != null) hint = ` · ★ ${view.nextMilestoneThreshold}`
 
   const runCycle = (e: { clientX: number; clientY: number }) => {
+    // Only celebrate a tap that actually started a cycle — a tap while one is
+    // already running is a no-op in the engine and must not pop a phantom "+$".
+    if (!tap(view.id)) return
     const payout = view.pps * (view.cycleMs / 1000)
     if (payout > 0) useUiStore.getState().spawnFloat(e.clientX, e.clientY, `+${money(payout)}`)
     haptic(12)
-    tap(view.id)
   }
 
   return (
     <div
       className="list-row relative py-2.5 pr-3"
+      role={tappable ? 'button' : undefined}
+      tabIndex={tappable ? 0 : undefined}
+      aria-label={tappable ? `Run a ${view.name} cycle` : undefined}
       style={{
         paddingLeft: view.isBestBuy ? '9px' : '12px',
         borderLeft: view.isBestBuy ? `2px solid ${accent}` : undefined,
-        cursor: tappable ? 'pointer' : undefined,
+        cursor: idle ? 'pointer' : undefined,
       }}
       onClick={tappable ? runCycle : undefined}
+      onKeyDown={
+        tappable
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                const r = e.currentTarget.getBoundingClientRect()
+                runCycle({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })
+              }
+            }
+          : undefined
+      }
     >
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ${idle ? 'tap-ready' : ''}`}

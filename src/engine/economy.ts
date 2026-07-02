@@ -13,6 +13,7 @@ import type {
 import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { UPGRADES } from '../content/upgrades'
 import { talentEconomy } from './talents'
+import { repeatableMultipliers } from './upgrades'
 import { founderProfitMult, founderSpeedMult } from './founderPerks'
 import { foodRushSpeedMult, FOOD_INDUSTRY_ID } from './rushHour'
 import { logisticsDispatchProfitMult, LOGISTICS_INDUSTRY_ID } from './logistics'
@@ -34,13 +35,22 @@ export function totalCost(def: BusinessDef, owned: number, q: number): Num {
   return (first * (Math.pow(r, q) - 1)) / (r - 1)
 }
 
-/** Largest integer q such that totalCost(owned, q) <= cash. */
-export function maxAffordable(def: BusinessDef, owned: number, cash: Num): number {
+/** Largest integer q such that totalCost(owned, q) × costMult <= cash.
+ *  `costMult` is the buyer's combined cost reduction (resolveBusiness.buyCostMult) —
+ *  purchase() charges the discounted total, so Buy Max must count with it too. */
+export function maxAffordable(def: BusinessDef, owned: number, cash: Num, costMult = 1): number {
   const r = def.growthRate
+  const effectiveCash = costMult > 0 ? cash / costMult : cash
   const first = def.baseCost * Math.pow(r, owned)
-  if (cash < first) return 0
-  const q = Math.log((cash * (r - 1)) / first + 1) / Math.log(r)
-  return Math.max(0, Math.floor(q + 1e-9)) // epsilon guards float drift at boundaries
+  if (effectiveCash < first) return 0
+  const est = Math.log((effectiveCash * (r - 1)) / first + 1) / Math.log(r)
+  let q = Math.max(0, Math.floor(est + 1e-9)) // epsilon guards float drift at boundaries
+  // Verify with the SAME arithmetic purchase() charges (totalCost × costMult) —
+  // the log estimate and the division above can each round a hair the other way
+  // at exact-boundary cash, and purchase() rejects strictly; a Buy Max that quotes
+  // one unit too many would be a dead tap.
+  while (q > 0 && totalCost(def, owned, q) * costMult > cash) q--
+  return q
 }
 
 /** Resolve a buy mode into a desired quantity (cost-checked separately). */
@@ -49,8 +59,9 @@ export function resolveQuantity(
   def: BusinessDef,
   owned: number,
   cash: Num,
+  costMult = 1,
 ): number {
-  if (mode === 'max') return maxAffordable(def, owned, cash)
+  if (mode === 'max') return maxAffordable(def, owned, cash, costMult)
   return mode === 'x1' ? 1 : mode === 'x10' ? 10 : 100
 }
 
@@ -207,19 +218,36 @@ export function ownsSpace(state: GameState): boolean {
 
 /** Space-only profit multiplier from the Salvage campaign: a timed run-reward buff
  *  × the permanent Orbital-Yard / AI-Pilot perks. 1 when nothing is active/unlocked.
- *  Pure (no `now`) — the buff runs on a countdown decremented by tickSpaceShooter. */
-export function spaceSalvageProfitMult(state: GameState): number {
+ *  Pure (no `now`) — the buff runs on a countdown decremented by tickSpaceShooter.
+ *  `steady` folds only the permanent perks (see EconomyFoldOptions). */
+export function spaceSalvageProfitMult(state: GameState, steady = false): number {
   const s = state.spaceShooter
   if (!s) return 1
   let m = 1
-  if ((s.buffMsLeft ?? 0) > 0) m *= s.buffMult || 1
+  if (!steady && (s.buffMsLeft ?? 0) > 0) m *= s.buffMult || 1
   if (s.orbitalYardUnlocked) m *= SALVAGE_YARD_SPACE_PROFIT
   if (s.aiPilotUnlocked) m *= AI_PILOT_SPACE_PROFIT
   return m
 }
 
+// ----- Fold options -----
+// `steady: true` prices the economy at its FAIR LONG-RUN rate: short activity-
+// triggered buffs (Golden frenzy, Rush Hour, dispatch surges, event cards, Mogul
+// boosts, the timed salvage buff) are excluded and Quantum's collapse oscillator is
+// replaced by its cycle mean. Used wherever a rate is multiplied over a long span —
+// offline catch-up and every "N seconds/hours of income" reward — so a 20-second
+// buff can never multiply a 2-hour payout. The live tick and the HUD use the
+// default (transients included).
+export interface EconomyFoldOptions {
+  steady?: boolean
+}
+
 /** Industry-wide profit/speed multipliers from base bonus + specialisation thresholds. */
-export function industryMultipliers(state: GameState, industryId: IndustryId) {
+export function industryMultipliers(
+  state: GameState,
+  industryId: IndustryId,
+  opts?: EconomyFoldOptions,
+) {
   const ind = INDUSTRIES[industryId]
   let profit = ind?.bonus.globalProfitMult ?? 1
   let speed = ind?.bonus.globalSpeedMult ?? 1
@@ -243,9 +271,15 @@ export function industryMultipliers(state: GameState, industryId: IndustryId) {
     }
   }
   // Finance's signature: income compounds the longer the industry has been running.
+  // (A slow persistent ramp, not a transient buff — it folds in steady mode too.)
   if (industryId === FINANCE_INDUSTRY_ID) profit *= financeCompoundMult(state)
-  // Quantum's signature: profit periodically collapses into a jackpot.
-  if (industryId === QUANTUM_INDUSTRY_ID) profit *= quantumSuperpositionMult(state)
+  // Quantum's signature: profit periodically collapses into a jackpot. Steady folds
+  // use the cycle MEAN (the perk table's value) instead of the instantaneous phase.
+  if (industryId === QUANTUM_INDUSTRY_ID) {
+    profit *= opts?.steady
+      ? SIGNATURE_PERKS.superposition?.profit ?? 1
+      : quantumSuperpositionMult(state)
+  }
   return { profit, speed }
 }
 
@@ -282,32 +316,38 @@ export const PRESTIGE_UNLOCK_LIFETIME = PRESTIGE_SCALE
 /** Temporary all-business profit multiplier from a claimed Golden Deal's "Profit Rush". */
 export const PROFIT_FRENZY_MULT = 2
 
-export function economyMultipliers(state: GameState, def: BusinessDef): EconomyMultipliers {
+export function economyMultipliers(
+  state: GameState,
+  def: BusinessDef,
+  opts?: EconomyFoldOptions,
+): EconomyMultipliers {
   const owned = state.businesses[def.id]?.owned ?? 0
+  const steady = opts?.steady === true
   const ms = appliedMilestones(def, owned)
-  const ind = industryMultipliers(state, def.industryId)
+  const ind = industryMultipliers(state, def.industryId, opts)
   const up = upgradeMultipliers(state, def)
   const tal = talentEconomy(state) // prestige talent tree (replaces flat +2%/token)
   // A claimed Golden Deal briefly multiplies all profit (read inline to avoid an
   // import cycle with engine/golden). Bounded + active-play only → harness-safe.
-  const frenzy = (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
+  const frenzy = !steady && (state.golden?.frenzyMsLeft ?? 0) > 0 ? PROFIT_FRENZY_MULT : 1
   const lateDampen = lateGameDampen(def.industryId) // slows the higher tiers (≤ 1)
   // Food's "Rush Hour" signature: a claimed surge multiplies Food speed (1 otherwise).
-  const rush = def.industryId === FOOD_INDUSTRY_ID ? foodRushSpeedMult(state) : 1
+  const rush = !steady && def.industryId === FOOD_INDUSTRY_ID ? foodRushSpeedMult(state) : 1
   // Logistics' "Just-In-Time Dispatch" signature: a released surge multiplies Logistics
   // profit for a short window (1 otherwise). Opt-in + bot-inert → harness byte-identical.
-  const dispatch = def.industryId === LOGISTICS_INDUSTRY_ID ? logisticsDispatchProfitMult(state) : 1
+  const dispatch =
+    !steady && def.industryId === LOGISTICS_INDUSTRY_ID ? logisticsDispatchProfitMult(state) : 1
   // Event cards: a resolved card's timed all-business profit/speed buff (1 when none).
-  const evProfit = eventProfitMult(state)
-  const evSpeed = eventSpeedMult(state)
+  const evProfit = steady ? 1 : eventProfitMult(state)
+  const evSpeed = steady ? 1 : eventSpeedMult(state)
   // Mogul Stories: a timed post-deal profit boost/debuff on the resolved story's industry
   // (×1 until the player plays a story → harness-safe). The Startup Combinator is now a
   // standalone business, not a multiplier.
-  const mogul = mogulStoryBoostMult(state, def.industryId)
+  const mogul = steady ? 1 : mogulStoryBoostMult(state, def.industryId)
   // Space Salvage Shooter: a Space-only timed run-reward buff × permanent campaign
   // perks (Orbital Yard, AI Pilot). 1 for non-Space and until anything is earned.
   // Opt-in + bot-inert (the harness never plays the shooter) → harness-safe.
-  const salvage = def.industryId === SPACE_INDUSTRY_ID ? spaceSalvageProfitMult(state) : 1
+  const salvage = def.industryId === SPACE_INDUSTRY_ID ? spaceSalvageProfitMult(state, steady) : 1
   return {
     profit:
       ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * mogul * salvage,
@@ -316,10 +356,13 @@ export function economyMultipliers(state: GameState, def: BusinessDef): EconomyM
   }
 }
 
-// Upgrades fold in here (populated in M5; safe no-op until then).
+// Upgrades fold in here (populated in M5; safe no-op until then). Executive
+// Programs (repeatable upgrades) fold in as GLOBAL profit/speed alongside the
+// one-shots — same layer, same semantics, just rank-scaled.
 function upgradeMultipliers(state: GameState, def: BusinessDef) {
-  let profit = 1
-  let speed = 1
+  const rep = repeatableMultipliers(state)
+  let profit = rep.profit
+  let speed = rep.speed
   let costRed = 1
   for (const id of state.upgradesPurchased) {
     const up = UPGRADE_LOOKUP[id]

@@ -42,6 +42,9 @@ interface UiStore {
   spaceShooterOpen: boolean
   openSpaceShooter: () => void
   closeSpaceShooter: () => void
+  // Another tab took over the save — this tab is paused behind a blocking overlay.
+  tabConflict: boolean
+  setTabConflict: (v: boolean) => void
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -73,4 +76,6 @@ export const useUiStore = create<UiStore>((set) => ({
   spaceShooterOpen: false,
   openSpaceShooter: () => set({ spaceShooterOpen: true }),
   closeSpaceShooter: () => set({ spaceShooterOpen: false }),
+  tabConflict: false,
+  setTabConflict: (tabConflict) => set({ tabConflict }),
 }))

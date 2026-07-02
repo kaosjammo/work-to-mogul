@@ -18,6 +18,8 @@ import { AscensionCelebration } from './ui/shared/AscensionCelebration'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
 import { WealthStage } from './ui/shared/WealthStage'
 import { AccountModal } from './ui/account/AccountModal'
+import { TabConflictOverlay } from './ui/shared/TabConflictOverlay'
+import { SoundNudge } from './ui/shared/SoundNudge'
 import { ART_GENERATED } from './content/artManifest'
 
 export function App() {
@@ -57,6 +59,8 @@ export function App() {
       <AscensionCelebration />
       <DailyBonusModal />
       <WelcomeBackBanner />
+      <SoundNudge />
+      <TabConflictOverlay />
     </>
   )
 }

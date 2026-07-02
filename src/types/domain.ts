@@ -325,6 +325,7 @@ export interface GameState {
   hirePool: string[] // templateIds currently offered
   purchasedUnlocks: string[] // explicit unlock ids (was a Set)
   upgradesPurchased: UpgradeId[]
+  repeatableRanks: Record<string, number> // Executive Programs ranks (run-scoped, like upgrades)
   milestonesReached: MilestoneId[]
   achievementsUnlocked: string[] // meta-progression; persists through prestige
   prestigeMilestonesClaimed: string[] // ascension-count rewards already granted

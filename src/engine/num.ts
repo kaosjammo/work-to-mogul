@@ -56,12 +56,17 @@ export function money(value: Num): string {
   return '$' + format(value)
 }
 
-/** Format seconds as a compact duration ("2.4s", "1m 05s"). */
+/** Format seconds as a compact duration ("2.4s", "1m 05s", "2h 05m"). */
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return seconds.toFixed(1) + 's'
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}m ${s.toString().padStart(2, '0')}s`
+  if (seconds < 3600) {
+    const m = Math.floor(seconds / 60)
+    const s = Math.floor(seconds % 60)
+    return `${m}m ${s.toString().padStart(2, '0')}s`
+  }
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  return `${h}h ${m.toString().padStart(2, '0')}m`
 }
 
 /**

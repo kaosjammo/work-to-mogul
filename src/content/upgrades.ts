@@ -301,3 +301,53 @@ export const UPGRADE_ORDER: UpgradeId[] = [
   'global_profit_25x',
   'quantum_profit_3x',
 ]
+
+// ============================================================
+//  Executive Programs — REPEATABLE, endlessly-buyable upgrades so the Upgrades
+//  tab never dead-ends once the one-shots are owned. Each rank is a small
+//  GLOBAL bonus with a steep geometric cost curve, making them a late-game cash
+//  sink (a few extra × over a whole run), not a runaway multiplier. Run-scoped:
+//  ranks reset on ascension like one-shot upgrades. Harness-safe: the sim bot
+//  never buys upgrades, so pacing baselines are untouched.
+// ============================================================
+export interface RepeatableUpgradeDef {
+  id: string
+  name: string
+  blurb: string
+  icon: string // emoji (no bespoke art yet)
+  baseCost: number
+  costGrowth: number // cost multiplier per rank already owned
+  effect: { kind: 'profitMult' | 'speedMult'; factorPerRank: number } // global scope
+}
+
+export const REPEATABLE_UPGRADES: Record<string, RepeatableUpgradeDef> = {
+  exec_training: {
+    id: 'exec_training',
+    name: 'Executive Training',
+    blurb: 'Sharper leadership at every desk.',
+    icon: '🎓',
+    baseCost: 1e9,
+    costGrowth: 6,
+    effect: { kind: 'profitMult', factorPerRank: 1.02 },
+  },
+  ops_playbook: {
+    id: 'ops_playbook',
+    name: 'Operations Playbook',
+    blurb: 'Shave seconds off every cycle, everywhere.',
+    icon: '📘',
+    baseCost: 5e9,
+    costGrowth: 7,
+    effect: { kind: 'speedMult', factorPerRank: 1.01 },
+  },
+  brand_equity: {
+    id: 'brand_equity',
+    name: 'Global Brand Campaign',
+    blurb: 'The name alone closes deals now.',
+    icon: '🌐',
+    baseCost: 2.5e10,
+    costGrowth: 8,
+    effect: { kind: 'profitMult', factorPerRank: 1.03 },
+  },
+}
+
+export const REPEATABLE_ORDER: string[] = ['exec_training', 'ops_playbook', 'brand_equity']

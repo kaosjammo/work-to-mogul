@@ -15,12 +15,17 @@ import { Overlay } from './Overlay'
 export function DailyBonusModal() {
   const daily = useDaily()
   const welcomeBack = useUiStore((s) => s.welcomeBack)
-  const [dismissed, setDismissed] = useState(false)
+  // "Later" suppresses the modal only for TODAY's bonus (keyed by day index, not a
+  // session boolean): the component never unmounts, and `available` can stay true
+  // straight through midnight when the player never claims — a new calendar day
+  // must re-show regardless.
+  const [dismissedDay, setDismissedDay] = useState<number | null>(null)
+  const dismissed = dismissedDay === daily.dayIndex
   // When a Welcome-Back is showing, it folds the daily in (one return moment) — don't stack.
   if (welcomeBack || !daily.available || dismissed) return null
 
   return (
-    <Overlay accent="var(--accent)" onBackdropClick={() => setDismissed(true)} panelClassName="items-center text-center">
+    <Overlay accent="var(--accent)" onBackdropClick={() => setDismissedDay(daily.dayIndex)} panelClassName="items-center text-center">
       <span className="text-5xl">🎁</span>
       <h2 className="text-lg font-bold">Daily Bonus</h2>
       <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
@@ -37,7 +42,7 @@ export function DailyBonusModal() {
       <button type="button" onClick={claimDailyBonus} className="btn btn-primary btn-lg btn-block mt-1">
         Claim
       </button>
-      <button type="button" onClick={() => setDismissed(true)} className="btn btn-ghost btn-sm">
+      <button type="button" onClick={() => setDismissedDay(daily.dayIndex)} className="btn btn-ghost btn-sm">
         Later
       </button>
     </Overlay>

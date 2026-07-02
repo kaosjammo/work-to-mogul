@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { initialGameState } from '../store/initialState'
 import { localDayIndex, canClaimDaily, claimDaily, dailyReward, DAILY_INCOME_SECONDS } from './daily'
 import { automatedIncomePerSec } from './catchUp'
+import { prestigeReset } from './prestige'
+import { PRESTIGE_SCALE } from './economy'
 import type { GameState } from '../types/domain'
 
 // A state with idle income (an operator-automated business) so the daily has a real reward.
@@ -73,5 +75,31 @@ describe('Daily return hook (D7)', () => {
     expect(s.dailyStreak).toBe(7)
     expect(last?.milestone?.day).toBe(7)
     expect(s.prestige.totalPoints).toBe(tokensBefore + 3) // +3 tokens granted
+  })
+
+  it('localDayIndex matches the calendar (no rounding drift at extreme offsets)', () => {
+    // Consecutive midnights are exactly 1 index apart, and 23:59 belongs to its day.
+    const idx0 = localDayIndex(new Date(2026, 2, 28, 0, 0, 0).getTime())
+    const idx0Late = localDayIndex(new Date(2026, 2, 28, 23, 59, 59).getTime())
+    const idx1 = localDayIndex(new Date(2026, 2, 29, 0, 0, 0).getTime())
+    expect(idx0Late).toBe(idx0)
+    expect(idx1 - idx0).toBe(1)
+  })
+
+  it('ascending does NOT re-open today’s claim or wipe the streak', () => {
+    const s = automated()
+    claimDaily(s, noon(0))
+    claimDaily(s, noon(1))
+    expect(s.dailyStreak).toBe(2)
+    const claimedDay = s.dailyClaimDay
+    s.lifetimeEarnings = PRESTIGE_SCALE * 1e6 // enough to ascend
+    expect(prestigeReset(s)).toBe(true)
+    expect(s.dailyClaimDay).toBe(claimedDay) // still claimed today
+    expect(s.dailyStreak).toBe(2) // streak survives the ascension
+    // And a re-automated empire still can't double-claim the same day.
+    const s2 = automated()
+    s2.dailyClaimDay = claimedDay
+    s2.dailyStreak = 2
+    expect(canClaimDaily(s2, noon(1))).toBe(false)
   })
 })

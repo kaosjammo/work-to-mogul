@@ -3,14 +3,18 @@
 //  employee layer meet. Both the tick and the UI read its output.
 // ============================================================
 import type { BusinessDef, GameState, ResolvedBusiness } from '../types/domain'
-import { economyMultipliers } from './economy'
+import { economyMultipliers, type EconomyFoldOptions } from './economy'
 import { computeEmployeeEffects, unlockedSlotCount } from './employees/composition'
 
-export function resolveBusiness(state: GameState, def: BusinessDef): ResolvedBusiness {
+export function resolveBusiness(
+  state: GameState,
+  def: BusinessDef,
+  opts?: EconomyFoldOptions,
+): ResolvedBusiness {
   const bs = state.businesses[def.id]
   const owned = bs?.owned ?? 0
 
-  const econ = economyMultipliers(state, def)
+  const econ = economyMultipliers(state, def, opts)
   const emp = computeEmployeeEffects(state, def, bs)
 
   // CRITICAL: revenue scales linearly with units owned (× owned), then

@@ -5,6 +5,7 @@
 import type { BusinessId, BuyMode, IndustryId, TabId } from '../types/domain'
 import { getEngineState, resetEngineState } from '../engine/engineState'
 import { purchase, tapBusiness } from '../engine/buy'
+import { resolveBusiness } from '../engine/resolveBusiness'
 import { spendCashBestValue, buyAllAffordableUpgrades } from '../engine/spend'
 import { resolveQuantity } from '../engine/economy'
 import { startShift, claimConsulting } from '../engine/career'
@@ -18,7 +19,7 @@ import {
   fuseEmployees,
 } from '../engine/employees/roster'
 import { autoAssignBest } from '../engine/employees/autoAssign'
-import { buyUpgrade as buyUpgradeFn } from '../engine/upgrades'
+import { buyUpgrade as buyUpgradeFn, buyRepeatable as buyRepeatableFn } from '../engine/upgrades'
 import { prestigeReset } from '../engine/prestige'
 import { buyTalent as buyTalentFn } from '../engine/talents'
 import { chooseFounderPerk as chooseFounderPerkFn } from '../engine/founderPerks'
@@ -54,7 +55,10 @@ export function buyBusiness(id: BusinessId): void {
   const def = BUSINESSES[id]
   const bs = s.businesses[id]
   if (!def || !bs) return
-  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash)
+  // Buy Max must count with the same discounted price purchase() charges. Only
+  // the 'max' branch reads the multiplier — skip the full economy fold otherwise.
+  const costMult = s.buyMode === 'max' ? resolveBusiness(s, def).buyCostMult : 1
+  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash, costMult)
   const before = [...s.milestonesReached]
   // Entering a new industry (its first owned unit) is a major beat — detect it
   // before the purchase so we can celebrate the expansion.
@@ -86,9 +90,11 @@ export function buyBusiness(id: BusinessId): void {
   }
 }
 
-export function tap(id: BusinessId): void {
-  tapBusiness(getEngineState(), id)
-  publishNow()
+/** Tap a manual business. Returns whether a cycle actually started. */
+export function tap(id: BusinessId): boolean {
+  const started = tapBusiness(getEngineState(), id)
+  if (started) publishNow()
+  return started
 }
 
 /** Quick-spend: pour spare cash into the best-value business buys (optimised). */
@@ -187,6 +193,14 @@ export function buyUpgrade(id: UpgradeId): void {
   }
 }
 
+/** Buy the next rank of a repeatable Executive Program. */
+export function buyRepeatableProgram(id: string): void {
+  if (buyRepeatableFn(getEngineState(), id)) {
+    playSound('buy')
+    publishNow()
+  }
+}
+
 export function prestige(): void {
   const s = getEngineState()
   const before = new Set(s.prestigeMilestonesClaimed)
@@ -232,8 +246,9 @@ export function claimContract(id: string): void {
   }
 }
 
-/** Tap the active Golden Deal → Time Warp (instant idle income). */
-export function claimGolden(): void {
+/** Tap the active Golden Deal → Time Warp (instant idle income).
+ *  Returns the cash actually earned (0 if the offer had already expired). */
+export function claimGolden(): number {
   const earned = claimGoldenDeal(getEngineState())
   if (earned > 0) {
     haptic(24)
@@ -241,6 +256,7 @@ export function claimGolden(): void {
     useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
     publishNow()
   }
+  return earned
 }
 
 /** Tap the active Food Rush Hour window → start a Food speed surge (×3 for 25s). */
