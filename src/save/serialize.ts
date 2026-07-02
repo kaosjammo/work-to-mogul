@@ -7,7 +7,7 @@
 // ============================================================
 import type { EmployeeInstance, GameState, Rarity, RoleId, TabId } from '../types/domain'
 import { initialGameState } from '../store/initialState'
-import { BUSINESSES } from '../content/businesses'
+import { BUSINESSES, COMBINATOR_ID } from '../content/businesses'
 import { MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { TRAIT_DEFS } from '../content/traits'
@@ -280,6 +280,19 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
       for (const k of SCORE_KEYS) a.scores[k] = num(raw[k])
     }
     a.offered = !!la.offered
+    // Reconcile the Startup Combinator reward with its business row. The card
+    // renders off `combinatorUnlocked`, but buying checks the BUSINESS's own
+    // unlocked flag — which only applyOutcome sets. Saves from before the
+    // Combinator became a standalone business (and any drift) land here with
+    // combinatorUnlocked=true but a locked, 0-owned row: a visible card whose
+    // Buy button is a dead tap. Re-grant what the great outcome grants.
+    if (a.combinatorUnlocked) {
+      const combo = s.businesses[COMBINATOR_ID]
+      if (combo) {
+        combo.unlocked = true
+        combo.owned = Math.max(1, combo.owned) // the founding unit the reward includes
+      }
+    }
     if (la.active) {
       const story = getMogulStory(a.storyId) ?? ANGEL_DEAL
       const stageOk = typeof la.stageId === 'string' && !!story.stages[la.stageId]
