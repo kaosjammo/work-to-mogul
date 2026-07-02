@@ -131,19 +131,20 @@ export function AutomationModal() {
       {tab === 'invest' ? (
         !a.invest.unlocked ? (
           <LockedNote>
-            Win over {a.ea.partnerName} through the Investment Fund story, then poach them to
+            Win over {a.ea.partnerName} through the Investment Fund story, then poach her to
             unlock your Executive Assistant.
           </LockedNote>
         ) : (
         <>
           <div>
-            <h2 className="text-lg font-extrabold">Executive Assistant</h2>
+            <h2 className="text-lg font-extrabold">{a.ea.partnerName}</h2>
             <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
-              Reinvests your spare cash on a cadence, so the empire keeps compounding while you’re away.
+              Your Executive Assistant — reinvests spare cash (and buys upgrades when they’re the
+              better value) on a cadence, so the empire keeps compounding while you’re away.
             </p>
           </div>
           <Switch
-            label={a.invest.enabled ? 'Assistant is ON' : 'Assistant is OFF'}
+            label={a.invest.enabled ? `${a.ea.partnerName.split(' ')[0]} is ON` : `${a.ea.partnerName.split(' ')[0]} is OFF`}
             hint={a.invest.enabled ? `Deploying ~${money(a.spendableNow)} every ${a.invest.intervalSec}s` : 'Turn on to auto-reinvest'}
             on={a.invest.enabled}
             onToggle={() => setAutoInvest({ enabled: !a.invest.enabled })}
@@ -239,10 +240,12 @@ export function AutomationModal() {
 
           <div>
             <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>Duties</div>
-            <div className="flex gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               <Chip label="🧑‍💼 Hire" on={a.staff.hire} onToggle={() => setAutoStaff({ hire: !a.staff.hire })} />
               <Chip label="⬆️ Level" on={a.staff.level} onToggle={() => setAutoStaff({ level: !a.staff.level })} />
               <Chip label="🎯 Assign" on={a.staff.assign} onToggle={() => setAutoStaff({ assign: !a.staff.assign })} />
+              <Chip label="🧬 Fuse" on={a.staff.fuse} onToggle={() => setAutoStaff({ fuse: !a.staff.fuse })} />
+              <Chip label="🎓 Skills" on={a.staff.spec} onToggle={() => setAutoStaff({ spec: !a.staff.spec })} />
             </div>
           </div>
 
@@ -264,3 +267,5 @@ export function AutomationModal() {
     </Overlay>
   )
 }
+
+    

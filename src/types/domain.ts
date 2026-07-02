@@ -364,6 +364,8 @@ export interface AutoStaffConfig {
   hire: boolean // auto-hire to fill empty slots (operators first, to automate)
   level: boolean // auto-level existing staff (cheapest-first)
   assign: boolean // auto-assign the roster (Auto-Assign Best)
+  fuse: boolean // auto-fuse duplicate pairs → promote rarity (+ buy duplicates to seed fusions)
+  spec: boolean // auto-pick employee specialisations at L5 (amplify) / L10 (mastery)
   intervalSec: number // how often the Chief acts (3..60)
   cooldownMs: number // internal countdown (does NOT advance offline)
   lifetimeSpent: number // stat

@@ -373,6 +373,8 @@ export interface AutomationView {
     hire: boolean
     level: boolean
     assign: boolean
+    fuse: boolean
+    spec: boolean
     intervalSec: number
     lifetimeSpent: number
     lifetimeHires: number
@@ -1112,6 +1114,8 @@ export function buildView(
       hire: auto?.staff.hire ?? true,
       level: auto?.staff.level ?? true,
       assign: auto?.staff.assign ?? true,
+      fuse: auto?.staff.fuse ?? true,
+      spec: auto?.staff.spec ?? true,
       intervalSec: auto?.staff.intervalSec ?? 10,
       lifetimeSpent: auto?.staff.lifetimeSpent ?? 0,
       lifetimeHires: auto?.staff.lifetimeHires ?? 0,

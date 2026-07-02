@@ -114,6 +114,50 @@ describe('Chief of Staff — autoStaffOnce', () => {
   })
 })
 
+describe('Chief of Staff — fuse + auto-spec (new duties)', () => {
+  it('auto-fuses a duplicate pair into a rarity promotion, keeping the higher level', () => {
+    const s = seededState()
+    s.employees.a = { id: 'a', templateId: 'mickey_gears', name: 'A', role: 'operator', rarity: 'common', level: 4, affinity: null, traits: [], specialisation: null }
+    s.employees.b = { id: 'b', templateId: 'mickey_gears', name: 'B', role: 'operator', rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null }
+    autoStaffOnce(s, 0, { ...s.automation.staff, hire: false, level: false, spec: false, assign: false, fuse: true })
+    const mickeys = Object.values(s.employees).filter((e) => e.templateId === 'mickey_gears')
+    expect(mickeys).toHaveLength(1) // one consumed
+    expect(mickeys[0].rarity).toBe('uncommon') // promoted a tier
+    expect(mickeys[0].level).toBe(4) // inherits the higher level
+  })
+
+  it('auto-picks the role amplify specialisation at L5', () => {
+    const s = seededState()
+    s.employees.c = { id: 'c', templateId: 'maxine_hustle', name: 'C', role: 'closer', rarity: 'uncommon', level: 5, affinity: null, traits: [], specialisation: null }
+    autoStaffOnce(s, 0, { ...s.automation.staff, hire: false, level: false, fuse: false, assign: false, spec: true })
+    expect(s.employees.c.specialisation).toBe('rainmaker') // the closer's primary amplify
+  })
+
+  it('leaves specs/fusion alone when those duties are off', () => {
+    const s = seededState()
+    s.employees.c = { id: 'c', templateId: 'maxine_hustle', name: 'C', role: 'closer', rarity: 'uncommon', level: 5, affinity: null, traits: [], specialisation: null }
+    autoStaffOnce(s, 0, { ...s.automation.staff, hire: false, level: false, fuse: false, assign: false, spec: false })
+    expect(s.employees.c.specialisation).toBe(null)
+  })
+})
+
+describe('Executive Assistant — auto-buys upgrades when efficient', () => {
+  it('buys an upgrade when it beats the next business unit (roi strategy)', () => {
+    const s = seededState()
+    s.businesses.lemonade.owned = 3000 // huge pps → the cheap lemonade_2x upgrade is a top ROI
+    expect(s.upgradesPurchased).toHaveLength(0)
+    reinvestWithin(s, 1e8, { ...s.automation.invest, strategy: 'roi' })
+    expect(s.upgradesPurchased.length).toBeGreaterThan(0)
+  })
+
+  it('never buys upgrades under the cheapest strategy (units only)', () => {
+    const s = seededState()
+    s.businesses.lemonade.owned = 3000
+    reinvestWithin(s, 1e8, { ...s.automation.invest, strategy: 'cheapest' })
+    expect(s.upgradesPurchased).toHaveLength(0)
+  })
+})
+
 describe('tickAutomation — cadence + HARNESS byte-identity', () => {
   it('does nothing while disabled (income byte-identical over many ticks)', () => {
     const off = seededState()

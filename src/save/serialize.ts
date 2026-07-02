@@ -370,6 +370,8 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
       st.hire = src.hire !== false
       st.level = src.level !== false
       st.assign = src.assign !== false
+      st.fuse = src.fuse !== false
+      st.spec = src.spec !== false
       st.intervalSec = clamp(Math.round(num(src.intervalSec, st.intervalSec)), 3, 60)
       st.lifetimeSpent = Math.max(0, num(src.lifetimeSpent))
       st.lifetimeHires = Math.max(0, Math.floor(num(src.lifetimeHires)))

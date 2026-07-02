@@ -21,26 +21,48 @@ import type {
 } from '../types/domain'
 import { BUSINESS_ORDER, BUSINESSES } from '../content/businesses'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
+import { UPGRADES, UPGRADE_ORDER } from '../content/upgrades'
+import type { UpgradeDef, UpgradeId } from '../types/domain'
 import { unitCost } from './economy'
 import { resolveBusiness } from './resolveBusiness'
 import { purchase } from './buy'
+import { buyUpgrade } from './upgrades'
 import {
   hireCost,
   hireEmployee,
   levelUpCost,
   levelUpEmployee,
   assignToFirstFreeSlot,
+  nextRarity,
+  fuseEmployees,
+  chooseSpecialisation,
 } from './employees/roster'
 import { unlockedSlotCount } from './employees/composition'
 import { autoAssignBest } from './employees/autoAssign'
 import { levelCostMult } from './talents'
 import { automatedIncomePerSec } from './catchUp'
 import { MAX_EMPLOYEE_LEVEL } from '../content/roles'
+import { REQUIRED_SPEC_LEVEL, MASTERY_SPEC_LEVEL } from '../content/specialisations'
+import type { RoleId } from '../types/domain'
 
 // Per-cycle action caps — keep a tick cheap + bounded no matter the cash pile.
 const MAX_REINVEST_BUYS = 200
 const MAX_HIRES_PER_CYCLE = 8
 const MAX_LEVELS_PER_CYCLE = 25
+const MAX_FUSIONS_PER_CYCLE = 12
+const MAX_FUSION_HIRES_PER_CYCLE = 6
+
+// The Chief's auto-pick specialisations per role: [slot 1 @ L5] amplify the primary channel,
+// [slot 2 @ L10] the Mastery capstone. (Operator has no primary amplify → its "Night Owl"
+// speed branch.) Ids must exist in content/specialisations.ts.
+const AUTO_SPEC_SLOT1: Record<RoleId, string> = {
+  operator: 'night_owl', runner: 'sprint_lead', closer: 'rainmaker', buyer: 'bulk_buyer',
+  gambler: 'sharpshooter', auditor: 'compliance_officer', hr: 'culture_champion',
+}
+const AUTO_SPEC_MASTERY: Record<RoleId, string> = {
+  operator: 'lights_out', runner: 'slipstream', closer: 'kingpin', buyer: 'monopolist',
+  gambler: 'whale', auditor: 'watchdog', hr: 'luminary',
+}
 
 // Cheapest operator/booster templates (automation-first hiring). Static content.
 const OPERATOR_TEMPLATES = HIRE_ORDER.filter((tid) => EMPLOYEE_TEMPLATES[tid].role === 'operator').sort(
@@ -76,6 +98,8 @@ export function initialAutomationState(): AutomationState {
       hire: true,
       level: true,
       assign: true,
+      fuse: true,
+      spec: true,
       intervalSec: 10,
       cooldownMs: 10000,
       lifetimeSpent: 0,
@@ -140,6 +164,44 @@ function perUnitPps(state: GameState, id: BusinessId): number {
   return p
 }
 
+/** Total $/s currently produced by the businesses in an upgrade's scope. */
+function scopePps(state: GameState, up: UpgradeDef): number {
+  let sum = 0
+  for (const id of BUSINESS_ORDER) {
+    const bs = state.businesses[id]
+    if (!bs?.unlocked || bs.owned <= 0) continue
+    const def = BUSINESSES[id]
+    if (up.scope.kind === 'business' && id !== up.scope.businessId) continue
+    if (up.scope.kind === 'industry' && def.industryId !== up.scope.industryId) continue
+    sum += resolveBusiness(state, def).pps
+  }
+  return sum
+}
+
+/** Marginal $/s a one-shot upgrade adds right now: a profit/speed ×factor on its scope
+ *  adds ~(factor − 1) × that scope's current $/s. costReduction upgrades add no direct
+ *  $/s (they cut future buy costs), so they're valued 0 and stay out of the ROI race. */
+function upgradeMarginalPps(state: GameState, up: UpgradeDef): number {
+  const eff = up.effect
+  if (eff.kind === 'profitMult' || eff.kind === 'speedMult') return (eff.factor - 1) * scopePps(state, up)
+  return 0
+}
+
+/** Un-owned one-shot upgrades the EA may buy (under 'focus', scoped to that industry +
+ *  global). UPGRADE_ORDER is roughly ascending cost. */
+function upgradeCandidates(state: GameState, cfg: AutoInvestConfig): UpgradeId[] {
+  return UPGRADE_ORDER.filter((uid) => {
+    if (state.upgradesPurchased.includes(uid)) return false
+    if (cfg.strategy === 'focus' && cfg.focusIndustry) {
+      const sc = UPGRADES[uid].scope
+      if (sc.kind === 'business') return BUSINESSES[sc.businessId]?.industryId === cfg.focusIndustry
+      if (sc.kind === 'industry') return sc.industryId === cfg.focusIndustry
+      // global upgrades help the focused industry too → allowed
+    }
+    return true
+  })
+}
+
 /**
  * Reinvest up to `budget` cash across the eligible businesses, honouring the
  * strategy (roi = best marginal $/s per $; cheapest = lowest next-unit cost;
@@ -183,6 +245,31 @@ export function reinvestWithin(
           bestId = id
           bestCost = cost
         }
+      }
+    }
+
+    // "Most efficient" strategies (roi / focus) also weigh one-shot UPGRADES, scored by the
+    // SAME marginal $/s per $ as a unit — so the EA buys an upgrade whenever it beats the best
+    // next business unit. ('cheapest' stays unit-only; it's about raw unit count.)
+    if (cfg.strategy !== 'cheapest') {
+      let bestUp: UpgradeId | null = null
+      let bestUpRoi = bestScore // must beat the best business unit's ROI to win the slot
+      let bestUpCost = 0
+      for (const uid of upgradeCandidates(state, cfg)) {
+        const cost = UPGRADES[uid].cost
+        if (spentBudget + cost > budget || cost > state.cash) continue
+        const mp = upgradeMarginalPps(state, UPGRADES[uid])
+        if (mp <= 0) continue
+        const roi = mp / cost
+        if (roi > bestUpRoi) {
+          bestUpRoi = roi
+          bestUp = uid
+          bestUpCost = cost
+        }
+      }
+      if (bestUp && buyUpgrade(state, bestUp)) {
+        spentBudget += bestUpCost
+        continue // an upgrade filled this greedy step; upgrades don't count as "units"
       }
     }
 
@@ -247,10 +334,78 @@ function cheapestLevelUp(state: GameState, budgetLeft: number): string | null {
   return bestId
 }
 
+/** A fusable pair (same template + rarity, promotable), keeping the higher-level one. */
+function findFusablePair(state: GameState): { keep: string; consume: string } | null {
+  const groups = new Map<string, string[]>()
+  for (const id in state.employees) {
+    const e = state.employees[id]
+    if (!nextRarity(e.rarity)) continue // top rarity can't fuse
+    const key = `${e.templateId}|${e.rarity}`
+    const arr = groups.get(key)
+    if (arr) arr.push(id)
+    else groups.set(key, [id])
+  }
+  for (const ids of groups.values()) {
+    if (ids.length < 2) continue
+    const [a, b] = ids
+    const keep = (state.employees[a].level >= state.employees[b].level) ? a : b
+    return { keep, consume: keep === a ? b : a }
+  }
+  return null
+}
+
+/** Fuse every eligible duplicate pair (free) → promotes rarity ("replace with better"). */
+function autoFuse(state: GameState): void {
+  for (let i = 0; i < MAX_FUSIONS_PER_CYCLE; i++) {
+    const pair = findFusablePair(state)
+    if (!pair) break
+    if (!fuseEmployees(state, pair.keep, pair.consume)) break
+  }
+}
+
+/** Auto-pick specialisations (free): the amplify spec at L5, the Mastery capstone at L10. */
+function autoPickSpecs(state: GameState): void {
+  for (const id in state.employees) {
+    const e = state.employees[id]
+    if (e.level >= REQUIRED_SPEC_LEVEL && !e.specialisation) {
+      const s1 = AUTO_SPEC_SLOT1[e.role]
+      if (s1) chooseSpecialisation(state, id, s1, 1)
+    }
+    if (e.level >= MASTERY_SPEC_LEVEL && !e.specialisation2) {
+      const s2 = AUTO_SPEC_MASTERY[e.role]
+      if (s2) chooseSpecialisation(state, id, s2, 2)
+    }
+  }
+}
+
+/** The cheapest affordable template we already own an ODD number of at BASE (un-promoted)
+ *  rarity — hiring one completes a fusable pair the fuse pass can then promote. Null if none. */
+function duplicateToSeedFusion(state: GameState, budgetLeft: number): string | null {
+  const baseCount = new Map<string, number>()
+  for (const id in state.employees) {
+    const e = state.employees[id]
+    const t = EMPLOYEE_TEMPLATES[e.templateId]
+    if (!t || e.rarity !== t.rarity || !nextRarity(e.rarity)) continue // only un-promoted + promotable
+    baseCount.set(e.templateId, (baseCount.get(e.templateId) ?? 0) + 1)
+  }
+  let best: string | null = null
+  let bestCost = Infinity
+  for (const [tid, count] of baseCount) {
+    if (count % 2 === 0) continue // already paired — a hire wouldn't complete a pair this step
+    const cost = hireCost(state, tid)
+    if (cost <= budgetLeft && cost <= state.cash && cost < bestCost) {
+      bestCost = cost
+      best = tid
+    }
+  }
+  return best
+}
+
 /**
- * Run one Chief-of-Staff cycle within `budget`: assign the bench (free), hire to
- * fill empty slots (operators first), then level the roster cheapest-first —
- * each bounded by the budget + a per-cycle action cap.
+ * Run one Chief-of-Staff cycle within `budget`: assign the bench (free), fuse duplicate
+ * pairs (free), hire to fill empty slots (operators first) + buy duplicates to seed more
+ * fusions, auto-pick specialisations (free), then level the roster cheapest-first — each
+ * bounded by the budget + a per-cycle action cap.
  */
 export function autoStaffOnce(
   state: GameState,
@@ -262,6 +417,7 @@ export function autoStaffOnce(
   let hires = 0
 
   if (cfg.assign) autoAssignBest(state)
+  if (cfg.fuse) autoFuse(state) // promote existing duplicate pairs first (free)
 
   if (cfg.hire && budget > 0) {
     for (let i = 0; i < MAX_HIRES_PER_CYCLE; i++) {
@@ -276,6 +432,20 @@ export function autoStaffOnce(
       hires++
       assignToFirstFreeSlot(state, id, target)
     }
+    // "Replace with better": buy duplicates to complete fusable pairs, then fuse them →
+    // the roster's rarity climbs over time, within the remaining budget.
+    if (cfg.fuse) {
+      for (let i = 0; i < MAX_FUSION_HIRES_PER_CYCLE; i++) {
+        const tid = duplicateToSeedFusion(state, budget - spentBudget)
+        if (!tid) break
+        const cost = hireCost(state, tid)
+        const id = hireEmployee(state, tid)
+        if (!id) break
+        spentBudget += cost
+        hires++
+      }
+      autoFuse(state) // fuse the freshly-seeded duplicates → promote
+    }
     if (cfg.assign) autoAssignBest(state) // place any that didn't land in the target
   }
 
@@ -288,6 +458,9 @@ export function autoStaffOnce(
       spentBudget += cost
     }
   }
+
+  if (cfg.spec) autoPickSpecs(state) // after fuse + level so newly-eligible staff get specs
+  if (cfg.assign) autoAssignBest(state) // re-place after promotions / levels
 
   return { spent: startCash - state.cash, hires }
 }
@@ -362,5 +535,7 @@ export function updateStaffConfig(state: GameState, patch: Partial<AutoStaffConf
   if (patch.hire !== undefined) st.hire = !!patch.hire
   if (patch.level !== undefined) st.level = !!patch.level
   if (patch.assign !== undefined) st.assign = !!patch.assign
+  if (patch.fuse !== undefined) st.fuse = !!patch.fuse
+  if (patch.spec !== undefined) st.spec = !!patch.spec
   if (patch.intervalSec !== undefined) st.intervalSec = Math.max(3, Math.min(60, Math.round(patch.intervalSec)))
 }
