@@ -354,6 +354,10 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     if (la.staff && typeof la.staff === 'object') {
       const src = la.staff
       const st = s.automation.staff
+      // Grandfather: a save that already had the Chief ENABLED (from before it became a
+      // one-time hire) counts as hired, so existing players keep their manager and the
+      // UI stays consistent (never shows a "Hire" card for a running Chief).
+      st.unlocked = src.unlocked === true || src.enabled === true
       st.enabled = src.enabled === true
       st.budgetPct = clamp(num(src.budgetPct, st.budgetPct), 0, 90)
       st.hire = src.hire !== false

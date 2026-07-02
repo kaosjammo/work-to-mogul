@@ -25,6 +25,16 @@ seam via a 5-agent understand workflow first.
 - 420 tests (+1 romance-preference, 1 rotation test re-scoped), build + oxlint clean;
   browser-verified deliberate stepper clicks now increment reliably (5→6→7).
 
+**Slice B — Chief of Staff is now a one-time HIRE.** New `automation.staff.unlocked` flag
+(persists through prestige, serialize-validated). A "Chief of Staff" card in the Staff screen
+shows a scaled signing cost (`max($1M, ~2 min of idle income)`) → `hireChiefOfStaff()` deducts
+it, unlocks + enables the manager, then the card flips to a Configure entry. The Stats
+AUTOMATION row + the config are gated on `unlocked`, and `updateStaffConfig` refuses to enable
+an un-hired Chief (defends the modal tab switcher). Grandfather migration: a save that already
+had the Chief enabled counts as hired, so existing players keep their manager. Harness-safe
+(default false → the bot never hires → income byte-identical). 423 tests (+4 hire/guard/
+grandfather), build + oxlint clean; browser-verified the hire → Configure flow end-to-end.
+
 ## Events: rarer but deeper (frequency rebalance + Momentum combo + meaningful choices)
 
 User feedback: the three tap-to-collect events (Rush Hour, Golden Deal, Event Cards) are

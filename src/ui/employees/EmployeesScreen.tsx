@@ -1,8 +1,9 @@
 import type { Rarity } from '../../types/domain'
 import type { EmployeeView } from '../../store/buildView'
 import { money } from '../../engine/num'
-import { useEmployees, useHireOptions } from '../../store/gameStore'
-import { hire, unassign, levelUp, autoAssign, chooseSpecialisation, fuse } from '../../store/actions'
+import { useEmployees, useHireOptions, useAutomation } from '../../store/gameStore'
+import { useUiStore } from '../../store/uiStore'
+import { hire, unassign, levelUp, autoAssign, chooseSpecialisation, fuse, hireChiefOfStaff } from '../../store/actions'
 import { Icon } from '../shared/Icon'
 import { employeeArt } from '../shared/art'
 import { TRAIT_BY_NAME } from '../../content/traits'
@@ -82,6 +83,68 @@ function SpecPicker({
   )
 }
 
+// The Chief of Staff — a one-time HIRE that unlocks the auto-roster manager, then a
+// Configure entry into its menu. Lives in the Staff section (it manages your roster).
+function ChiefOfStaffCard() {
+  const automation = useAutomation()
+  const openAutomation = useUiStore((s) => s.openAutomation)
+  const staff = automation.staff
+  if (!automation.eligible) return null // nothing to manage before you own a business
+  return (
+    <section className="section">
+      <div className="mb-2">
+        <h2>Chief of Staff</h2>
+      </div>
+      <div className="card overflow-hidden">
+        <div
+          className="list-row py-2.5 pr-3"
+          style={{ paddingLeft: '9px', borderLeft: `2px solid ${staff.unlocked ? 'var(--accent)' : 'var(--divider)'}` }}
+        >
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl"
+            style={{ background: 'var(--surface-2)' }}
+          >
+            👔
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">
+              {staff.unlocked ? 'Chief of Staff' : 'Hire a Chief of Staff'}
+            </div>
+            <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+              {staff.unlocked
+                ? staff.enabled
+                  ? `On · auto hire / level / assign · ${money(staff.lifetimeSpent)} spent`
+                  : 'Hired · currently paused (turn on in the menu)'
+                : 'Auto-hires, levels, and assigns your roster within a budget you set.'}
+            </div>
+          </div>
+          {staff.unlocked ? (
+            <button
+              type="button"
+              onClick={() => openAutomation('staff')}
+              className="btn btn-md btn-secondary shrink-0"
+            >
+              Configure ›
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={!automation.chiefAffordable}
+              onClick={() => hireChiefOfStaff()}
+              className={`btn btn-md shrink-0 ${automation.chiefAffordable ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              <span>Hire</span>
+              <span className="tnum" style={{ fontWeight: 400, opacity: 0.7 }}>
+                {money(automation.chiefUnlockCost)}
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function EmployeesScreen() {
   const employees = useEmployees()
   const hireOptions = useHireOptions()
@@ -142,6 +205,8 @@ export function EmployeesScreen() {
           ))}
         </div>
       </section>
+
+      <ChiefOfStaffCard />
 
       <section className="section">
         <div className="mb-2 flex items-center justify-between gap-2">

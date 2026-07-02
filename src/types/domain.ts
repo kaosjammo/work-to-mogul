@@ -351,6 +351,7 @@ export interface AutoInvestConfig {
 
 /** The Chief of Staff's auto-roster policy: hire, level, and assign within a budget. */
 export interface AutoStaffConfig {
+  unlocked: boolean // the Chief has been HIRED (one-time purchase in the Staff screen)
   enabled: boolean
   budgetPct: number // max % of cash to spend on staff per cycle (0..90)
   hire: boolean // auto-hire to fill empty slots (operators first, to automate)

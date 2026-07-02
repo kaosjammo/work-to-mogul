@@ -37,7 +37,7 @@ import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
 import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
-import { updateInvestConfig, updateStaffConfig } from '../engine/automation'
+import { updateInvestConfig, updateStaffConfig, unlockChiefOfStaff } from '../engine/automation'
 import type { AutoInvestConfig, AutoStaffConfig } from '../types/domain'
 import { momentumMult } from '../engine/momentum'
 import { claimDaily } from '../engine/daily'
@@ -396,6 +396,16 @@ export function setAutoStaff(patch: Partial<AutoStaffConfig>): void {
     playSound('chime')
   }
   publishNow()
+}
+
+/** Hire the Chief of Staff (one-time unlock, from the Staff screen). */
+export function hireChiefOfStaff(): void {
+  if (unlockChiefOfStaff(getEngineState())) {
+    haptic(26)
+    playSound('chime')
+    useUiStore.getState().pushCelebrations(['👔 Chief of Staff hired! Auto hire / level / assign is on.'])
+    publishNow()
+  }
 }
 
 /** Claim today's daily bonus (~2h of idle income) + any streak milestone reward. */

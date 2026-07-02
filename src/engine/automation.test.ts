@@ -11,6 +11,8 @@ import {
   autoStaffOnce,
   updateInvestConfig,
   updateStaffConfig,
+  unlockChiefOfStaff,
+  chiefUnlockCost,
 } from './automation'
 
 /** A state that owns a couple of unlocked Food businesses + cash to deploy. */
@@ -143,11 +145,43 @@ describe('tickAutomation — cadence + HARNESS byte-identity', () => {
 
   it('an enabled Chief of Staff hires over time', () => {
     const s = seededState()
+    s.automation.staff.unlocked = true // the Chief must be hired first
     updateStaffConfig(s, { enabled: true, intervalSec: 3 })
     const rng = () => 0.5
     for (let i = 0; i < 100; i++) applyTick(s, 100, rng)
     expect(Object.keys(s.employees).length).toBeGreaterThan(0)
     expect(s.automation.staff.lifetimeHires).toBeGreaterThan(0)
+  })
+
+  it('a Chief cannot be enabled until it is hired (unlocked)', () => {
+    const s = seededState()
+    updateStaffConfig(s, { enabled: true }) // not hired yet
+    expect(s.automation.staff.enabled).toBe(false)
+    const rng = () => 0.5
+    for (let i = 0; i < 100; i++) applyTick(s, 100, rng)
+    expect(Object.keys(s.employees)).toHaveLength(0) // never ran
+  })
+})
+
+describe('Chief of Staff — the one-time hire (unlock)', () => {
+  it('hiring deducts the cost and turns the Chief on', () => {
+    const s = seededState()
+    expect(s.automation.staff.unlocked).toBe(false)
+    const cost = chiefUnlockCost(s)
+    expect(cost).toBeGreaterThanOrEqual(1_000_000) // at least the floor
+    const before = s.cash
+    expect(unlockChiefOfStaff(s)).toBe(true)
+    expect(s.automation.staff.unlocked).toBe(true)
+    expect(s.automation.staff.enabled).toBe(true)
+    expect(s.cash).toBeCloseTo(before - cost)
+    expect(unlockChiefOfStaff(s)).toBe(false) // already hired → no double-charge
+  })
+
+  it('refuses the hire with insufficient cash', () => {
+    const s = seededState()
+    s.cash = 5 // below the $1M floor
+    expect(unlockChiefOfStaff(s)).toBe(false)
+    expect(s.automation.staff.unlocked).toBe(false)
   })
 })
 
@@ -175,6 +209,7 @@ describe('Automation — save + prestige', () => {
   it('config + stats round-trip through save (clamped) and reset the cooldown', () => {
     const s = seededState()
     updateInvestConfig(s, { enabled: true, reservePct: 40, strategy: 'focus', focusIndustry: 'tech', intervalSec: 12 })
+    s.automation.staff.unlocked = true
     updateStaffConfig(s, { enabled: true, budgetPct: 35, level: false })
     s.automation.invest.lifetimeSpent = 12345
     s.automation.staff.lifetimeHires = 9
@@ -184,6 +219,8 @@ describe('Automation — save + prestige', () => {
     expect(back.automation.invest.strategy).toBe('focus')
     expect(back.automation.invest.focusIndustry).toBe('tech')
     expect(back.automation.invest.lifetimeSpent).toBe(12345)
+    expect(back.automation.staff.unlocked).toBe(true) // the hire persists
+    expect(back.automation.staff.enabled).toBe(true)
     expect(back.automation.staff.budgetPct).toBe(35)
     expect(back.automation.staff.level).toBe(false)
     expect(back.automation.staff.lifetimeHires).toBe(9)
@@ -197,16 +234,28 @@ describe('Automation — save + prestige', () => {
     expect(fixed.automation.invest.reservePct).toBe(90)
   })
 
+  it('grandfathers a pre-hire save that already had the Chief enabled', () => {
+    const s = seededState()
+    const raw = JSON.parse(serialize(s, 1))
+    raw.state.automation.staff.enabled = true
+    delete raw.state.automation.staff.unlocked // old save: no unlocked field
+    const back = deserialize(JSON.stringify(raw))!
+    expect(back.automation.staff.unlocked).toBe(true) // enabled ⟹ counts as hired
+    expect(back.automation.staff.enabled).toBe(true)
+  })
+
   it('config persists through prestige (a set-and-forget convenience)', () => {
     const s = seededState()
     s.lifetimeEarnings = 1e15
     updateInvestConfig(s, { enabled: true, reservePct: 33 })
+    s.automation.staff.unlocked = true
     updateStaffConfig(s, { enabled: true, budgetPct: 15 })
     s.automation.invest.lifetimeSpent = 999
     expect(prestigeReset(s)).toBe(true)
     expect(s.automation.invest.enabled).toBe(true)
     expect(s.automation.invest.reservePct).toBe(33)
     expect(s.automation.invest.lifetimeSpent).toBe(999)
+    expect(s.automation.staff.unlocked).toBe(true) // the hire is permanent meta-progression
     expect(s.automation.staff.enabled).toBe(true)
     expect(s.automation.staff.budgetPct).toBe(15)
   })

@@ -78,7 +78,7 @@ import {
   marriageDrainFraction,
   marriageLevelUpCost,
 } from '../engine/romance'
-import { automationEligible } from '../engine/automation'
+import { automationEligible, chiefUnlockCost } from '../engine/automation'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -365,6 +365,7 @@ export interface AutomationView {
     lifetimeUnits: number
   }
   staff: {
+    unlocked: boolean // the Chief has been hired
     enabled: boolean
     budgetPct: number
     hire: boolean
@@ -376,6 +377,8 @@ export interface AutomationView {
   }
   spendableNow: number // cash above the EA's reserve — a live "it would deploy ~$X" preview
   staffBudgetNow: number // cash the Chief would spend this cycle
+  chiefUnlockCost: number // one-time cost to hire the Chief of Staff
+  chiefAffordable: boolean // can the player afford the Chief hire right now
 }
 
 /** The love-story arc's progress + the marriage money-sink (Stats-tab panel). */
@@ -1077,6 +1080,7 @@ export function buildView(
 
   // Automation managers — config mirror + live "it would deploy ~$X" previews.
   const auto = state.automation
+  const chiefCost = chiefUnlockCost(state)
   const automation: AutomationView = {
     eligible: automationEligible(state),
     invest: {
@@ -1089,6 +1093,7 @@ export function buildView(
       lifetimeUnits: auto?.invest.lifetimeUnits ?? 0,
     },
     staff: {
+      unlocked: auto?.staff.unlocked ?? false,
       enabled: auto?.staff.enabled ?? false,
       budgetPct: auto?.staff.budgetPct ?? 20,
       hire: auto?.staff.hire ?? true,
@@ -1100,6 +1105,8 @@ export function buildView(
     },
     spendableNow: state.cash * (1 - (auto?.invest.reservePct ?? 25) / 100),
     staffBudgetNow: state.cash * ((auto?.staff.budgetPct ?? 20) / 100),
+    chiefUnlockCost: chiefCost,
+    chiefAffordable: state.cash >= chiefCost,
   }
 
   // Startup Combinator business (great-outcome reward) — its row + the exit-payout timer.

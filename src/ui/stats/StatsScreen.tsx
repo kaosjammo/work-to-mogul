@@ -220,13 +220,15 @@ export function StatsScreen() {
             on={automation.invest.enabled}
             onClick={() => openAutomation('invest')}
           />
-          <AutomationRow
-            icon="👔"
-            name="Chief of Staff"
-            desc={automation.staff.enabled ? `On · managing staff every ${automation.staff.intervalSec}s` : 'Auto hire, level & assign staff'}
-            on={automation.staff.enabled}
-            onClick={() => openAutomation('staff')}
-          />
+          {automation.staff.unlocked && (
+            <AutomationRow
+              icon="👔"
+              name="Chief of Staff"
+              desc={automation.staff.enabled ? `On · managing staff every ${automation.staff.intervalSec}s` : 'Hired · currently paused'}
+              on={automation.staff.enabled}
+              onClick={() => openAutomation('staff')}
+            />
+          )}
         </Section>
       )}
 

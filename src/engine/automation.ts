@@ -34,6 +34,7 @@ import {
 import { unlockedSlotCount } from './employees/composition'
 import { autoAssignBest } from './employees/autoAssign'
 import { levelCostMult } from './talents'
+import { automatedIncomePerSec } from './catchUp'
 import { MAX_EMPLOYEE_LEVEL } from '../content/roles'
 
 // Per-cycle action caps — keep a tick cheap + bounded no matter the cash pile.
@@ -64,6 +65,7 @@ export function initialAutomationState(): AutomationState {
       lifetimeUnits: 0,
     },
     staff: {
+      unlocked: false,
       enabled: false,
       budgetPct: 20,
       hire: true,
@@ -82,6 +84,34 @@ export function initialAutomationState(): AutomationState {
 export function automationEligible(state: GameState): boolean {
   for (const id in state.businesses) if ((state.businesses[id]?.owned ?? 0) > 0) return true
   return false
+}
+
+// ── Chief of Staff — a one-time HIRE that unlocks the auto-roster manager ─────
+/** A one-time signing cost, scaled so it's a real decision at any stage: at least
+ *  $1M, or ~2 minutes of idle income (whichever is larger). */
+export const CHIEF_UNLOCK_FLOOR = 1_000_000
+export const CHIEF_UNLOCK_SECONDS = 120
+
+export function chiefUnlockCost(state: GameState): number {
+  return Math.max(CHIEF_UNLOCK_FLOOR, automatedIncomePerSec(state) * CHIEF_UNLOCK_SECONDS)
+}
+
+/**
+ * Hire the Chief of Staff (player action, from the Staff screen): pay the signing
+ * cost, flip `unlocked`, and start it working. Returns true if the hire happened.
+ * Player-only → the sim bot never hires, so `unlocked`/`enabled` stay false and the
+ * automation tick stays inert (income byte-identical).
+ */
+export function unlockChiefOfStaff(state: GameState): boolean {
+  const st = state.automation?.staff
+  if (!st || st.unlocked) return false
+  const cost = chiefUnlockCost(state)
+  if (!(cost >= 0) || state.cash < cost) return false
+  state.cash -= cost
+  st.unlocked = true
+  st.enabled = true // starts working immediately; the player can tune/disable in the menu
+  st.cooldownMs = Math.min(st.cooldownMs, 1000) // act promptly after hiring
+  return true
 }
 
 // ── Executive Assistant — auto-reinvest ──────────────────────────────────────
@@ -316,7 +346,9 @@ export function updateInvestConfig(state: GameState, patch: Partial<AutoInvestCo
 export function updateStaffConfig(state: GameState, patch: Partial<AutoStaffConfig>): void {
   const st = state.automation.staff
   if (patch.enabled !== undefined) {
-    st.enabled = !!patch.enabled
+    // The Chief can only run once HIRED — this defends every enable path (incl. the
+    // modal's tab switcher) so the hire gate can't be bypassed.
+    st.enabled = !!patch.enabled && st.unlocked
     if (st.enabled) st.cooldownMs = Math.min(st.cooldownMs, 1000)
   }
   if (patch.budgetPct !== undefined) st.budgetPct = clampPct(patch.budgetPct)
