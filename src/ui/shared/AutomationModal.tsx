@@ -86,6 +86,15 @@ function Section({ children }: { children: ReactNode }) {
   return <div className="card overflow-hidden">{children}</div>
 }
 
+/** Shown for a manager the player hasn't unlocked yet (reachable via the tab switcher). */
+function LockedNote({ children }: { children: ReactNode }) {
+  return (
+    <div className="card p-5 text-center text-sm" style={{ color: 'var(--text-dim)' }}>
+      🔒 {children}
+    </div>
+  )
+}
+
 const STRATEGIES: { id: AutoInvestStrategy; label: string; hint: string }[] = [
   { id: 'roi', label: 'Best ROI', hint: 'Buys whatever adds the most income per dollar.' },
   { id: 'cheapest', label: 'Cheapest', hint: 'Buys the cheapest units first — fast progress + milestones.' },
@@ -101,7 +110,9 @@ export function AutomationModal() {
 
   return (
     <Overlay accent={ACCENT} onBackdropClick={close} panelClassName="max-h-[88vh] overflow-y-auto">
-      {/* Tab switcher */}
+      {/* Tab switcher — only when BOTH managers are unlocked (else the modal is opened
+          straight to the single unlocked manager, so there's nothing to switch to). */}
+      {a.invest.unlocked && a.staff.unlocked && (
       <div className="flex gap-1 rounded-full p-1" style={{ background: 'var(--surface-2)' }}>
         {(['invest', 'staff'] as const).map((t) => (
           <button
@@ -115,8 +126,15 @@ export function AutomationModal() {
           </button>
         ))}
       </div>
+      )}
 
       {tab === 'invest' ? (
+        !a.invest.unlocked ? (
+          <LockedNote>
+            Win over {a.ea.partnerName} through the Investment Fund story, then poach them to
+            unlock your Executive Assistant.
+          </LockedNote>
+        ) : (
         <>
           <div>
             <h2 className="text-lg font-extrabold">Executive Assistant</h2>
@@ -178,8 +196,33 @@ export function AutomationModal() {
               <span className="tnum text-sm font-bold">{money(a.invest.lifetimeSpent)} · {a.invest.lifetimeUnits} units</span>
             </div>
           </Section>
+
+          {/* Board Advisor Fee — the poached EA auto-collects board fees at 100%. */}
+          <div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>Board Advisor Fee</div>
+            <Switch
+              label={a.ea.advisorFee ? 'Auto-collecting' : 'Off'}
+              hint={`${a.ea.partnerName.split(' ')[0]} banks ~${money(a.ea.advisorFeeValue)} in board fees when the meter fills`}
+              on={a.ea.advisorFee}
+              onToggle={() => setAutoInvest({ advisorFee: !a.ea.advisorFee })}
+            />
+            {a.ea.advisorFee && (
+              <div className="mt-1.5">
+                <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${a.ea.advisorFeePct}%`, background: ACCENT }} />
+                </div>
+                <div className="mt-0.5 text-right text-[10px]" style={{ color: 'var(--text-faint)' }}>
+                  {a.ea.advisorFeePct}% · next ~{money(a.ea.advisorFeeValue)}
+                </div>
+              </div>
+            )}
+          </div>
         </>
+        )
       ) : (
+        !a.staff.unlocked ? (
+          <LockedNote>Hire the Chief of Staff from the Staff screen to unlock this manager.</LockedNote>
+        ) : (
         <>
           <div>
             <h2 className="text-lg font-extrabold">Chief of Staff</h2>
@@ -212,6 +255,7 @@ export function AutomationModal() {
             </div>
           </Section>
         </>
+        )
       )}
 
       <button type="button" onClick={close} className="btn btn-primary btn-lg btn-block">

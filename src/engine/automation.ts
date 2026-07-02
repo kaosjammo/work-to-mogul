@@ -55,6 +55,11 @@ const clampPct = (n: number) => Math.max(0, Math.min(90, n))
 export function initialAutomationState(): AutomationState {
   return {
     invest: {
+      unlocked: false,
+      arcStage: 0,
+      arcStarted: false,
+      advisorFee: false,
+      advisorFeeMs: 0,
       enabled: false,
       reservePct: 25,
       strategy: 'roi',
@@ -334,13 +339,15 @@ const INDUSTRY_LIKE = (v: unknown): IndustryId | null => (typeof v === 'string' 
 export function updateInvestConfig(state: GameState, patch: Partial<AutoInvestConfig>): void {
   const inv = state.automation.invest
   if (patch.enabled !== undefined) {
-    inv.enabled = !!patch.enabled
+    // The EA can only run once POACHED — defends every enable path (incl. the modal tabs).
+    inv.enabled = !!patch.enabled && inv.unlocked
     if (inv.enabled) inv.cooldownMs = Math.min(inv.cooldownMs, 1000)
   }
   if (patch.reservePct !== undefined) inv.reservePct = clampPct(patch.reservePct)
   if (patch.strategy !== undefined) inv.strategy = patch.strategy
   if (patch.focusIndustry !== undefined) inv.focusIndustry = INDUSTRY_LIKE(patch.focusIndustry)
   if (patch.intervalSec !== undefined) inv.intervalSec = Math.max(3, Math.min(60, Math.round(patch.intervalSec)))
+  if (patch.advisorFee !== undefined) inv.advisorFee = !!patch.advisorFee && inv.unlocked
 }
 
 export function updateStaffConfig(state: GameState, patch: Partial<AutoStaffConfig>): void {

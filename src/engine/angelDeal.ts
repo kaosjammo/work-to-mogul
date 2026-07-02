@@ -15,6 +15,12 @@ import { getMogulStory, MOGUL_STORIES, LAUNCH, type MogulStory } from '../conten
 import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
 import { isRomanceStory, romanceEligible, applyRomanceOutcome, ROMANCE_NEXT_DATE_MS } from './romance'
+import { isEaStory, eaEligible, applyEaOutcome, EA_EPISODE_IDS } from './execAssistant'
+
+/** Arc episodes (romance + EA) — rare, one-time, non-repeatable content. */
+function isArcStory(id: string): boolean {
+  return isRomanceStory(id) || isEaStory(id)
+}
 
 export type OutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 
@@ -179,13 +185,35 @@ export function storyEligible(state: GameState, story: MogulStory): boolean {
  *  Romance episodes gate on RELATIONSHIP progress (bespoke), not an industry. */
 export function eligibleStories(state: GameState): MogulStory[] {
   return MOGUL_STORIES.filter((s) =>
-    isRomanceStory(s.id) ? romanceEligible(state, s) : storyEligible(state, s),
+    isRomanceStory(s.id)
+      ? romanceEligible(state, s)
+      : isEaStory(s.id)
+        ? eaEligible(state, s)
+        : storyEligible(state, s),
   )
 }
 
 /** Back-compat helper: is the Angel story specifically eligible? */
 export function angelEligible(state: GameState): boolean {
   return storyEligible(state, ANGEL_DEAL)
+}
+
+/**
+ * The EA arc opens on the FIRST Investment Fund unlock: surface episode 1 immediately,
+ * bypassing the pitch cooldown, so the story "pops" right when the Fund unlocks. Latches
+ * via `invest.arcStarted` so it fires exactly once. Sets flags only → bot-inert.
+ * Returns true if it opened the offer (the caller then returns).
+ */
+function maybeOpenEaArc(state: GameState): boolean {
+  const a = state.angelDeal
+  const inv = state.automation?.invest
+  if (!a || !inv || inv.arcStarted || inv.unlocked) return false
+  if (!ownsIndustry(state, FINANCE_INDUSTRY_ID)) return false // Finance owned…
+  if (!state.businesses['fund']?.unlocked) return false // …and specifically the Fund is unlocked
+  inv.arcStarted = true
+  a.storyId = EA_EPISODE_IDS[0]
+  a.offered = true
+  return true
 }
 
 /**
@@ -202,6 +230,9 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
     if (a.boostMsLeft === 0) a.boostMult = 1
   }
   if (a.active || a.offered) return // a pitch is in flight / waiting
+  // The EA arc opens the moment the Investment Fund is first unlocked — surface episode
+  // 1 immediately (bypassing the pitch cooldown) so it "pops" right on the unlock.
+  if (maybeOpenEaArc(state)) return
   const eligible = eligibleStories(state)
   if (eligible.length === 0) return
   if (a.cooldownMs > 0) {
@@ -210,13 +241,13 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
   }
   // A date that went well reserved this (shortened) slot for the NEXT episode —
   // courtship momentum must actually surface the courtship, not a business pitch.
-  const nextDate = a.nextIsDate ? eligible.find((s) => isRomanceStory(s.id)) : undefined
+  const nextDate = a.nextIsDate ? eligible.find((s) => isArcStory(s.id)) : undefined
   a.nextIsDate = false
-  // Arc episodes (the love story) are RARE, one-time, non-repeatable content. In a strict
+  // Arc episodes (romance + EA) are RARE, one-time, non-repeatable content. In a strict
   // round-robin they were 1-of-~7 eligible pitches, so a Finance player almost never saw
   // them (~once every 90 min). PREFER any eligible arc episode over the repeatable business
-  // pitches so the arc actually surfaces; business pitches resume between/after episodes.
-  const arcEpisodes = eligible.filter((s) => isRomanceStory(s.id))
+  // pitches so the arcs actually surface; business pitches resume between/after episodes.
+  const arcEpisodes = eligible.filter((s) => isArcStory(s.id))
   const preferred =
     nextDate ?? (arcEpisodes.length > 0 ? arcEpisodes[a.completedCount % arcEpisodes.length] : undefined)
   a.storyId = (preferred ?? eligible[a.completedCount % eligible.length]).id
@@ -329,6 +360,11 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       // (stage progression / marriage), applied by the romance module.
       a.payout = 0
       applyRomanceOutcome(state, a.storyId, band)
+    } else if (isEaStory(a.storyId)) {
+      // EA arc: no cash swing either — the reward is the courtship (arc progress
+      // toward the poach), applied by the exec-assistant module.
+      a.payout = 0
+      applyEaOutcome(state, a.storyId, band)
     } else {
       a.payout = applyOutcome(state, band, false)
     }
@@ -336,9 +372,9 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
     return true
   }
   if (choice.next === 'walkaway') {
-    if (isRomanceStory(a.storyId)) {
-      // Walking away from a date is always a clean, quiet neutral — no "discipline
-      // bonus" cash for dodging a person, no penalty either.
+    if (isArcStory(a.storyId)) {
+      // Walking away from a person (a date or a recruit) is always a clean, quiet
+      // neutral — no "discipline bonus" cash for dodging someone, no penalty either.
       a.outcome = 'neutral'
       a.disciplined = false
       a.payout = 0
@@ -365,17 +401,19 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
 export function dismissAngelOutcome(state: GameState): void {
   const a = state.angelDeal
   if (!a) return
-  const dateWentWell =
-    isRomanceStory(a.storyId) &&
+  // An arc episode that went WELL keeps the momentum: the next episode offers sooner.
+  // Covers both the romance (until married) and the EA courtship (until poached).
+  const arcWentWell =
     (a.outcome === 'great' || a.outcome === 'good') &&
-    !state.romance?.married
+    ((isRomanceStory(a.storyId) && !state.romance?.married) ||
+      (isEaStory(a.storyId) && !state.automation?.invest?.unlocked))
   a.active = false
   a.offered = false
   a.stageId = null
   a.outcome = null
   a.scores = initialScores()
-  a.nextIsDate = dateWentWell
-  a.cooldownMs = dateWentWell ? ROMANCE_NEXT_DATE_MS : ANGEL_REOFFER_MS
+  a.nextIsDate = arcWentWell
+  a.cooldownMs = arcWentWell ? ROMANCE_NEXT_DATE_MS : ANGEL_REOFFER_MS
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────

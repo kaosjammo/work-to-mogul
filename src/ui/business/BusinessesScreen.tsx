@@ -5,11 +5,13 @@ import {
   useQuantumSuperposition,
   useLogistics,
   useBuyMode,
+  useAutomation,
 } from '../../store/gameStore'
+import { useUiStore } from '../../store/uiStore'
 import { INDUSTRIES } from '../../content/industries'
 import { BUSINESSES } from '../../content/businesses'
 import { money, formatEta } from '../../engine/num'
-import { spendCash, dispatchCargo, setBuyMode } from '../../store/actions'
+import { spendCash, dispatchCargo, setBuyMode, poachAssistant } from '../../store/actions'
 import type { LogisticsView } from '../../store/buildView'
 import type { BuyMode } from '../../types/domain'
 import { WorkCard } from '../work/WorkCard'
@@ -131,6 +133,8 @@ export function BusinessesScreen() {
   const quantumSuperposition = useQuantumSuperposition()
   const logistics = useLogistics()
   const buyMode = useBuyMode()
+  const automation = useAutomation()
+  const openAutomation = useUiStore((s) => s.openAutomation)
 
   if (!ind || !industryView) return null
 
@@ -206,13 +210,41 @@ export function BusinessesScreen() {
         </div>
       )}
 
-      <div className="section mb-2 flex items-center justify-between">
+      <div className="section mb-2 flex items-center justify-between gap-1.5">
         <h2>Businesses</h2>
-        {hasAnyBusiness && (
-          <button type="button" onClick={spendCash} className="btn btn-secondary btn-sm" style={{ color: 'var(--accent)' }}>
-            💸 Spend cash
-          </button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {/* Executive Assistant: a Poach offer once you've courted all 3 episodes,
+              then a status/config chip once they're yours — right by Spend cash. */}
+          {automation.ea.canPoach && (
+            <button
+              type="button"
+              onClick={() => poachAssistant()}
+              className="btn btn-primary btn-sm"
+              title={`${automation.ea.partnerName} is ready to jump — poach them as your Executive Assistant`}
+            >
+              🤝 Poach {automation.ea.partnerName.split(' ')[0]}
+            </button>
+          )}
+          {automation.ea.unlocked && (
+            <button
+              type="button"
+              onClick={() => openAutomation('invest')}
+              className={`btn btn-sm ${automation.invest.enabled ? 'btn-primary' : 'btn-secondary'}`}
+              title={
+                automation.invest.enabled
+                  ? `EA on · reinvesting every ${automation.invest.intervalSec}s`
+                  : 'Executive Assistant (paused)'
+              }
+            >
+              🤖 EA
+            </button>
+          )}
+          {hasAnyBusiness && (
+            <button type="button" onClick={spendCash} className="btn btn-secondary btn-sm" style={{ color: 'var(--accent)' }}>
+              💸 Spend cash
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card overflow-hidden">

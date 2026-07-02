@@ -79,6 +79,7 @@ import {
   marriageLevelUpCost,
 } from '../engine/romance'
 import { automationEligible, chiefUnlockCost } from '../engine/automation'
+import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa, advisorFeeFraction, advisorFeeValue } from '../engine/execAssistant'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -356,6 +357,7 @@ export interface AngelDealView {
 export interface AutomationView {
   eligible: boolean // owns ≥1 business → the managers are available
   invest: {
+    unlocked: boolean // the EA has been poached
     enabled: boolean
     reservePct: number
     strategy: 'roi' | 'cheapest' | 'focus'
@@ -379,6 +381,16 @@ export interface AutomationView {
   staffBudgetNow: number // cash the Chief would spend this cycle
   chiefUnlockCost: number // one-time cost to hire the Chief of Staff
   chiefAffordable: boolean // can the player afford the Chief hire right now
+  ea: {
+    partnerName: string // the EA character (for the widget/poach copy)
+    arcStage: number // courtship progress (0..3)
+    arcTotal: number // 3
+    unlocked: boolean // poached → they're your EA
+    canPoach: boolean // courted all 3, not yet poached → show the Poach widget
+    advisorFee: boolean // Board Advisor Fee auto-collect toggle
+    advisorFeePct: number // fee meter fill, 0..100
+    advisorFeeValue: number // cash a full fee banks right now
+  }
 }
 
 /** The love-story arc's progress + the marriage money-sink (Stats-tab panel). */
@@ -1084,6 +1096,7 @@ export function buildView(
   const automation: AutomationView = {
     eligible: automationEligible(state),
     invest: {
+      unlocked: auto?.invest.unlocked ?? false,
       enabled: auto?.invest.enabled ?? false,
       reservePct: auto?.invest.reservePct ?? 25,
       strategy: auto?.invest.strategy ?? 'roi',
@@ -1107,6 +1120,16 @@ export function buildView(
     staffBudgetNow: state.cash * ((auto?.staff.budgetPct ?? 20) / 100),
     chiefUnlockCost: chiefCost,
     chiefAffordable: state.cash >= chiefCost,
+    ea: {
+      partnerName: EA_PARTNER_NAME,
+      arcStage: auto?.invest.arcStage ?? 0,
+      arcTotal: EA_EPISODE_IDS.length,
+      unlocked: auto?.invest.unlocked ?? false,
+      canPoach: canPoachEa(state),
+      advisorFee: auto?.invest.advisorFee ?? false,
+      advisorFeePct: Math.round(advisorFeeFraction(state) * 100),
+      advisorFeeValue: advisorFeeValue(state),
+    },
   }
 
   // Startup Combinator business (great-outcome reward) — its row + the exit-payout timer.

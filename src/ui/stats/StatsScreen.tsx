@@ -211,15 +211,17 @@ export function StatsScreen() {
         <Row label="Achievements" value={`${s.achievements}/${s.achievementsTotal}`} />
       </Section>
 
-      {automation.eligible && (
+      {(automation.invest.unlocked || automation.staff.unlocked) && (
         <Section title="AUTOMATION">
-          <AutomationRow
-            icon="🤖"
-            name="Executive Assistant"
-            desc={automation.invest.enabled ? `On · reinvesting every ${automation.invest.intervalSec}s` : 'Auto-reinvest your spare cash'}
-            on={automation.invest.enabled}
-            onClick={() => openAutomation('invest')}
-          />
+          {automation.invest.unlocked && (
+            <AutomationRow
+              icon="🤖"
+              name="Executive Assistant"
+              desc={automation.invest.enabled ? `On · reinvesting every ${automation.invest.intervalSec}s` : 'Poached · currently paused'}
+              on={automation.invest.enabled}
+              onClick={() => openAutomation('invest')}
+            />
+          )}
           {automation.staff.unlocked && (
             <AutomationRow
               icon="👔"

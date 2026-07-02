@@ -339,6 +339,13 @@ export interface FoodFrenzyState {
  *  All config PERSISTS through prestige (a set-and-forget convenience). */
 export type AutoInvestStrategy = 'roi' | 'cheapest' | 'focus'
 export interface AutoInvestConfig {
+  // ── Executive Assistant unlock arc (won by poaching a rival CEO's assistant) ──
+  unlocked: boolean // the EA has been POACHED (auto-reinvest available)
+  arcStage: number // courtship progress across the 3 EA episodes (0..3); poach at 3
+  arcStarted: boolean // the first EA episode has been surfaced (fires once on Fund unlock)
+  advisorFee: boolean // Board Advisor Fee toggle: auto-collect the fee when it fills to 100%
+  advisorFeeMs: number // fee accrual meter (0..fill); online-only, not persisted
+  // ── auto-reinvest policy ──
   enabled: boolean
   reservePct: number // keep this % of cash as a war-chest; reinvest the rest (0..90)
   strategy: AutoInvestStrategy // roi = best $/s per $; cheapest = fastest unit count; focus = one industry

@@ -35,6 +35,24 @@ had the Chief enabled counts as hired, so existing players keep their manager. H
 (default false → the bot never hires → income byte-identical). 423 tests (+4 hire/guard/
 grandfather), build + oxlint clean; browser-verified the hire → Configure flow end-to-end.
 
+**Slice C — the Executive Assistant is now WON via a 3-episode story arc.** New engine module
+`execAssistant.ts` + EA fields on `automation.invest` (`unlocked`, `arcStage`, `arcStarted`,
+`advisorFee`, `advisorFeeMs`). Three new Mogul Stories (`eaSummit`/`eaWarRoom`/`eaOffer` —
+authored by a 3-Opus parallel workflow off one shared character bible): you court **Wes Vaughn**,
+the razor-sharp EA to a rival CEO (Gideon Frost), across "The Summit → The War Room → The Offer".
+Episode 1 **pops the moment the Investment Fund first unlocks** (`maybeOpenEaArc` bypasses the
+pitch cooldown); episodes 2 & 3 surface through the arc-preferred rotation (romance + EA episodes
+both preferred over business pitches now). A great/good finish advances `arcStage` (like the
+romance arc; no cash swing). Court all 3 → a **🤝 Poach Wes** button appears next to Spend Cash →
+poaching unlocks + turns on the EA (free; the episodes were the price). A **🤖 EA** status/config
+chip then lives by Spend Cash, and the config gains the **Board Advisor Fee** toggle: a meter that
+fills over 5 min and, when on, auto-collects ~90s of idle income at 100%. Gates: `updateInvestConfig`
+refuses to enable an un-poached EA; the Stats row + modal tab are unlock-gated; the tab-switcher
+only shows unlocked managers. Migration: a pre-arc enabled EA is grandfathered as poached.
+Harness-safe (all default off → bot never poaches/toggles → income byte-identical). 434 tests
+(+10 EA arc), build + oxlint clean. Browser-verified the whole chain: Fund unlock → ea_summit
+offered → arc → Poach Wes → 🤖 EA widget → Board Advisor Fee.
+
 ## Events: rarer but deeper (frequency rebalance + Momentum combo + meaningful choices)
 
 User feedback: the three tap-to-collect events (Rush Hour, Golden Deal, Event Cards) are

@@ -38,6 +38,7 @@ import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type M
 import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
 import { updateInvestConfig, updateStaffConfig, unlockChiefOfStaff } from '../engine/automation'
+import { poachEa, EA_PARTNER_NAME } from '../engine/execAssistant'
 import type { AutoInvestConfig, AutoStaffConfig } from '../types/domain'
 import { momentumMult } from '../engine/momentum'
 import { claimDaily } from '../engine/daily'
@@ -404,6 +405,16 @@ export function hireChiefOfStaff(): void {
     haptic(26)
     playSound('chime')
     useUiStore.getState().pushCelebrations(['👔 Chief of Staff hired! Auto hire / level / assign is on.'])
+    publishNow()
+  }
+}
+
+/** Poach the courted Executive Assistant (from the main-screen widget) → they're yours. */
+export function poachAssistant(): void {
+  if (poachEa(getEngineState())) {
+    haptic(28)
+    playSound('chime')
+    useUiStore.getState().pushCelebrations([`🤝 ${EA_PARTNER_NAME} is now YOUR Executive Assistant!`])
     publishNow()
   }
 }

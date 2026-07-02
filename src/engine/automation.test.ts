@@ -131,6 +131,7 @@ describe('tickAutomation — cadence + HARNESS byte-identity', () => {
   it('an enabled EA reinvests on its interval and diverges from an idle empire', () => {
     const auto = seededState()
     const idle = seededState()
+    auto.automation.invest.unlocked = true // the EA must be poached first
     updateInvestConfig(auto, { enabled: true, reservePct: 20, intervalSec: 5 })
     const rng = () => 0.5
     for (let i = 0; i < 100; i++) {
@@ -208,6 +209,7 @@ describe('Automation config setters clamp to safe ranges', () => {
 describe('Automation — save + prestige', () => {
   it('config + stats round-trip through save (clamped) and reset the cooldown', () => {
     const s = seededState()
+    s.automation.invest.unlocked = true
     updateInvestConfig(s, { enabled: true, reservePct: 40, strategy: 'focus', focusIndustry: 'tech', intervalSec: 12 })
     s.automation.staff.unlocked = true
     updateStaffConfig(s, { enabled: true, budgetPct: 35, level: false })
@@ -247,6 +249,7 @@ describe('Automation — save + prestige', () => {
   it('config persists through prestige (a set-and-forget convenience)', () => {
     const s = seededState()
     s.lifetimeEarnings = 1e15
+    s.automation.invest.unlocked = true
     updateInvestConfig(s, { enabled: true, reservePct: 33 })
     s.automation.staff.unlocked = true
     updateStaffConfig(s, { enabled: true, budgetPct: 15 })
