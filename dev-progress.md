@@ -8,9 +8,11 @@ Append-only log of development loops. Newest at top.
 
 User feedback: the three tap-to-collect events (Rush Hour, Golden Deal, Event Cards) are
 "annoying/boring after a while" — too frequent and too shallow — while the richer beats
-(Mogul Stories, Romance episodes) are too rare. Shipping in three slices: **(1)** rebalance
+(Mogul Stories, Romance episodes) are too rare. Shipped in two slices: **(1)** rebalance
 frequency both directions, **(2)** a Momentum "Hot Streak" combo that ties the now-rarer tap
-events together, **(3)** meaningful two-option choices on Golden Deal + Rush Hour.
+events together. A planned Slice 3 (two-button meaningful choices on Golden Deal + Rush Hour)
+was **declined by the user** — the rarer cadence + the combo were deemed enough, and the extra
+decision-per-pop-up would re-add the friction the rebalance removed.
 
 **Slice 1 — frequency rebalance.** Tap events made rarer: Golden Deal `2min → 4min`, Rush
 Hour `3min → 6min`, Event Cards `5min → 9min`. Story beats made more frequent: Mogul Story
