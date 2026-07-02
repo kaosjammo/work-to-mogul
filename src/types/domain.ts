@@ -276,6 +276,7 @@ export interface AngelDealState {
   boostMult: number // timed post-deal industry multiplier (>1 good / <1 bad)
   boostMsLeft: number
   boostIndustryId: string // which industry the timed boost applies to (the resolved story's)
+  nextIsDate: boolean // a date went well → the SHORTENED cooldown is reserved for the next episode
   // Startup Combinator business (unlocked by the great outcome): periodic "exit" payouts.
   exitCooldownMs: number // countdown to the next exit lump (while the Combinator is owned)
   exitCount: number // exits fired (drives the deterministic payout sequence + UI celebration)
@@ -301,6 +302,15 @@ export interface SpaceShooterState {
   aiSalvageCooldownMs: number // countdown to the AI pilot's next automatic salvage payout
 }
 
+/** The love-story arc (Mogul Stories: the Quinn Harlow episodes) + marriage sink.
+ *  META-PROGRESSION: persists through prestige (an ascension is not a divorce). */
+export interface RomanceState {
+  stage: number // dating progress: romance episodes completed successfully (0..4)
+  married: boolean // the proposal landed (stage 4) — unlocks the marriage money-sink
+  marriageLevel: number // sink level (0 = not started); each level drains more income
+  totalSpent: number // lifetime cash lavished on the marriage (running sink total)
+}
+
 export interface GameState {
   cash: Num
   lifetimeEarnings: Num
@@ -310,7 +320,8 @@ export interface GameState {
   rushHour: RushHourState
   logistics: LogisticsState // Logistics' signature: Just-In-Time Dispatch (transient)
   eventCards: EventCardsState // the active-decision layer (transient)
-  angelDeal: AngelDealState // Angel Investment mini-game (opportunity)
+  angelDeal: AngelDealState // Mogul Story session runtime (offers/stages/scores)
+  romance: RomanceState // the love-story arc + marriage sink (persists through prestige)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode

@@ -69,7 +69,14 @@ import {
 } from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { ANGEL_DEAL } from '../content/angelDeal'
-import { getMogulStory } from '../content/mogulStories'
+import { getMogulStory, type MogulStoryHintCopy } from '../content/mogulStories'
+import {
+  PARTNER_NAME,
+  MARRIAGE_MAX_LEVEL,
+  MARRIAGE_TITLES,
+  marriageDrainFraction,
+  marriageLevelUpCost,
+} from '../engine/romance'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -333,15 +340,42 @@ export interface AngelDealView {
   hints: string[] // qualitative read on the hidden scores (never raw numbers)
 }
 
-/** Qualitative "read" on the hidden deal scores — flavour, never numbers. */
-function angelHints(s: AngelScores): string[] {
+/** The love-story arc's progress + the marriage money-sink (Stats-tab panel). */
+export interface RomanceView {
+  stage: number // romance episodes completed (0..4)
+  married: boolean
+  partner: string
+  marriageLevel: number // 0 = sink unlocked but not started
+  maxLevel: number
+  title: string // current level's flavour name ('' at level 0)
+  nextTitle: string | null // next level's flavour name (null when maxed)
+  drainPct: number // % of business income drained per second
+  drainPerSec: number // estimated $/s at the current idle income
+  nextCost: number // price of the next level (0 when maxed / unmarried)
+  canAfford: boolean
+  totalSpent: number // lifetime cash lavished on the marriage
+}
+
+/** Qualitative "read" on the hidden scores — flavour, never numbers. Each story
+ *  may override the copy per slot (`hintCopy`) so a romance reads as romance;
+ *  unset slots fall back to the default deal-flavoured lines. */
+function angelHints(s: AngelScores, copy?: MogulStoryHintCopy): string[] {
+  const c = {
+    highRisk: '⚠️ Something here doesn’t add up.',
+    someRisk: 'A few loose threads nag at you.',
+    solid: 'The numbers hold up so far.',
+    leading: 'You’re holding the cards.',
+    trailing: 'He’s setting the pace, not you.',
+    warm: 'You genuinely like this founder.',
+    ...copy,
+  }
   const out: string[] = []
-  if (s.risk >= 6) out.push('⚠️ Something here doesn’t add up.')
-  else if (s.risk >= 3) out.push('A few loose threads nag at you.')
-  else if (s.dueDiligence >= 4) out.push('The numbers hold up so far.')
-  if (s.leverage >= 3) out.push('You’re holding the cards.')
-  else if (s.leverage <= -2) out.push('He’s setting the pace, not you.')
-  else if (s.founderTrust >= 4) out.push('You genuinely like this founder.')
+  if (s.risk >= 6) out.push(c.highRisk)
+  else if (s.risk >= 3) out.push(c.someRisk)
+  else if (s.dueDiligence >= 4) out.push(c.solid)
+  if (s.leverage >= 3) out.push(c.leading)
+  else if (s.leverage <= -2) out.push(c.trailing)
+  else if (s.founderTrust >= 4) out.push(c.warm)
   return out.slice(0, 2)
 }
 
@@ -381,6 +415,7 @@ export interface ContractView {
 
 export interface SpaceShooterView {
   offerAvailable: boolean // a salvage signal is on offer now (the floating chip shows)
+  signalKey: number // stable per distinct signal (the cooldown that armed it) — buzz once per key
   stageIndex: number // next incomplete stage (0..4), or -1 when the campaign is done
   stageNumber: number // 1..5 for display
   stageTitle: string
@@ -411,6 +446,7 @@ export interface ViewSnapshot {
   rushHour: RushHourView
   logistics: LogisticsView
   angelDeal: AngelDealView
+  romance: RomanceView
   combinator: CombinatorView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
@@ -739,11 +775,14 @@ export function buildView(
   // unaffordable unlocked business a countdown so a disabled Buy button reads as
   // progress, not a dead end. Assumes all idle income is saved toward it (the
   // standard idle-game convention) — only shown when there's income to estimate from.
-  if (totalPps > 0) {
+  // NET of the marriage upkeep: a married empire actually banks less than it earns,
+  // and the ETA promise ("at your current income") must stay honest about that.
+  const netPps = totalPps * (1 - marriageDrainFraction(state))
+  if (netPps > 0) {
     for (const id in businesses) {
       const bv = businesses[id]
       if (bv.unlocked && !bv.affordable && bv.buyCost > state.cash) {
-        bv.affordEtaSec = (bv.buyCost - state.cash) / totalPps
+        bv.affordEtaSec = (bv.buyCost - state.cash) / netPps
       }
     }
   }
@@ -762,7 +801,7 @@ export function buildView(
       entryCost,
       firstBusinessName: firstDef.name,
       entryAffordable,
-      entryEtaSec: !entryAffordable && totalPps > 0 ? (entryCost - state.cash) / totalPps : null,
+      entryEtaSec: !entryAffordable && netPps > 0 ? (entryCost - state.cash) / netPps : null,
       ownsAny: totalOwned > 0,
       totalOwned,
     }
@@ -946,7 +985,26 @@ export function buildView(
     payout: ad.payout,
     disciplined: ad.disciplined,
     combinatorUnlocked: ad.combinatorUnlocked,
-    hints: angelHints(ad.scores),
+    hints: angelHints(ad.scores, story.hintCopy),
+  }
+
+  // Romance / marriage — the love-story arc's progress + the marriage money-sink.
+  const rm = state.romance
+  const marriageLevel = rm?.marriageLevel ?? 0
+  const nextCost = rm ? marriageLevelUpCost(state) : 0
+  const romance: RomanceView = {
+    stage: rm?.stage ?? 0,
+    married: rm?.married ?? false,
+    partner: PARTNER_NAME,
+    marriageLevel,
+    maxLevel: MARRIAGE_MAX_LEVEL,
+    title: MARRIAGE_TITLES[marriageLevel] ?? '',
+    nextTitle: marriageLevel < MARRIAGE_MAX_LEVEL ? (MARRIAGE_TITLES[marriageLevel + 1] ?? null) : null,
+    drainPct: Math.round(marriageDrainFraction(state) * 100),
+    drainPerSec: totalPps * marriageDrainFraction(state),
+    nextCost,
+    canAfford: nextCost > 0 && state.cash >= nextCost,
+    totalSpent: rm?.totalSpent ?? 0,
   }
 
   // Startup Combinator business (great-outcome reward) — its row + the exit-payout timer.
@@ -1014,6 +1072,7 @@ export function buildView(
   const ssStageDef = ssNextIdx >= 0 ? SPACE_SHOOTER_STAGE_BY_INDEX[ssNextIdx] : null
   const spaceShooter: SpaceShooterView = {
     offerAvailable: spaceShooterOfferAvailable(state, Date.now()),
+    signalKey: ssState?.cooldownUntil ?? 0,
     stageIndex: ssNextIdx,
     stageNumber: ssStageDef?.number ?? SPACE_SHOOTER_TOTAL_STAGES,
     stageTitle: ssStageDef?.title ?? 'Campaign Complete',
@@ -1119,7 +1178,7 @@ export function buildView(
   return {
     cash: state.cash,
     lifetimeEarnings: state.lifetimeEarnings,
-    totalPps,
+    totalPps: netPps, // what the player actually BANKS (gross minus marriage upkeep)
     career,
     revealedTabs,
     newTabs,
@@ -1127,6 +1186,7 @@ export function buildView(
     rushHour,
     logistics,
     angelDeal,
+    romance,
     combinator,
     financeCompound,
     quantumSuperposition,

@@ -54,6 +54,18 @@ export interface MogulStoryOutcomeCopy {
   line: string
 }
 
+/** Optional per-story flavour for the qualitative score hints shown during play.
+ *  Slots map to the fixed hint thresholds (see buildView); unset slots fall back
+ *  to the default deal-flavoured copy. Lets a romance read as romance. */
+export interface MogulStoryHintCopy {
+  highRisk?: string // risk >= 6
+  someRisk?: string // risk >= 3
+  solid?: string // dueDiligence >= 4 (when risk is low)
+  leading?: string // leverage >= 3
+  trailing?: string // leverage <= -2
+  warm?: string // founderTrust >= 4
+}
+
 /** A single Mogul Story — pure content + presentation. Outcome→band logic and reward
  *  side-effects are the story's own (registered separately) so nothing is hardcoded here. */
 export interface MogulStory {
@@ -69,4 +81,5 @@ export interface MogulStory {
   order: string[] // stage ids, for the "Stage N of M" progress
   stages: Record<string, MogulStoryStage>
   outcome: Record<MogulStoryOutcomeBand, MogulStoryOutcomeCopy> // per-band result copy
+  hintCopy?: MogulStoryHintCopy // optional story-flavoured score hints (default: deal copy)
 }

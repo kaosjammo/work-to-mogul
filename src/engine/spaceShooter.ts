@@ -22,8 +22,13 @@ import { ownsSpace } from './economy'
 export const SHOOTER_PASS_COOLDOWN_MS = 12 * 60_000
 /** After FAILING: retry the SAME stage after this cooldown. */
 export const SHOOTER_FAIL_COOLDOWN_MS = 4 * 60_000
-/** After WALKING AWAY before launch: re-arm the same offer shortly (no progress). */
-export const SHOOTER_ABORT_COOLDOWN_MS = 60_000
+/** After WALKING AWAY before launch: re-arm the same offer later (no progress).
+ *  Was 60s — that made the chip feel like a nag; opening the game and backing out
+ *  now buys a real break. */
+export const SHOOTER_ABORT_COOLDOWN_MS = 10 * 60_000
+/** Explicitly dismissing the floating signal ("Not now") snoozes it for a long
+ *  while — matches the Mogul Story re-offer cadence so opportunities stay rare. */
+export const SHOOTER_SNOOZE_MS = 30 * 60_000
 
 // ----- AI Salvage Pilot (Stage 5 reward): modest automatic salvage income -----
 export const AI_SALVAGE_INTERVAL_MS = 5 * 60_000
@@ -92,6 +97,10 @@ export function campaignComplete(state: GameState): boolean {
  * business, the campaign not finished, the AI pilot not yet taken over, and the
  * cooldown elapsed. `now` is injected (Date.now() at the call site) so this stays
  * pure/testable. Used by buildView (UI-only; the harness never reads buildView).
+ *
+ * ROTATION: a pending/active Mogul Story gets right-of-way — the salvage chip
+ * yields until the story is resolved or declined. Stories are the rarer beat
+ * (30-min cadence), so without this the signal drowns them out.
  */
 export function spaceShooterOfferAvailable(state: GameState, now: number): boolean {
   const s = state.spaceShooter
@@ -99,6 +108,7 @@ export function spaceShooterOfferAvailable(state: GameState, now: number): boole
   if (s.aiPilotUnlocked) return false
   if (s.stageCompleted >= SPACE_SHOOTER_TOTAL_STAGES) return false
   if (!ownsSpace(state)) return false
+  if (state.angelDeal?.offered || state.angelDeal?.active) return false
   return now >= (s.cooldownUntil ?? 0)
 }
 
@@ -233,12 +243,22 @@ export function resolveMission(
 }
 
 /**
- * Walk away before launch (or dismiss the signal): re-arm the SAME offer after a
- * short cooldown. No progress, no reward, no penalty — exactly the "walking away
- * does not progress the stage" requirement.
+ * Walk away before launch: re-arm the SAME offer after a break. No progress,
+ * no reward, no penalty — exactly the "walking away does not progress the
+ * stage" requirement.
  */
 export function abortMission(state: GameState, now: number): void {
   const s = state.spaceShooter
   if (!s) return
   s.cooldownUntil = now + SHOOTER_ABORT_COOLDOWN_MS
+}
+
+/**
+ * "Not now" on the floating signal itself: a long snooze. The player told us
+ * they don't feel like playing — believe them, and stay gone for a while.
+ */
+export function snoozeSignal(state: GameState, now: number): void {
+  const s = state.spaceShooter
+  if (!s) return
+  s.cooldownUntil = Math.max(s.cooldownUntil ?? 0, now + SHOOTER_SNOOZE_MS)
 }

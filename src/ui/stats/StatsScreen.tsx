@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { money, formatRate, format } from '../../engine/num'
 import { CAREER_LEVELS } from '../../content/career'
-import { useStats, useContracts, useDaily } from '../../store/gameStore'
+import { useStats, useContracts, useDaily, useRomance } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { ContractView } from '../../store/buildView'
-import { claimContract, claimDailyBonus } from '../../store/actions'
+import { claimContract, claimDailyBonus, renewVows } from '../../store/actions'
 import { DailyStreakProgress } from '../shared/DailyStreakProgress'
 
 /** A flat stat row: dim label left, bold value right. Sits inside a shared .card list. */
@@ -111,6 +111,7 @@ export function StatsScreen() {
   const s = useStats()
   const contracts = useContracts()
   const daily = useDaily()
+  const romance = useRomance()
   const careerTitle = CAREER_LEVELS[s.stats.careerLevel]?.title ?? '—'
   const bonusPct = s.prestigeProfitBonusPct
   const haptics = useSettingsStore((st) => st.haptics)
@@ -182,6 +183,38 @@ export function StatsScreen() {
         <Row label="Empire tokens" value={format(s.prestige.totalPoints)} />
         <Row label="Achievements" value={`${s.achievements}/${s.achievementsTotal}`} />
       </Section>
+
+      {romance.married && (
+        <Section title={`💍 MARRIAGE · ${romance.partner}`}>
+          <Row
+            label="Level"
+            value={romance.marriageLevel > 0 ? `${romance.marriageLevel}/${romance.maxLevel} · ${romance.title}` : 'Just married'}
+          />
+          <Row
+            label="Lifestyle upkeep"
+            value={romance.drainPct > 0 ? `${romance.drainPct}% of income (~${formatRate(romance.drainPerSec)})` : 'None yet'}
+          />
+          <Row label="Lavished so far" value={money(romance.totalSpent)} />
+          {romance.nextTitle && (
+            <div className="list-row justify-between gap-2 px-3 py-2">
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Next: {romance.nextTitle}</span>
+                <span className="block text-xs" style={{ color: 'var(--text-faint)' }}>
+                  +1% income upkeep, forever. {romance.partner} would love it.
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={renewVows}
+                disabled={!romance.canAfford}
+                className="btn btn-primary btn-md shrink-0"
+              >
+                {money(romance.nextCost)}
+              </button>
+            </div>
+          )}
+        </Section>
+      )}
 
       <Section title="SETTINGS">
         <ToggleRow

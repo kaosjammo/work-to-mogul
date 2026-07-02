@@ -18,6 +18,7 @@ import { tickGolden } from './golden'
 import { tickRushHour } from './rushHour'
 import { tickLogistics } from './logistics'
 import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
+import { applyMarriageUpkeep } from './romance'
 import { tickEventCards } from './eventCards'
 import { tickSpaceShooter } from './spaceShooter'
 
@@ -69,6 +70,10 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   // Work/Career: the early-game manual income source.
   applyCareerTick(state, dtMs)
 
+  // Snapshot for the marriage upkeep: the sink takes a share of BUSINESS income
+  // earned this tick (married-only → the sim bot never reaches the branch).
+  const cashBeforeBusinesses = state.cash
+
   for (const id in state.businesses) {
     const bs = state.businesses[id]
     if (!bs.unlocked || bs.owned <= 0) continue
@@ -111,6 +116,10 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
       bs.cycleProgressMs = 0
     }
   }
+
+  // 💍 Marriage upkeep — the spouse's lifestyle takes its share of what the
+  // businesses just earned (player-opted money sink; never negative, no offline).
+  applyMarriageUpkeep(state, state.cash - cashBeforeBusinesses)
 
   tickGolden(state, dtMs)
   tickRushHour(state, dtMs)

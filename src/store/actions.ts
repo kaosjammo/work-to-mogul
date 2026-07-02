@@ -34,7 +34,8 @@ import {
   hiredRoles,
 } from '../engine/angelDeal'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
-import { resolveMission, abortMission, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
+import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
+import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
@@ -326,6 +327,12 @@ export function abortSpaceMission(): void {
   publishNow()
 }
 
+/** "Not now" on the floating salvage chip — snoozes the signal for a long while. */
+export function snoozeSalvageSignal(): void {
+  snoozeSignal(getEngineState(), Date.now())
+  publishNow()
+}
+
 /** Claim today's daily bonus (~2h of idle income) + any streak milestone reward. */
 export function claimDailyBonus(): void {
   const { cash, milestone } = claimDaily(getEngineState(), Date.now())
@@ -372,11 +379,38 @@ export function chooseAngel(choiceId: string): void {
 /** Close the outcome screen (starts the re-offer cooldown). */
 export function closeAngelOutcome(): void {
   const s = getEngineState()
-  const great = s.angelDeal.outcome === 'great'
+  const outcome = s.angelDeal.outcome
+  const storyId = s.angelDeal.storyId
+  const great = outcome === 'great'
+  const progressed = outcome === 'great' || outcome === 'good'
   dismissAngelOutcome(s)
-  if (great) {
+  if (isRomanceStory(storyId)) {
+    const proposalId = ROMANCE_EPISODE_IDS[ROMANCE_EPISODE_IDS.length - 1]
+    if (storyId === proposalId && progressed) {
+      useUiStore
+        .getState()
+        .pushCelebrations([`💍 You married ${PARTNER_NAME}! The marriage panel is on the Stats tab.`])
+    } else if (progressed) {
+      useUiStore.getState().pushCelebrations([`💕 ${PARTNER_NAME} wants to see you again…`])
+    }
+  } else if (great && storyId === 'angel_fridgemind') {
     useUiStore.getState().pushCelebrations(['🚀 Startup Combinator founded — see the Business screen!'])
   }
+  publishNow()
+}
+
+/** Level up the marriage (the money sink): a lump cost now, more upkeep forever. */
+export function renewVows(): void {
+  const s = getEngineState()
+  const res = buyMarriageLevel(s)
+  if (!res) return
+  haptic(30)
+  playSound('coin')
+  useUiStore
+    .getState()
+    .pushCelebrations([
+      `💍 Lv ${res.level}: ${res.title} — ${PARTNER_NAME} is delighted. (-${money(res.cost)})`,
+    ])
   publishNow()
 }
 

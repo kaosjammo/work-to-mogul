@@ -14,6 +14,7 @@ import { ANGEL_DEAL, SCORE_KEYS, type Scores, type RoleBoost, type DealChoice } 
 import { getMogulStory, MOGUL_STORIES, LAUNCH, type MogulStory } from '../content/mogulStories'
 import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
+import { isRomanceStory, romanceEligible, applyRomanceOutcome, ROMANCE_NEXT_DATE_MS } from './romance'
 
 export type OutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 
@@ -65,6 +66,7 @@ export function initialAngelDealState(): AngelDealState {
     boostMult: 1,
     boostMsLeft: 0,
     boostIndustryId: FINANCE_INDUSTRY_ID,
+    nextIsDate: false,
     exitCooldownMs: EXIT_INTERVAL_MS,
     exitCount: 0,
     lastExitAmount: 0,
@@ -173,9 +175,12 @@ export function storyEligible(state: GameState, story: MogulStory): boolean {
   return ownsIndustry(state, story.industryId) && state.cash >= ANGEL_MIN_CASH
 }
 
-/** Registered stories eligible to be pitched right now, in registry order. */
+/** Registered stories eligible to be pitched right now, in registry order.
+ *  Romance episodes gate on RELATIONSHIP progress (bespoke), not an industry. */
 export function eligibleStories(state: GameState): MogulStory[] {
-  return MOGUL_STORIES.filter((s) => storyEligible(state, s))
+  return MOGUL_STORIES.filter((s) =>
+    isRomanceStory(s.id) ? romanceEligible(state, s) : storyEligible(state, s),
+  )
 }
 
 /** Back-compat helper: is the Angel story specifically eligible? */
@@ -203,8 +208,12 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
     a.cooldownMs = Math.max(0, a.cooldownMs - dtMs)
     if (a.cooldownMs > 0) return // still cooling down
   }
-  // Rotate through the eligible stories by completions so successive pitches vary.
-  a.storyId = eligible[a.completedCount % eligible.length].id
+  // A date that went well reserved this (shortened) slot for the NEXT episode —
+  // courtship momentum must actually surface the courtship, not a business pitch.
+  const nextDate = a.nextIsDate ? eligible.find((s) => isRomanceStory(s.id)) : undefined
+  a.nextIsDate = false
+  // Otherwise rotate through the eligible stories by completions so pitches vary.
+  a.storyId = (nextDate ?? eligible[a.completedCount % eligible.length]).id
   a.offered = true // cooldown elapsed → a pitch is waiting
 }
 
@@ -309,15 +318,30 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
     const band = investedBand(a.scores)
     a.outcome = band
     a.disciplined = false
-    a.payout = applyOutcome(state, band, false)
+    if (isRomanceStory(a.storyId)) {
+      // Romance: no cash swing, no industry boost — the reward IS the relationship
+      // (stage progression / marriage), applied by the romance module.
+      a.payout = 0
+      applyRomanceOutcome(state, a.storyId, band)
+    } else {
+      a.payout = applyOutcome(state, band, false)
+    }
     a.completedCount += 1
     return true
   }
   if (choice.next === 'walkaway') {
-    const disciplined = avoidedBadDeal(a.scores)
-    a.outcome = 'neutral'
-    a.disciplined = disciplined
-    a.payout = applyOutcome(state, 'neutral', disciplined)
+    if (isRomanceStory(a.storyId)) {
+      // Walking away from a date is always a clean, quiet neutral — no "discipline
+      // bonus" cash for dodging a person, no penalty either.
+      a.outcome = 'neutral'
+      a.disciplined = false
+      a.payout = 0
+    } else {
+      const disciplined = avoidedBadDeal(a.scores)
+      a.outcome = 'neutral'
+      a.disciplined = disciplined
+      a.payout = applyOutcome(state, 'neutral', disciplined)
+    }
     a.completedCount += 1
     return true
   }
@@ -328,16 +352,24 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
   return false
 }
 
-/** Close the outcome screen — clears the session and starts the re-offer cooldown. */
+/** Close the outcome screen — clears the session and starts the re-offer cooldown.
+ *  A date that went WELL keeps the momentum: the next EPISODE offers sooner (the
+ *  shortened slot is reserved for the romance via `nextIsDate`; it never applies
+ *  after the proposal — there is no next date once you're married). */
 export function dismissAngelOutcome(state: GameState): void {
   const a = state.angelDeal
   if (!a) return
+  const dateWentWell =
+    isRomanceStory(a.storyId) &&
+    (a.outcome === 'great' || a.outcome === 'good') &&
+    !state.romance?.married
   a.active = false
   a.offered = false
   a.stageId = null
   a.outcome = null
   a.scores = initialScores()
-  a.cooldownMs = ANGEL_REOFFER_MS
+  a.nextIsDate = dateWentWell
+  a.cooldownMs = dateWentWell ? ROMANCE_NEXT_DATE_MS : ANGEL_REOFFER_MS
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────

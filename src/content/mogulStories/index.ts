@@ -12,6 +12,10 @@ import { VIRAL_MOMENT } from './viralMoment'
 import { DOCK_DISPUTE } from './dockDispute'
 import { INSPECTION } from './inspection'
 import { LAUNCH } from './launchGamble'
+import { ROMANCE_SPARK } from './romanceSpark'
+import { ROMANCE_DATE } from './romanceDate'
+import { ROMANCE_GETAWAY } from './romanceGetaway'
+import { ROMANCE_PROPOSAL } from './romanceProposal'
 
 export * from './types'
 export { ANGEL_DEAL } from './angelInvestment'
@@ -21,8 +25,14 @@ export { VIRAL_MOMENT } from './viralMoment'
 export { DOCK_DISPUTE } from './dockDispute'
 export { INSPECTION } from './inspection'
 export { LAUNCH } from './launchGamble'
+export { ROMANCE_SPARK } from './romanceSpark'
+export { ROMANCE_DATE } from './romanceDate'
+export { ROMANCE_GETAWAY } from './romanceGetaway'
+export { ROMANCE_PROPOSAL } from './romanceProposal'
 
-/** Every registered Mogul Story (Angel Investment is the reference story). */
+/** Every registered Mogul Story (Angel Investment is the reference story).
+ *  The four `love_*` entries form the romance ARC — offered one at a time,
+ *  gated on relationship progress (see engine/romance.ts), not an industry. */
 export const MOGUL_STORIES: MogulStory[] = [
   ANGEL_DEAL,
   LEASE_SHOWDOWN,
@@ -31,6 +41,10 @@ export const MOGUL_STORIES: MogulStory[] = [
   DOCK_DISPUTE,
   INSPECTION,
   LAUNCH,
+  ROMANCE_SPARK,
+  ROMANCE_DATE,
+  ROMANCE_GETAWAY,
+  ROMANCE_PROPOSAL,
 ]
 
 export const MOGUL_STORY_BY_ID: Record<string, MogulStory> = Object.fromEntries(

@@ -16,6 +16,8 @@ import {
   SHOOTER_PASS_COOLDOWN_MS,
   SHOOTER_FAIL_COOLDOWN_MS,
   SHOOTER_ABORT_COOLDOWN_MS,
+  SHOOTER_SNOOZE_MS,
+  snoozeSignal,
   AI_SALVAGE_INTERVAL_MS,
   AI_SALVAGE_INCOME_SECONDS,
   type MissionMetrics,
@@ -51,6 +53,37 @@ function metrics(p: Partial<MissionMetrics> = {}): MissionMetrics {
 const GREAT = metrics({ survived: true, shieldsRemaining: 3, maxShields: 3, enemiesDestroyed: 8, salvageCollected: 5 })
 const PASS = metrics({ survived: true, shieldsRemaining: 1, maxShields: 4, enemiesDestroyed: 1, salvageCollected: 1 })
 const FAIL = metrics({ survived: false, shieldsRemaining: 0, maxShields: 3, enemiesDestroyed: 2 })
+
+describe('Salvage Signal cadence — snooze + story right-of-way (the anti-nag rules)', () => {
+  it('"Not now" snoozes the signal for a long while (and never SHORTENS a cooldown)', () => {
+    const s = spaceState()
+    snoozeSignal(s, 100_000)
+    expect(s.spaceShooter.cooldownUntil).toBe(100_000 + SHOOTER_SNOOZE_MS)
+    expect(spaceShooterOfferAvailable(s, 100_000 + SHOOTER_SNOOZE_MS - 1)).toBe(false)
+    expect(spaceShooterOfferAvailable(s, 100_000 + SHOOTER_SNOOZE_MS + 1)).toBe(true)
+    // A snooze never pulls an already-longer cooldown closer.
+    s.spaceShooter.cooldownUntil = 100_000 + SHOOTER_SNOOZE_MS * 3
+    snoozeSignal(s, 100_000)
+    expect(s.spaceShooter.cooldownUntil).toBe(100_000 + SHOOTER_SNOOZE_MS * 3)
+  })
+
+  it('walking away from a launch buys a real break, not a 60s nag', () => {
+    expect(SHOOTER_ABORT_COOLDOWN_MS).toBeGreaterThanOrEqual(10 * 60_000)
+    expect(SHOOTER_SNOOZE_MS).toBeGreaterThanOrEqual(30 * 60_000)
+  })
+
+  it('a pending or active Mogul Story gets right-of-way over the salvage chip', () => {
+    const s = spaceState()
+    expect(spaceShooterOfferAvailable(s, 1)).toBe(true)
+    s.angelDeal.offered = true
+    expect(spaceShooterOfferAvailable(s, 1)).toBe(false) // story chip is up
+    s.angelDeal.offered = false
+    s.angelDeal.active = true
+    expect(spaceShooterOfferAvailable(s, 1)).toBe(false) // story session in play
+    s.angelDeal.active = false
+    expect(spaceShooterOfferAvailable(s, 1)).toBe(true) // story resolved → signal returns
+  })
+})
 
 describe('Space Salvage Shooter — campaign progression', () => {
   it('starts a fresh campaign at stage 0 with nothing unlocked', () => {

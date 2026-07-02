@@ -222,12 +222,20 @@ describe('Angel Deal — trigger + economy folds', () => {
     expect(s.angelDeal.offered).toBe(true)
   })
 
-  it('never offers when ineligible (no Finance / too little cash)', () => {
+  it('never offers the ANGEL deal when ineligible; a rich player can still be offered a date', () => {
+    const broke = initialGameState(0)
+    broke.cash = 100 // too poor for any story (below every cash floor)
+    tickAngelDeal(broke, ANGEL_FIRST_OFFER_MS * 3)
+    expect(broke.angelDeal.offered).toBe(false)
+
     const s = initialGameState(0)
     s.cash = ANGEL_MIN_CASH * 10 // rich, but owns no Finance
     expect(angelEligible(s)).toBe(false)
     tickAngelDeal(s, ANGEL_FIRST_OFFER_MS * 3)
-    expect(s.angelDeal.offered).toBe(false)
+    // The romance arc is industry-free by design — with no industries owned, the
+    // ONLY eligible story here is the first date; the Angel deal never offers.
+    expect(s.angelDeal.offered).toBe(true)
+    expect(s.angelDeal.storyId).toBe('love_spark')
   })
 
   it('the timed boost fold is ×1 until a deal is played, and targets the boost industry', () => {
@@ -269,7 +277,11 @@ describe('Mogul Story #2 — The Lease (Retail): shared runtime, generic resolut
 
   it('a Retail-only player is offered the lease (rotation picks an eligible story)', () => {
     const s = retailState()
-    expect(eligibleStories(s).map((x) => x.id)).toEqual([LEASE_SHOWDOWN.id])
+    // Eligible: the Retail story + the first romance episode (relationship-gated,
+    // industry-free). Registry order puts the lease first, so completion 0 offers it.
+    const ids = eligibleStories(s).map((x) => x.id)
+    expect(ids).toContain(LEASE_SHOWDOWN.id)
+    expect(ids.filter((id) => !id.startsWith('love_'))).toEqual([LEASE_SHOWDOWN.id])
     tickAngelDeal(s, ANGEL_FIRST_OFFER_MS + 1)
     expect(s.angelDeal.offered).toBe(true)
     expect(s.angelDeal.storyId).toBe(LEASE_SHOWDOWN.id)

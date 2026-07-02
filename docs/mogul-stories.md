@@ -32,6 +32,7 @@ The vocabulary lives in [`src/content/mogulStories/types.ts`](../src/content/mog
 | `MogulStoryOutcomeCopy` | per-band result screen copy (`title` + `line`) |
 | `MogulStoryRoleBoost` | employee role that amplifies a matching choice |
 | `MogulStoryLength` | `'short' | 'standard' | 'major'` (authoring hint only) |
+| `MogulStoryHintCopy` | optional per-story flavour for the in-play score hints |
 
 Story **content** lives under [`src/content/mogulStories/`](../src/content/mogulStories/);
 register each story in [`index.ts`](../src/content/mogulStories/index.ts). The reusable
@@ -219,3 +220,56 @@ finish gives the strong cash + boost; only the **Angel** story's `great` additio
 the Combinator. So a new negotiation story is often just **content + registration** — reach
 for a bespoke resolver only when the reward genuinely differs (a unique unlock, a
 non-industry effect).
+
+## The Romance Arc (episodic stories + the marriage money-sink)
+
+The framework's first **multi-episode** story: a 4-episode enemies-to-lovers arc with the
+fictional rival mogul **Quinn Harlow** (34 stages total), told through the shared runtime
+but gated on **relationship progress** instead of an industry.
+
+| # | Episode | id | Icon | Stages |
+|---|---|---|---|---|
+| 1 | The Spark (the auction meet-cute) | `love_spark` | 💘 | 9 |
+| 2 | The First Date (the diner test) | `love_first_date` | 🌹 | 8 |
+| 3 | The Getaway (the storm weekend) | `love_getaway` | 🏝️ | 8 |
+| 4 | The Question (the proposal) | `love_proposal` | 💍 | 9 |
+
+Mechanics (all in [`engine/romance.ts`](../src/engine/romance.ts), hooked from the shared
+runtime):
+
+- **Episodic eligibility** — `romanceEligible` replaces the owns-industry gate: only the
+  CURRENT episode offers (`romance.stage === episodeIndex`), never after marriage, once the
+  cash floor is met. The arc is **industry-free** — `industryId: 'food'` is nominal.
+- **Progression** — `great` **or** `good` advances the stage (both are a "yes"); `bad` is a
+  recoverable setback (retry after the cooldown; never a breakup); walking away is always a
+  graceful neutral (no "discipline bonus" cash for dodging a person). A successful date
+  shortens the next offer to `ROMANCE_NEXT_DATE_MS` (15 min) AND reserves that slot for the
+  next episode (`nextIsDate`) — courtship momentum surfaces the courtship, never a business
+  pitch, and never fires after the proposal (there is no next date once you're married).
+- **No cash swing** — dates pay/cost nothing and grant no industry boost; the reward IS the
+  relationship. The proposal landing = **married**, which unlocks the marriage panel on the
+  Stats tab.
+- **The marriage money-sink** — each marriage level ("The Honeymoon" → … → "The Dynasty",
+  20 levels) is bought with a lump sum — the LARGER of ~10 min of income × level and **10% of
+  current cash** (so the price can't be gamed to the floor by buying right after an ascension
+  or with automation unassigned; the lifestyle scales with the visible fortune) — and adds
+  **+1% of business income per second** in permanent lifestyle upkeep (`applyMarriageUpkeep`,
+  applied to each tick's business payout — proportional, so it can never bankrupt you, and it
+  doesn't apply offline). Leveling is always the player's choice: opt-in per level, one-way.
+  Affordability ETAs and the Stats "Idle income" row report income **net** of the upkeep.
+- **Meta-progression** — `RomanceState` persists through prestige (an ascension is not a
+  divorce) and save/cloud round-trips tolerantly (married implies the arc complete; a sink
+  can only exist inside a marriage).
+- **Romance-flavoured hints** — the arc introduced `MogulStory.hintCopy`: per-story copy for
+  the fixed hint thresholds, so mid-story reads say "There's real chemistry here" instead of
+  "The numbers hold up so far".
+- **Harness-inert** as always: the bot never accepts a date → `married` stays false → the
+  upkeep branch never runs → income byte-identical.
+
+## Opportunity rotation (stories vs. the Salvage Signal)
+
+Floating opportunity chips take turns instead of stacking: a pending/active Mogul Story gets
+**right-of-way** — `spaceShooterOfferAvailable` yields while `angelDeal.offered || active`.
+The Salvage Signal also gained a "Not now" snooze (`SHOOTER_SNOOZE_MS`, 30 min — matching the
+story cadence) and walking out of a launch re-arms after 10 min (was 60s). Rare beats stay
+rare; nothing nags.

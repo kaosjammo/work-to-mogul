@@ -21,6 +21,7 @@ import { refillBoard } from '../engine/contracts'
 import { REPEATABLE_UPGRADES } from '../content/upgrades'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
+import { ROMANCE_EPISODE_IDS, MARRIAGE_MAX_LEVEL } from '../engine/romance'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
@@ -270,6 +271,7 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     a.boostMult = num(la.boostMult, 1) || 1
     a.boostMsLeft = Math.max(0, num(la.boostMsLeft))
     if (typeof la.boostIndustryId === 'string') a.boostIndustryId = la.boostIndustryId
+    a.nextIsDate = la.nextIsDate === true
     a.exitCooldownMs = Math.max(0, num(la.exitCooldownMs, a.exitCooldownMs))
     a.exitCount = Math.max(0, Math.floor(num(la.exitCount)))
     a.lastExitAmount = Math.max(0, num(la.lastExitAmount))
@@ -305,6 +307,27 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
         a.outcome = outcomeOk ? (la.outcome as GameState['angelDeal']['outcome']) : null
       }
       // else: unrecoverable session → stays idle (meta preserved above)
+    }
+  }
+
+  // Romance / marriage — meta-progression (like the salvage campaign): the arc
+  // stage, marriage, sink level, and the lifetime-lavished total all persist.
+  // Consistency guards: married implies the arc is complete; the sink can only
+  // exist inside a marriage.
+  if (loaded.romance && typeof loaded.romance === 'object') {
+    const lr = loaded.romance
+    const r = s.romance
+    r.stage = clamp(Math.floor(num(lr.stage)), 0, ROMANCE_EPISODE_IDS.length)
+    r.married = lr.married === true
+    r.marriageLevel = clamp(Math.floor(num(lr.marriageLevel)), 0, MARRIAGE_MAX_LEVEL)
+    r.totalSpent = Math.max(0, num(lr.totalSpent))
+    if (r.married) {
+      r.stage = ROMANCE_EPISODE_IDS.length
+    } else {
+      r.marriageLevel = 0
+      // Unmarried can be AT MOST "ready for the proposal" — a corrupt {stage: 4,
+      // married: false} would otherwise dead-end the arc forever (no episode left).
+      r.stage = Math.min(r.stage, ROMANCE_EPISODE_IDS.length - 1)
     }
   }
 

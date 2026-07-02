@@ -4,6 +4,76 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Salvage Signal anti-nag + the Romance Arc (4 episodes) + marriage money-sink
+
+Two user-directed features. (Note: the long-standing "no dating/life-sim" constraint was
+explicitly lifted by the user for this feature on 2026-07-02.)
+
+**A) Salvage Signal cadence (the "it keeps popping up" fix):**
+- The chip had NO dismiss and walking out of a launch re-armed it in **60s** — a nag by
+  construction. Now: a **"Not now"** button on the chip snoozes it **30 min**
+  (`SHOOTER_SNOOZE_MS`, matching the story cadence; never shortens an existing cooldown),
+  and aborting a launch re-arms after **10 min** (was 1).
+- **Opportunity rotation:** a pending/active Mogul Story gets right-of-way —
+  `spaceShooterOfferAvailable` yields while `angelDeal.offered || active`, so the rarer
+  story beats stop being drowned out. (UI-only gate; the harness never reads it.)
+
+**B) The Romance Arc — a lengthy love Mogul Story (4 episodes, 34 stages) + marriage sink:**
+- **Quinn Harlow**, fictional rival mogul; enemies-to-lovers: **The Spark** (💘 auction
+  meet-cute, 9), **The First Date** (🌹 diner test, 8), **The Getaway** (🏝️ storm weekend,
+  8), **The Question** (💍 proposal, 9). Authored via a 4-agent parallel workflow from a
+  shared story bible (continuity: the neon EAT sign, the ancient espresso machine, Priya).
+- **Episodic eligibility** (`engine/romance.ts`): only the CURRENT episode offers
+  (`romance.stage`), industry-free, cash floor $1M, never after marriage. great OR good
+  advances; bad = recoverable setback; walking away = clean neutral (no discipline cash).
+  A successful date shortens the next offer to 15 min (courtship momentum).
+- **Marriage money-sink:** the proposal landing = married → a 💍 panel on the Stats tab.
+  Each of 20 levels ("The Honeymoon" → "The Dynasty") costs ~10 min of income × level and
+  adds **+1%/level of business income per second** in permanent upkeep — applied to each
+  tick's business payout (proportional → never bankrupts; no offline drain; opt-in per
+  level; `totalSpent` tracked as "Lavished so far").
+- **Meta-progression:** `RomanceState` persists through prestige ("an ascension is not a
+  divorce") and save/cloud round-trips with consistency guards.
+- **Framework addition:** `MogulStory.hintCopy` — per-story hint flavour ("There's real
+  chemistry here" instead of "The numbers hold up so far").
+- **Fixed in passing:** `closeAngelOutcome` used to fire the "Startup Combinator founded"
+  toast on ANY great outcome (latent since story #2) — now gated to the Angel story.
+- **Harness-inert:** all player-triggered; the bot never dates → `married` false → the
+  upkeep branch never runs → income byte-identical (harness/balance/progression unchanged).
+
+**Adversarial review (4-lens find→verify workflow, 13 agents) confirmed 7 findings — all
+fixed in the same change:**
+1. *Post-prestige sink exploit*: marriage levels collapsed to the $25k floor after an
+   ascension (income 0, marriage preserved) → cost is now also floored at **10% of current
+   cash** (`MARRIAGE_COST_CASH_FRACTION`) — the lifestyle scales with the visible fortune.
+2. *Momentum mis-slot*: the shortened 15-min "next date" cooldown often rotated to a
+   NON-romance pitch → new `AngelDealState.nextIsDate` reserves the slot for the next
+   episode (and never fires after the proposal — no next date once married).
+3. *Save dead-end*: corrupt `{stage: 4, married: false}` bricked the arc forever → unmarried
+   now clamps to "ready for the proposal" on load.
+4. *Hit-area overlap* (empirically measured): "Not now"'s 44px `::before` overhung ~6px onto
+   the Golden Deal chip's top → salvage stack raised to +78px with gap-2 (≥8px clearance).
+5. *Haptic re-buzz*: story-yield visibility flips re-buzzed for an already-seen signal → buzz
+   is now keyed per distinct signal (`SpaceShooterView.signalKey`).
+6. *ETA dishonesty*: afford/entry ETAs + the Stats "Idle income" row ignored the drain (up to
+   25% understatement at L20) → both now use income NET of marriage upkeep.
+7. *Ep4 continuity inversion*: the proposal claimed QUINN won the EAT sign (eps 1–3: YOU won
+   it; it hangs in Quinn's hallway) → rewritten as a Priya-assisted overnight heist of the
+   sign from Quinn's hallway; "snowed in" → the rainstorm the getaway actually staged.
+(One finding rejected on verification: lowercase "jumbotron" is a genericized dictionary word.)
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **345 tests** (+21: 3 salvage cadence,
+18 romance engine/save/prestige/drain — incl. a live applyTick 10%-drain equivalence test,
+the post-prestige pricing regression, the reserved-slot rotation test, and the dead-end
+clamp; framework auto-covers the 4 new stories). Browser-verified 375px: the exact "Stage 2"
+chip from the user's report now snoozes 30 min on "Not now"; salvage yields to a pending
+story chip; The Spark plays (💘 · "Lot Seven · 1/9") with romance hints and zero deal-copy
+leakage; proposal → "Yes. Obviously Yes." → married; Stats panel → Renew Vows Lv1 ("The
+Honeymoon", $1.2T) → live drain measured at exactly 1% of business income; the hit-area
+clearance re-measured ≥8px; no overflow, no console errors.
+
+---
+
 ## Mogul Stories — distinct per-story icons (finishing polish)
 
 A small presentational finish now that the 7-story set is complete: each story had been

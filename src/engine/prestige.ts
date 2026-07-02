@@ -61,6 +61,9 @@ export function prestigeReset(state: GameState): boolean {
   const contracts = state.contracts
     ? { active: [...state.contracts.active], nextIndex: state.contracts.nextIndex }
     : undefined
+  // The love-story arc + marriage are meta-progression — an ascension is not a
+  // divorce. The relationship (and its money sink) carries into the new empire.
+  const romance = state.romance ? { ...state.romance } : undefined
   // The Space Salvage campaign is meta-progression (permanent unlocks like the AI
   // pilot) — its PROGRESS survives ascension; the transient run-reward buff resets
   // with the fresh state (initialGameState seeds a clean buff/AI-salvage timer).
@@ -92,6 +95,7 @@ export function prestigeReset(state: GameState): boolean {
   state.dailyClaimDay = dailyClaimDay
   state.dailyStreak = dailyStreak
   if (contracts) state.contracts = contracts // the missions board persists too
+  if (romance) state.romance = romance // the marriage (and its upkeep) persists too
   if (salvageCampaign) state.spaceShooter = { ...state.spaceShooter, ...salvageCampaign }
   // Reaching an ascension-count milestone banks bonus tokens (one-time).
   checkPrestigeMilestones(state)
