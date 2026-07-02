@@ -1,12 +1,12 @@
 // ============================================================
-//  Mogul Story — "The Question" (Romance, Episode 4 of 4 — the finale). The ring has
+//  Mogul Story — "The Question" (Romance, Episode 6 of 6 — the finale). The ring has
 //  been in your pocket for three weeks and Quinn Harlow — rival, partner, owner of one
 //  ancient espresso machine — has started to notice. Pick the place, get the blessing,
 //  survive the fake-out, and bring the rusty neon EAT sign home for the backdrop. Ask
 //  it true and simple and the answer is yes; over-produce it and the ring goes back in
 //  the pocket (a setback, never a breakup). A 9-stage `standard` proposal on the shared
 //  runtime. industryId is 'food' for trigger context only — eligibility is bespoke,
-//  gated on the relationship stage (the first three episodes), not on the Food industry.
+//  gated on the relationship stage (the first five episodes), not on the Food industry.
 //
 //  All fictional — no real people, brands, or companies.
 // ============================================================

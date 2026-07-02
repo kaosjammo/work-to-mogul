@@ -223,8 +223,8 @@ non-industry effect).
 
 ## The Romance Arc (episodic stories + the marriage money-sink)
 
-The framework's first **multi-episode** story: a 4-episode enemies-to-lovers arc with the
-fictional rival mogul **Quinn Harlow** (34 stages total), told through the shared runtime
+The framework's first **multi-episode** story: a 6-episode enemies-to-lovers arc with the
+fictional rival mogul **Quinn Harlow** (44 stages total), told through the shared runtime
 but gated on **relationship progress** instead of an industry.
 
 | # | Episode | id | Icon | Stages |
@@ -232,7 +232,9 @@ but gated on **relationship progress** instead of an industry.
 | 1 | The Spark (the auction meet-cute) | `love_spark` | 💘 | 9 |
 | 2 | The First Date (the diner test) | `love_first_date` | 🌹 | 8 |
 | 3 | The Getaway (the storm weekend) | `love_getaway` | 🏝️ | 8 |
-| 4 | The Question (the proposal) | `love_proposal` | 💍 | 9 |
+| 4 | Going Public (the rivals hit the press) | `love_public` | 📰 | 5 |
+| 5 | The Key (her gran's machine moves in) | `love_key` | 🔑 | 5 |
+| 6 | The Question (the proposal) | `love_proposal` | 💍 | 9 |
 
 Mechanics (all in [`engine/romance.ts`](../src/engine/romance.ts), hooked from the shared
 runtime):

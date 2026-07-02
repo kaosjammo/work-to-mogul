@@ -396,7 +396,7 @@ export interface AutomationView {
 
 /** The love-story arc's progress + the marriage money-sink (Stats-tab panel). */
 export interface RomanceView {
-  stage: number // romance episodes completed (0..4)
+  stage: number // romance episodes completed (0..6)
   married: boolean
   partner: string
   marriageLevel: number // 0 = sink unlocked but not started

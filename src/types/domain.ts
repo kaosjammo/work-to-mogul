@@ -314,7 +314,7 @@ export interface SpaceShooterState {
 /** The love-story arc (Mogul Stories: the Quinn Harlow episodes) + marriage sink.
  *  META-PROGRESSION: persists through prestige (an ascension is not a divorce). */
 export interface RomanceState {
-  stage: number // dating progress: romance episodes completed successfully (0..4)
+  stage: number // dating progress: romance episodes completed successfully (0..6)
   married: boolean // the proposal landed (stage 4) — unlocks the marriage money-sink
   marriageLevel: number // sink level (0 = not started); each level drains more income
   totalSpent: number // lifetime cash lavished on the marriage (running sink total)

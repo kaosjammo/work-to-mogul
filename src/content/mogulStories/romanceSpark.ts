@@ -2,7 +2,7 @@
 //  Mogul Story — "The Spark" (Romance, Episode 1 of 4). A black-tie charity gala,
 //  and lot seven — a rusty neon diner sign that just says EAT — turns into a
 //  paddle-for-paddle duel with a stranger who turns out to be Quinn Harlow, the
-//  rival CEO from the headlines. A 9-stage `standard` enemies-to-lovers opener on
+//  rival CEO from the headlines. Episode 1 of 6. A 9-stage `standard` enemies-to-lovers opener on
 //  the shared runtime: listen more than you flex and the night ends with a yes
 //  (great AND good both advance the arc); walk away and it stays a perfect story
 //  you can pick up later; showboat and you flop — stingingly, recoverably.

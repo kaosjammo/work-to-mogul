@@ -15,6 +15,8 @@ import { LAUNCH } from './launchGamble'
 import { ROMANCE_SPARK } from './romanceSpark'
 import { ROMANCE_DATE } from './romanceDate'
 import { ROMANCE_GETAWAY } from './romanceGetaway'
+import { ROMANCE_PUBLIC } from './romancePublic'
+import { ROMANCE_KEY } from './romanceKey'
 import { ROMANCE_PROPOSAL } from './romanceProposal'
 import { EA_SUMMIT } from './eaSummit'
 import { EA_WARROOM } from './eaWarRoom'
@@ -31,13 +33,15 @@ export { LAUNCH } from './launchGamble'
 export { ROMANCE_SPARK } from './romanceSpark'
 export { ROMANCE_DATE } from './romanceDate'
 export { ROMANCE_GETAWAY } from './romanceGetaway'
+export { ROMANCE_PUBLIC } from './romancePublic'
+export { ROMANCE_KEY } from './romanceKey'
 export { ROMANCE_PROPOSAL } from './romanceProposal'
 export { EA_SUMMIT } from './eaSummit'
 export { EA_WARROOM } from './eaWarRoom'
 export { EA_OFFER } from './eaOffer'
 
 /** Every registered Mogul Story (Angel Investment is the reference story).
- *  The four `love_*` entries form the romance ARC — offered one at a time,
+ *  The six `love_*` entries form the romance ARC — offered one at a time,
  *  gated on relationship progress (see engine/romance.ts), not an industry. */
 export const MOGUL_STORIES: MogulStory[] = [
   ANGEL_DEAL,
@@ -50,6 +54,8 @@ export const MOGUL_STORIES: MogulStory[] = [
   ROMANCE_SPARK,
   ROMANCE_DATE,
   ROMANCE_GETAWAY,
+  ROMANCE_PUBLIC,
+  ROMANCE_KEY,
   ROMANCE_PROPOSAL,
   // Executive Assistant arc (poach a rival CEO's right hand) — gated on EA-arc progress.
   EA_SUMMIT,

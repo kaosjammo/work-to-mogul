@@ -1,5 +1,5 @@
 // ============================================================
-//  Mogul Story — "The Getaway" (Romance, episode 3 of 4). Months into the thing with
+//  Mogul Story — "The Getaway" (Romance, episode 3 of 6). Months into the thing with
 //  Quinn Harlow, she books a coastal cottage weekend with exactly one rule: no laptops.
 //  Then the rain kills every plan, your empire catches fire with Harlow & Co. on the
 //  other side of the clashing deal, and somewhere between board games, a sulking

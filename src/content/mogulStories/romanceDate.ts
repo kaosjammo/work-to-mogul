@@ -1,5 +1,5 @@
 // ============================================================
-//  Mogul Story — "The First Date" (Romance arc, Episode 2 of 4). Quinn Harlow —
+//  Mogul Story — "The First Date" (Romance arc, Episode 2 of 6). Quinn Harlow —
 //  rival CEO, dry wit, allergic to flattery — actually said yes, and picked the venue:
 //  a hole-in-the-wall diner with a temperamental espresso machine. Everything is a
 //  test tonight: what you order, where your phone lives, how you pay a two-digit
@@ -27,7 +27,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'venue',
     title: 'The Venue',
     speaker: 'narrator',
-    text: 'The address Quinn texted turns out to be a hole-in-the-wall diner wedged between a laundromat and a locksmith — five booths, a counter, and an espresso machine that hisses like it holds grudges. Quinn is already in the corner booth, watching your face as you take it in. This is not a venue. This is a test.',
+    text: 'The address Quinn texted turns out to be a hole-in-the-wall diner wedged between a laundromat and a locksmith — five booths, a counter, and an espresso machine that hisses like it holds grudges. It isn’t Rosie’s — her gran’s place is long closed — but it’s a cousin of it, and after everything she told you at the auction you understand the choice before you’ve even sat down. Quinn is already in the corner booth, watching your face as you take it in. This is not a venue. This is a test.',
     choices: [
       {
         id: 'venue_upgrade',
@@ -150,7 +150,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'gran',
     title: 'The Real Talk',
     speaker: 'protagonist',
-    text: '"You want to know why a diner." Quinn turns her cup a slow quarter-turn. "My gran ran one. Two counters, five booths, a neon sign out front that just said EAT — no name, no slogan. Her whole philosophy in one word. It went under when I was twelve. The bank took everything except the sign." She stops turning the cup. "I don’t tell people that."',
+    text: '"You already know the sign story — I told you far too much of it at that gala, which I’m still deciding how I feel about." Quinn turns her cup a slow quarter-turn. "Here’s the part I skipped. Rosie’s went under when I was twelve. The bank took the booths, the griddle, the counter Gran polished every closing — everything. Except the sign. Nobody bids on a broken sign." She stops turning the cup. "I’ve never told anyone the twelve part."',
     choices: [
       {
         id: 'gran_pivot',
@@ -161,14 +161,14 @@ const STAGES: MogulStoryStage[] = [
       },
       {
         id: 'gran_sign',
-        label: '“The charity auction. That’s why you bid like that on the EAT sign — it was hers.”',
-        result: 'Quinn goes very still. “You remembered,” she says, quietly, like it costs something. “Nobody ever connects it.” The armor doesn’t come off — but it unbuckles.',
+        label: '“So every hostile takeover is you, at twelve, buying Rosie’s back — one company at a time.”',
+        result: 'Quinn goes very still. “Nobody has ever said that out loud,” she says, quietly, like it costs something. “Least of all me.” The armor doesn’t come off — but it unbuckles.',
         effects: { dueDiligence: 3, founderTrust: 2, leverage: 1 },
         next: 'bill',
       },
       {
         id: 'gran_listen',
-        label: 'Don’t fill the silence. Then, gently: “What was she like — your gran?”',
+        label: 'Don’t fill the silence. Then, gently: “What was she actually like — your gran?”',
         result: '“Terrifying. Kind. Kept a wrench behind the register for the espresso machine — the same machine that’s in my office now.” Quinn laughs at something far away. “You’d have liked her.”',
         effects: { founderTrust: 2, valuationDiscipline: 1 },
         next: 'bill',

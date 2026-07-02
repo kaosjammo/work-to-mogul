@@ -298,7 +298,7 @@ describe('Marriage — the levelable money sink', () => {
 describe('Romance — save + prestige are marriage-safe', () => {
   it('round-trips through save; corrupt combos are repaired on load', () => {
     const s = richState()
-    s.romance = { stage: 4, married: true, marriageLevel: 7, totalSpent: 123456 }
+    s.romance = { stage: ROMANCE_EPISODE_IDS.length, married: true, marriageLevel: 7, totalSpent: 123456 }
     const back = deserialize(serialize(s, 1))!
     expect(back.romance).toEqual(s.romance)
 
@@ -316,9 +316,9 @@ describe('Romance — save + prestige are marriage-safe', () => {
     expect(fixed2.romance.marriageLevel).toBe(0) // no marriage → no sink
     expect(fixed2.romance.stage).toBe(2)
 
-    // {stage: 4, married: false} would dead-end the arc forever (no episode left,
+    // {stage: length, married: false} would dead-end the arc forever (no episode left,
     // never married) — unmarried clamps to "ready for the proposal" at most.
-    raw.state.romance = { stage: 4, married: false, marriageLevel: 0, totalSpent: 0 }
+    raw.state.romance = { stage: ROMANCE_EPISODE_IDS.length, married: false, marriageLevel: 0, totalSpent: 0 }
     const fixed3 = deserialize(JSON.stringify(raw))!
     expect(fixed3.romance.stage).toBe(ROMANCE_EPISODE_IDS.length - 1)
   })

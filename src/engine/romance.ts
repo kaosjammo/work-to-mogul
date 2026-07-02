@@ -1,6 +1,6 @@
 // ============================================================
-//  Romance — the love-story Mogul arc (pure over GameState). Four episodic
-//  stories (meet-cute → first date → getaway → proposal) told through the shared
+//  Romance — the love-story Mogul arc (pure over GameState). Six episodic
+//  stories (meet-cute → first date → getaway → going public → the key → proposal) told through the shared
 //  Mogul Story runtime, gated on RELATIONSHIP PROGRESS instead of an industry.
 //  A successful episode advances the relationship; the proposal landing means
 //  marriage — which unlocks the game's one deliberate MONEY SINK: each marriage
@@ -29,6 +29,8 @@ export const ROMANCE_EPISODE_IDS = [
   'love_spark',
   'love_first_date',
   'love_getaway',
+  'love_public',
+  'love_key',
   'love_proposal',
 ] as const
 
