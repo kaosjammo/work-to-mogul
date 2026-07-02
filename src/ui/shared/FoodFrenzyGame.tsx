@@ -10,9 +10,11 @@
 //  bounded rewards + advances the campaign. No mid-run state is ever persisted:
 //  a refresh simply closes the modal and the signal re-arms.
 //
-//  Controls — desktop: WASD/arrows. Mobile: drag to move. Sprites are emoji
-//  (zero assets). Level-up pauses the swarm; the overlay buttons are real DOM
-//  (44px tap areas), not canvas hit-boxes.
+//  Controls are device-aware: desktop = WASD/arrows OR hold-left-click to drive toward
+//  the cursor; touch = a floating analog joystick. Everything (sprites, reach, HUD)
+//  scales by one factor S from the short edge, so a phone renders the same game smaller.
+//  Sprites are emoji (zero assets). Level-up pauses the swarm; the overlay buttons are
+//  real DOM (44px tap areas), not canvas hit-boxes.
 // ============================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useFoodFrenzy } from '../../store/gameStore'
@@ -36,7 +38,8 @@ interface Fan {
   hunger: number
   kind: 0 | 1 | 2 // walker / sprinter / superfan
   speed: number
-  r: number
+  r: number // effective radius = rBase * S (rescaled on resize)
+  rBase: number // authored radius, so a mid-run resize can rescale live fans
   wobble: number
 }
 interface Dog {
@@ -80,15 +83,18 @@ interface RunStats {
   dmg: number
 }
 
-function statsFrom(stacks: Record<string, number>): RunStats {
+// S bakes the responsive scale into every WORLD-space stat (range/moveSpeed/magnet/
+// splash) so the game is geometrically similar at any screen size; counts + times
+// (projectiles/fireMs/pierce/dmg) are resolution-independent and stay unscaled.
+function statsFrom(stacks: Record<string, number>, S: number): RunStats {
   return {
     projectiles: 1 + (stacks.double_dogs ?? 0),
     fireMs: 520 * Math.pow(0.75, stacks.turbo_grill ?? 0),
-    splash: (stacks.extra_mustard ?? 0) * 30,
-    range: 190 * Math.pow(1.3, stacks.long_toss ?? 0),
-    moveSpeed: 300 * Math.pow(1.2, stacks.roller_skates ?? 0),
+    splash: (stacks.extra_mustard ?? 0) * 30 * S,
+    range: 190 * S * Math.pow(1.3, stacks.long_toss ?? 0),
+    moveSpeed: 300 * S * Math.pow(1.2, stacks.roller_skates ?? 0),
     pierce: (stacks.big_dog ?? 0) > 0 ? 2 : 0,
-    magnet: 60 * Math.pow(1.5, stacks.snack_magnet ?? 0),
+    magnet: 60 * S * Math.pow(1.5, stacks.snack_magnet ?? 0),
     dmg: 1 + (stacks.combo_sauce ?? 0),
   }
 }
@@ -113,28 +119,21 @@ function FrenzyCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // ── responsive scale (one similarity factor) ──────────────────────────────
     let W = 0
     let H = 0
+    let S = 1 // whole-scene scale from the short edge (sprites/reach/HUD were authored in px)
+    let HUD_S = 0.72 // HUD text/geometry never shrinks below this (legibility floor)
     const dpr = Math.min(2, window.devicePixelRatio || 1)
-    function resize() {
-      const rect = canvas!.getBoundingClientRect()
-      W = Math.max(1, rect.width)
-      H = Math.max(1, rect.height)
-      canvas!.width = Math.floor(W * dpr)
-      canvas!.height = Math.floor(H * dpr)
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
-    resize()
-    window.addEventListener('resize', resize)
 
-    // world
-    const truck = { x: W / 2, y: H / 2, r: 22, composure: MAX_COMPOSURE, invMs: 0, fireMs: 0 }
+    // ── world (declared BEFORE resize — resize() rescales them) ────────────────
+    const truck = { x: 0, y: 0, r: 22, composure: MAX_COMPOSURE, invMs: 0, fireMs: 0 }
     const fans: Fan[] = []
     const dogs: Dog[] = []
     const tips: Tip[] = []
     const parts: Particle[] = []
     const stacks: Record<string, number> = {}
-    let stats = statsFrom(stacks)
+    let stats = statsFrom(stacks, S)
 
     let elapsed = 0
     let paused = false
@@ -150,11 +149,195 @@ function FrenzyCanvas({
     let xpNext = 12
     let fedSinceBurger = 0
 
-    // input
+    // ── input ──────────────────────────────────────────────────────────────────
+    // Device-aware: TOUCH → a floating analog joystick (anchored where the thumb
+    // lands; pace ∝ deflection). MOUSE → hold-left-click drives the truck toward the
+    // cursor at a CONSTANT pace (re-targets live, stops at the cursor). KEYBOARD
+    // (WASD/arrows) always wins. Priority: keyboard > joystick > hold-mouse.
     const keys = new Set<string>()
-    let pointerActive = false
-    let pTargetX = truck.x
-    let pTargetY = truck.y
+    let inputMode: 'idle' | 'joystick' | 'holdmouse' = 'idle'
+    let activePointerId: number | null = null // the ONE tracked pointer; others ignored
+    let lastPointerType: 'touch' | 'mouse' | null = null // for the device-aware hint
+    let stickAX = 0
+    let stickAY = 0 // joystick base-ring centre (canvas px)
+    let stickDX = 0
+    let stickDY = 0 // clamped thumb offset from anchor
+    let stickNX = 0
+    let stickNY = 0 // unit direction
+    let stickMag = 0 // 0..1 throttle after dead-zone remap
+    let holdTargetX = 0
+    let holdTargetY = 0 // live cursor while a mouse button is held
+    let stickMaxR = 46 // full-throttle thumb travel (S-scaled in resize)
+    let stickBaseR = 52 // drawn base-ring radius
+    let stickThumbR = 22 // drawn thumb radius
+    let holdStop = 1 // arrive-and-stop epsilon
+    const stickDead = 0.16 // dead-zone as a FRACTION of stickMaxR (unitless)
+
+    // ── festival background — baked once per resize into an offscreen canvas ─────
+    let bg: HTMLCanvasElement | OffscreenCanvas | null = null
+    let lastBgKey = '' // device-pixel dims of the last bake — skip re-baking on same-size resizes
+    function buildBackground(w: number, h: number, ratio: number, s: number): HTMLCanvasElement | OffscreenCanvas | null {
+      try {
+        const cw = Math.max(1, Math.floor(w * ratio))
+        const ch = Math.max(1, Math.floor(h * ratio))
+        const c: HTMLCanvasElement | OffscreenCanvas =
+          typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cw, ch) : document.createElement('canvas')
+        if (!(typeof OffscreenCanvas !== 'undefined' && c instanceof OffscreenCanvas)) {
+          ;(c as HTMLCanvasElement).width = cw
+          ;(c as HTMLCanvasElement).height = ch
+        }
+        const b = c.getContext('2d') as unknown as CanvasRenderingContext2D | null
+        if (!b) return null
+        b.setTransform(ratio, 0, 0, ratio, 0, 0)
+        // seeded LCG so the static layout is stable across rebuilds (no twinkle on resize)
+        let seed = (0x9e3779b9 ^ (Math.floor(w) * 73856093) ^ (Math.floor(h) * 19349663)) >>> 0
+        const rnd = () => {
+          seed = (seed * 1664525 + 1013904223) >>> 0
+          return seed / 4294967296
+        }
+        // 1. base wash (warm dusk pavement, keyed to the modal browns)
+        const g = b.createLinearGradient(0, 0, 0, h)
+        g.addColorStop(0, '#17110b')
+        g.addColorStop(1, '#0f0a06')
+        b.fillStyle = g
+        b.fillRect(0, 0, w, h)
+        // 2. ground plane + soft horizon (near street vs far end)
+        b.fillStyle = '#1b1410'
+        b.fillRect(0, h * 0.38, w, h * 0.62)
+        const hz = b.createLinearGradient(0, h * 0.38, 0, h * 0.38 + 24 * s)
+        hz.addColorStop(0, 'rgba(60,40,20,0.25)')
+        hz.addColorStop(1, 'rgba(60,40,20,0)')
+        b.fillStyle = hz
+        b.fillRect(0, h * 0.38, w, 24 * s)
+        // 3. paver seams (faint plaza floor)
+        b.strokeStyle = 'rgba(255,235,200,0.03)'
+        b.lineWidth = 1
+        for (let gx = 0; gx <= w; gx += 46 * s) {
+          b.beginPath()
+          b.moveTo(gx, h * 0.4)
+          b.lineTo(gx, h)
+          b.stroke()
+        }
+        let cy = h * 0.42
+        let gap = 26 * s
+        while (cy < h) {
+          b.beginPath()
+          b.moveTo(0, cy)
+          b.lineTo(w, cy)
+          b.stroke()
+          cy += gap
+          gap *= 1.14
+        }
+        // 4. warm light pools the truck drives through
+        const lamps = Math.ceil(w / 220)
+        for (let i = 0; i < lamps; i++) {
+          const lx = (i + 0.5) * 220
+          const ly = i % 2 === 0 ? h * 0.32 : h * 0.78
+          const rg = b.createRadialGradient(lx, ly, 0, lx, ly, 150 * s)
+          rg.addColorStop(0, 'rgba(245,197,24,0.05)')
+          rg.addColorStop(1, 'rgba(245,197,24,0)')
+          b.fillStyle = rg
+          b.fillRect(lx - 160 * s, ly - 160 * s, 320 * s, 320 * s)
+        }
+        // 5. distant stalls / skyline at the horizon (atmosphere, not focus)
+        const stalls = 6
+        for (let i = 0; i < stalls; i++) {
+          const sw = 60 * s + rnd() * 40 * s
+          const sx = (i / stalls) * w + rnd() * 20 * s
+          const sy = h * 0.3 + rnd() * h * 0.06
+          const sh = 26 * s + rnd() * 14 * s
+          b.fillStyle = 'rgba(40,26,18,0.5)'
+          b.fillRect(sx, sy, sw, sh)
+          for (let k = 0; k < 4; k++) {
+            b.fillStyle = k % 2 === 0 ? 'rgba(122,59,18,0.4)' : 'rgba(168,83,26,0.4)'
+            b.fillRect(sx + (k / 4) * sw, sy, sw / 4, 5 * s)
+          }
+          b.fillStyle = 'rgba(255,207,138,0.25)'
+          b.fillRect(sx + sw * 0.3, sy + sh * 0.5, 5 * s, 6 * s)
+        }
+        // 6. string-lights (bunting) across the top
+        for (let row = 0; row < 2; row++) {
+          const y0 = (8 + row * 10) * s
+          b.strokeStyle = 'rgba(255,210,120,0.18)'
+          b.lineWidth = 1.5 * s
+          b.beginPath()
+          b.moveTo(0, y0)
+          b.quadraticCurveTo(w / 2, y0 + 16 * s, w, y0)
+          b.stroke()
+          for (let bx = 10 * s; bx < w; bx += 70 * s) {
+            const tt = bx / w
+            const by = y0 + 32 * s * tt * (1 - tt) // point on the quadratic sag
+            const glow = b.createRadialGradient(bx, by, 0, bx, by, 6 * s)
+            glow.addColorStop(0, 'rgba(255,210,120,0.12)')
+            glow.addColorStop(1, 'rgba(255,210,120,0)')
+            b.fillStyle = glow
+            b.fillRect(bx - 6 * s, by - 6 * s, 12 * s, 12 * s)
+            b.fillStyle = Math.floor(bx / (70 * s)) % 2 === 0 ? 'rgba(255,210,74,0.5)' : 'rgba(255,157,74,0.5)'
+            b.beginPath()
+            b.arc(bx, by, 2.2 * s, 0, Math.PI * 2)
+            b.fill()
+          }
+        }
+        // 7. confetti flecks on the pavement (seeded → static)
+        const flecks = Math.floor((w * h) / 26000)
+        const cols = ['#f5c518', '#46d369', '#f43f5e']
+        b.globalAlpha = 0.06
+        for (let i = 0; i < flecks; i++) {
+          const fx = rnd() * w
+          const fy = h * 0.4 + rnd() * h * 0.6
+          b.fillStyle = cols[Math.floor(rnd() * cols.length)]
+          const fs = (1 + rnd()) * s
+          b.fillRect(fx, fy, fs, fs)
+        }
+        b.globalAlpha = 1
+        // 8. edge vignette (LAST — darkens the busy spawn perimeter, brightens centre)
+        const vg = b.createRadialGradient(w / 2, h * 0.55, Math.min(w, h) * 0.3, w / 2, h * 0.55, Math.hypot(w, h) * 0.62)
+        vg.addColorStop(0, 'rgba(0,0,0,0)')
+        vg.addColorStop(1, 'rgba(0,0,0,0.38)')
+        b.fillStyle = vg
+        b.fillRect(0, 0, w, h)
+        // 9. contrast guard so nothing rivals a bright emoji
+        b.fillStyle = 'rgba(10,7,4,0.16)'
+        b.fillRect(0, 0, w, h)
+        return c
+      } catch {
+        return null
+      }
+    }
+
+    function resize() {
+      const rect = canvas!.getBoundingClientRect()
+      W = Math.max(1, rect.width)
+      H = Math.max(1, rect.height)
+      canvas!.width = Math.floor(W * dpr)
+      canvas!.height = Math.floor(H * dpr)
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // one scale from the short edge; desktop stays ~full-size, phones shrink ~40%
+      S = Math.min(1.15, Math.max(0.62, Math.min(W, H) / 640))
+      HUD_S = Math.max(S, 0.72)
+      stickMaxR = 46 * S
+      stickBaseR = 52 * S
+      stickThumbR = 22 * S
+      holdStop = 1 * S
+      stats = statsFrom(stacks, S) // re-derive scaled reach/speed (pure; safe mid-run)
+      truck.r = 22 * S
+      for (const f of fans) f.r = f.rBase * S // rescale live fans (radius only, NOT position)
+      // The bake is deterministic in (W,H,dpr) — browsers fire bursts of duplicate resize
+      // events (mobile URL-bar, orientation settle), so skip the multi-gradient rebuild
+      // whenever the device-pixel size is unchanged.
+      const bgKey = `${Math.floor(W * dpr)}x${Math.floor(H * dpr)}`
+      if (bgKey !== lastBgKey || !bg) {
+        bg = buildBackground(W, H, dpr, S)
+        lastBgKey = bgKey
+      }
+    }
+    resize()
+    truck.x = W / 2 // now W/H are known — centre the truck
+    truck.y = H / 2
+    holdTargetX = truck.x
+    holdTargetY = truck.y
+    window.addEventListener('resize', resize)
+
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
       if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'a', 'w', 's', 'd'].includes(k)) e.preventDefault()
@@ -163,35 +346,155 @@ function FrenzyCanvas({
     const onKeyUp = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase())
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
-    const pointFromEvent = (e: PointerEvent) => {
+
+    const ptFromEvent = (e: PointerEvent) => {
       const rect = canvas!.getBoundingClientRect()
-      pTargetX = e.clientX - rect.left
-      pTargetY = e.clientY - rect.top
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    }
+    // Every touch currently on the glass (id → last point). Lets endPointer HAND OFF to
+    // a still-down finger instead of stranding 'idle' when the owning finger lifts first.
+    const downPoints = new Map<number, { x: number; y: number }>()
+    const beginJoystick = (id: number, x: number, y: number) => {
+      activePointerId = id
+      lastPointerType = 'touch'
+      inputMode = 'joystick'
+      stickAX = x
+      stickAY = y
+      stickDX = 0
+      stickDY = 0
+      stickNX = 0
+      stickNY = 0
+      stickMag = 0
+    }
+    // Drop all live input (focus loss / level-up): no keyup or pointerup is delivered
+    // when the window loses focus, so a held key or a captured pointer would otherwise
+    // latch forever (stuck-key drift / frozen controls).
+    const clearPointerInput = () => {
+      if (activePointerId !== null) {
+        try {
+          canvas!.releasePointerCapture(activePointerId)
+        } catch {
+          /* not captured — fine */
+        }
+      }
+      activePointerId = null
+      inputMode = 'idle'
+      stickMag = 0
+      stickNX = 0
+      stickNY = 0
+      downPoints.clear()
+    }
+    const onBlur = () => {
+      keys.clear()
+      clearPointerInput()
     }
     const onPointerDown = (e: PointerEvent) => {
-      pointerActive = true
-      pointFromEvent(e)
+      if (paused || finished) return
+      const isMouse = e.pointerType === 'mouse' // '', 'pen', 'touch', undefined → joystick
+      if (!isMouse) downPoints.set(e.pointerId, ptFromEvent(e)) // track every touch for hand-off
+      if (activePointerId !== null) return // one owner at a time (multi-touch guard)
+      if (isMouse) {
+        if (e.button !== 0) return // left button only
+        activePointerId = e.pointerId
+        lastPointerType = 'mouse'
+        inputMode = 'holdmouse'
+        const p = ptFromEvent(e)
+        holdTargetX = p.x
+        holdTargetY = p.y
+      } else {
+        const p = ptFromEvent(e)
+        beginJoystick(e.pointerId, p.x, p.y)
+        haptic(6)
+      }
+      try {
+        canvas!.setPointerCapture(e.pointerId)
+      } catch {
+        /* capture unsupported — the window pointerup fallback still ends the gesture */
+      }
+      e.preventDefault()
     }
     const onPointerMove = (e: PointerEvent) => {
-      if (pointerActive) pointFromEvent(e)
+      const p = ptFromEvent(e)
+      if (downPoints.has(e.pointerId)) downPoints.set(e.pointerId, p) // keep every finger's position fresh
+      if (e.pointerId !== activePointerId) return
+      if (inputMode === 'holdmouse') {
+        holdTargetX = p.x
+        holdTargetY = p.y
+        return
+      }
+      // joystick — floating/follow: if the thumb pulls past max, drag the anchor under it
+      let dx = p.x - stickAX
+      let dy = p.y - stickAY
+      const len = Math.hypot(dx, dy)
+      if (len > stickMaxR) {
+        const k = (len - stickMaxR) / len
+        stickAX += dx * k
+        stickAY += dy * k
+        dx = p.x - stickAX
+        dy = p.y - stickAY
+      }
+      stickDX = dx
+      stickDY = dy
+      const raw = Math.min(1, Math.hypot(dx, dy) / stickMaxR)
+      stickMag = raw <= stickDead ? 0 : (raw - stickDead) / (1 - stickDead) // ramp 0→1 past the dead-zone
+      if (stickMag > 0) {
+        const dl = Math.hypot(dx, dy) || 1
+        stickNX = dx / dl
+        stickNY = dy / dl
+      } else {
+        stickNX = 0
+        stickNY = 0
+      }
     }
-    const onPointerUp = () => {
-      pointerActive = false
+    const endPointer = (e: PointerEvent) => {
+      downPoints.delete(e.pointerId)
+      if (e.pointerId !== activePointerId) return
+      // releasePointerCapture throws if the pointer isn't currently captured — must
+      // never abort the state reset, or activePointerId stays latched and every later
+      // tap is ignored (frozen controls).
+      try {
+        canvas!.releasePointerCapture(e.pointerId)
+      } catch {
+        /* not captured — fine */
+      }
+      // Two-thumb play: if another finger is still down, hand the stick to it (re-anchored
+      // at its current spot) instead of freezing on 'idle' until the player re-presses.
+      const next = downPoints.keys().next()
+      if (!next.done) {
+        const id = next.value
+        const np = downPoints.get(id)!
+        beginJoystick(id, np.x, np.y)
+        try {
+          canvas!.setPointerCapture(id)
+        } catch {
+          /* fine */
+        }
+        return
+      }
+      activePointerId = null
+      inputMode = 'idle'
+      stickMag = 0
+      stickNX = 0
+      stickNY = 0
     }
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointermove', onPointerMove)
-    window.addEventListener('pointerup', onPointerUp)
+    canvas.addEventListener('pointerup', endPointer)
+    canvas.addEventListener('pointercancel', endPointer)
+    canvas.addEventListener('lostpointercapture', endPointer)
+    window.addEventListener('pointerup', endPointer) // fallback where capture is unsupported
+    window.addEventListener('blur', onBlur) // drop stuck keys/pointers on focus loss
     canvas.style.touchAction = 'none'
 
     function burst(x: number, y: number, color: string, n: number) {
       for (let i = 0; i < n; i++) {
         const a = rand(0, Math.PI * 2)
-        const sp = rand(30, 160)
-        parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: rand(0.25, 0.6), color, r: rand(1.5, 3) })
+        const sp = rand(30, 160) * S
+        parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: rand(0.25, 0.6), color, r: rand(1.5, 3) * S })
       }
     }
     function heartPop(x: number, y: number) {
-      parts.push({ x, y, vx: 0, vy: -46, life: 0, max: 0.8, text: '💖' })
+      parts.push({ x, y, vx: 0, vy: -46 * S, life: 0, max: 0.8, text: '💖' })
     }
 
     function spawnFan(kindOverride?: 0 | 1 | 2, angle?: number) {
@@ -201,15 +504,17 @@ function FrenzyCanvas({
       if (kindOverride != null) kind = kindOverride
       else if (Math.random() < tier.fastShare) kind = 1
       const a = angle ?? rand(0, Math.PI * 2)
-      const rad = Math.hypot(W, H) / 2 + 30
-      const speedBase = tier.fanSpeed * (1 + 0.35 * t)
+      const rad = Math.hypot(W, H) / 2 + 30 * S
+      const speedBase = tier.fanSpeed * (1 + 0.35 * t) * S
+      const rBase = kind === 2 ? 20 : 14
       fans.push({
         x: W / 2 + Math.cos(a) * rad,
         y: H / 2 + Math.sin(a) * rad,
         hunger: kind === 2 ? 3 : 1,
         kind,
         speed: kind === 1 ? speedBase * 1.8 : kind === 2 ? speedBase * 0.55 : speedBase * rand(0.9, 1.1),
-        r: kind === 2 ? 20 : 14,
+        r: rBase * S,
+        rBase,
         wobble: rand(0, Math.PI * 2),
       })
     }
@@ -230,7 +535,7 @@ function FrenzyCanvas({
       if (burger) fedSinceBurger = 0
       const n = f.kind === 2 ? 3 : 1
       for (let i = 0; i < n; i++) {
-        tips.push({ x: f.x + rand(-8, 8), y: f.y + rand(-8, 8), vx: 0, vy: 0, burger: burger && i === 0 })
+        tips.push({ x: f.x + rand(-8, 8) * S, y: f.y + rand(-8, 8) * S, vx: 0, vy: 0, burger: burger && i === 0 })
       }
       gainXp(1) // feeding itself levels you — tips are a bonus, not the only path
     }
@@ -265,10 +570,14 @@ function FrenzyCanvas({
         opts.push(pool.splice(Math.floor(rand(0, pool.length)), 1)[0])
       }
       paused = true
+      // Force-release pointer input so a held stick/mouse can't coast the truck under
+      // the pause overlay (and a stale target can't jerk it on resume). The player
+      // re-presses when play resumes. (Keys are harmless — update() no-ops while paused.)
+      clearPointerInput()
       haptic(24)
       onLevelUp(opts, (id: string) => {
         stacks[id] = (stacks[id] ?? 0) + 1
-        stats = statsFrom(stacks)
+        stats = statsFrom(stacks, S)
         paused = false
       })
     }
@@ -326,23 +635,39 @@ function FrenzyCanvas({
         }
       }
 
-      // truck movement
+      // truck movement — keyboard > joystick (touch) > hold-mouse (desktop).
+      // moveSpeed is ALREADY S-scaled inside stats; both pointer modes move at a
+      // CONSTANT pace (no ease that mushes near the target).
       let mvx = 0
       let mvy = 0
       if (keys.has('arrowleft') || keys.has('a')) mvx -= 1
       if (keys.has('arrowright') || keys.has('d')) mvx += 1
       if (keys.has('arrowup') || keys.has('w')) mvy -= 1
       if (keys.has('arrowdown') || keys.has('s')) mvy += 1
-      if (pointerActive) {
-        truck.x += (pTargetX - truck.x) * Math.min(1, dt * (stats.moveSpeed / 34))
-        truck.y += (pTargetY - truck.y) * Math.min(1, dt * (stats.moveSpeed / 34))
-      } else if (mvx || mvy) {
+      if (mvx || mvy) {
         const len = Math.hypot(mvx, mvy) || 1
         truck.x += (mvx / len) * stats.moveSpeed * dt
         truck.y += (mvy / len) * stats.moveSpeed * dt
+      } else if (inputMode === 'joystick' && stickMag > 0) {
+        truck.x += stickNX * stats.moveSpeed * stickMag * dt
+        truck.y += stickNY * stats.moveSpeed * stickMag * dt
+      } else if (inputMode === 'holdmouse') {
+        const dx = holdTargetX - truck.x
+        const dy = holdTargetY - truck.y
+        const dist = Math.hypot(dx, dy)
+        if (dist > holdStop) {
+          const step = stats.moveSpeed * dt
+          if (step >= dist) {
+            truck.x = holdTargetX
+            truck.y = holdTargetY
+          } else {
+            truck.x += (dx / dist) * step
+            truck.y += (dy / dist) * step
+          }
+        }
       }
       truck.x = Math.max(truck.r, Math.min(W - truck.r, truck.x))
-      truck.y = Math.max(truck.r + 46, Math.min(H - truck.r - 6, truck.y))
+      truck.y = Math.max(truck.r + 48 * HUD_S, Math.min(H - truck.r - 10 * HUD_S, truck.y))
       if (truck.invMs > 0) truck.invMs -= dtm
 
       // auto-throw at the nearest fan in range
@@ -356,7 +681,7 @@ function FrenzyCanvas({
         if (targets.length > 0) {
           for (const tgt of targets) {
             const a = Math.atan2(tgt.f.y - truck.y, tgt.f.x - truck.x)
-            dogs.push({ x: truck.x, y: truck.y, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, pierce: stats.pierce })
+            dogs.push({ x: truck.x, y: truck.y, vx: Math.cos(a) * 340 * S, vy: Math.sin(a) * 340 * S, pierce: stats.pierce })
           }
           truck.fireMs = stats.fireMs
         }
@@ -367,13 +692,13 @@ function FrenzyCanvas({
         const d = dogs[i]
         d.x += d.vx * dt
         d.y += d.vy * dt
-        if (d.x < -20 || d.x > W + 20 || d.y < -20 || d.y > H + 20) {
+        if (d.x < -20 * S || d.x > W + 20 * S || d.y < -20 * S || d.y > H + 20 * S) {
           dogs.splice(i, 1)
           continue
         }
         for (let j = fans.length - 1; j >= 0; j--) {
           const f = fans[j]
-          if (Math.hypot(d.x - f.x, d.y - f.y) < f.r + 8) {
+          if (Math.hypot(d.x - f.x, d.y - f.y) < f.r + 8 * S) {
             f.hunger -= stats.dmg
             burst(d.x, d.y, '#f5c518', 3)
             // splash (Extra Mustard) satisfies neighbours a little
@@ -404,8 +729,8 @@ function FrenzyCanvas({
         const a = Math.atan2(truck.y - f.y, truck.x - f.x)
         f.wobble += dt * 6
         f.x += Math.cos(a) * f.speed * dt
-        f.y += Math.sin(a) * f.speed * dt + Math.sin(f.wobble) * 8 * dt
-        if (Math.hypot(f.x - truck.x, f.y - truck.y) < f.r + truck.r - 6) {
+        f.y += Math.sin(a) * f.speed * dt + Math.sin(f.wobble) * 8 * S * dt
+        if (Math.hypot(f.x - truck.x, f.y - truck.y) < f.r + truck.r - 6 * S) {
           // A mobbing fan grabs a snack off the counter and leaves (you lose composure).
           fans.splice(i, 1)
           mobbed()
@@ -419,14 +744,16 @@ function FrenzyCanvas({
         const dy = truck.y - p.y
         const d = Math.hypot(dx, dy)
         if (d < stats.magnet) {
-          p.vx += (dx / (d || 1)) * 900 * dt
-          p.vy += (dy / (d || 1)) * 900 * dt
+          // Pull accel scales with S like the trigger radius → same felt magnet strength
+          // (pull-in time) at every screen size, consistent with range/moveSpeed/splash.
+          p.vx += (dx / (d || 1)) * 900 * S * dt
+          p.vy += (dy / (d || 1)) * 900 * S * dt
         }
         p.x += p.vx * dt
         p.y += p.vy * dt
         p.vx *= 0.92
         p.vy *= 0.92
-        if (d < truck.r + 10) {
+        if (d < truck.r + 10 * S) {
           tips.splice(i, 1)
           if (p.burger) {
             if (truck.composure < MAX_COMPOSURE) truck.composure += 1
@@ -458,36 +785,26 @@ function FrenzyCanvas({
     }
 
     function render() {
-      // pavement backdrop + subtle grid
-      ctx!.fillStyle = '#141019'
-      ctx!.fillRect(0, 0, W, H)
-      ctx!.strokeStyle = 'rgba(255,255,255,0.04)'
-      ctx!.lineWidth = 1
-      for (let gx = 0; gx < W; gx += 40) {
-        ctx!.beginPath()
-        ctx!.moveTo(gx, 0)
-        ctx!.lineTo(gx, H)
-        ctx!.stroke()
-      }
-      for (let gy = 0; gy < H; gy += 40) {
-        ctx!.beginPath()
-        ctx!.moveTo(0, gy)
-        ctx!.lineTo(W, gy)
-        ctx!.stroke()
+      // festival backdrop (pre-baked bitmap; guarded flat fill if the bake failed)
+      if (bg) ctx!.drawImage(bg, 0, 0, W, H)
+      else {
+        ctx!.fillStyle = '#141019'
+        ctx!.fillRect(0, 0, W, H)
       }
 
       ctx!.textAlign = 'center'
       ctx!.textBaseline = 'middle'
 
-      // range ring (subtle)
+      // range ring (subtle) — stats.range is already S-scaled
       ctx!.strokeStyle = 'rgba(245,197,24,0.14)'
+      ctx!.lineWidth = 1
       ctx!.beginPath()
       ctx!.arc(truck.x, truck.y, stats.range, 0, Math.PI * 2)
       ctx!.stroke()
 
       // tips
       for (const p of tips) {
-        ctx!.font = '14px system-ui'
+        ctx!.font = `${14 * S}px system-ui`
         ctx!.fillText(p.burger ? '🍔' : '💵', p.x, p.y)
       }
 
@@ -496,7 +813,7 @@ function FrenzyCanvas({
         ctx!.save()
         ctx!.translate(d.x, d.y)
         ctx!.rotate(Math.atan2(d.vy, d.vx))
-        ctx!.font = '16px system-ui'
+        ctx!.font = `${16 * S}px system-ui`
         ctx!.fillText('🌭', 0, 0)
         ctx!.restore()
       }
@@ -510,7 +827,7 @@ function FrenzyCanvas({
           for (let i = 0; i < f.hunger; i++) {
             ctx!.fillStyle = '#f5c518'
             ctx!.beginPath()
-            ctx!.arc(f.x - 10 + i * 10, f.y - f.r - 6, 3, 0, Math.PI * 2)
+            ctx!.arc(f.x - 10 * S + i * 10 * S, f.y - f.r - 6 * S, 3 * S, 0, Math.PI * 2)
             ctx!.fill()
           }
         }
@@ -519,7 +836,7 @@ function FrenzyCanvas({
       // truck (blink while recovering composure)
       const blink = truck.invMs > 0 && Math.floor(elapsed / 90) % 2 === 0
       if (!blink) {
-        ctx!.font = '44px system-ui'
+        ctx!.font = `${44 * S}px system-ui`
         ctx!.fillText('🚚', truck.x, truck.y)
       }
 
@@ -528,7 +845,7 @@ function FrenzyCanvas({
         const a = Math.max(0, 1 - p.life / p.max)
         ctx!.globalAlpha = a
         if (p.text) {
-          ctx!.font = '18px system-ui'
+          ctx!.font = `${18 * S}px system-ui`
           ctx!.fillText(p.text, p.x, p.y)
         } else {
           ctx!.fillStyle = p.color ?? '#fff'
@@ -539,47 +856,73 @@ function FrenzyCanvas({
       }
       ctx!.globalAlpha = 1
 
-      // ---------- HUD ----------
+      // joystick (touch only) — low alpha, drawn before the HUD so its ctx state
+      // is isolated by save()/restore() and the HUD sets its own font/align.
+      if (inputMode === 'joystick') {
+        ctx!.save()
+        ctx!.beginPath()
+        ctx!.arc(stickAX, stickAY, stickBaseR, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(245,197,24,0.06)'
+        ctx!.fill()
+        ctx!.lineWidth = Math.max(1, 2 * S)
+        ctx!.strokeStyle = 'rgba(245,197,24,0.3)'
+        ctx!.stroke()
+        ctx!.beginPath()
+        ctx!.arc(stickAX + stickDX, stickAY + stickDY, stickThumbR, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(245,238,224,0.9)'
+        ctx!.fill()
+        ctx!.strokeStyle = 'rgba(180,83,9,0.9)'
+        ctx!.lineWidth = Math.max(1, 2 * S)
+        ctx!.stroke()
+        ctx!.restore()
+      }
+
+      // ---------- HUD (geometry + text scale together by HUD_S) ----------
       const pct = Math.min(1, elapsed / (tier.durationSec * 1000))
       ctx!.fillStyle = 'rgba(255,255,255,0.12)'
-      ctx!.fillRect(10, 10, W - 20, 8)
+      ctx!.fillRect(10 * HUD_S, 10 * HUD_S, W - 20 * HUD_S, 8 * HUD_S)
       ctx!.fillStyle = '#f5c518'
-      ctx!.fillRect(10, 10, (W - 20) * pct, 8)
+      ctx!.fillRect(10 * HUD_S, 10 * HUD_S, (W - 20 * HUD_S) * pct, 8 * HUD_S)
       ctx!.fillStyle = '#e8e0d0'
-      ctx!.font = '600 11px system-ui, sans-serif'
-      ctx!.fillText(`CLOSING TIME ${Math.floor(pct * 100)}%`, W / 2, 30)
+      ctx!.font = `600 ${11 * HUD_S}px system-ui, sans-serif`
+      ctx!.fillText(`CLOSING TIME ${Math.floor(pct * 100)}%`, W / 2, 30 * HUD_S)
       // composure hearts (top-left)
       ctx!.textAlign = 'left'
-      ctx!.font = '13px system-ui'
+      ctx!.font = `${13 * HUD_S}px system-ui`
       for (let i = 0; i < MAX_COMPOSURE; i++) {
         ctx!.globalAlpha = i < truck.composure ? 1 : 0.22
-        ctx!.fillText('❤️', 12 + i * 18, 48)
+        ctx!.fillText('❤️', 12 * HUD_S + i * 18 * HUD_S, 50 * HUD_S)
       }
       ctx!.globalAlpha = 1
       // fed + score (top-right)
       ctx!.textAlign = 'right'
       ctx!.fillStyle = '#f5c518'
-      ctx!.font = '700 14px system-ui, sans-serif'
-      ctx!.fillText(String(Math.round(score)), W - 12, 48)
+      ctx!.font = `700 ${14 * HUD_S}px system-ui, sans-serif`
+      ctx!.fillText(String(Math.round(score)), W - 12 * HUD_S, 50 * HUD_S)
       ctx!.fillStyle = '#e8e0d0'
-      ctx!.font = '600 11px system-ui, sans-serif'
-      ctx!.fillText(`🌭 ${fansFed} fed`, W - 12, 64)
+      ctx!.font = `600 ${11 * HUD_S}px system-ui, sans-serif`
+      ctx!.fillText(`🌭 ${fansFed} fed`, W - 12 * HUD_S, 66 * HUD_S)
       // XP bar (bottom) + level
       ctx!.fillStyle = 'rgba(255,255,255,0.12)'
-      ctx!.fillRect(10, H - 14, W - 20, 6)
+      ctx!.fillRect(10 * HUD_S, H - 14 * HUD_S, W - 20 * HUD_S, 6 * HUD_S)
       ctx!.fillStyle = '#46d369'
-      ctx!.fillRect(10, H - 14, (W - 20) * Math.min(1, xp / xpNext), 6)
+      ctx!.fillRect(10 * HUD_S, H - 14 * HUD_S, (W - 20 * HUD_S) * Math.min(1, xp / xpNext), 6 * HUD_S)
       ctx!.textAlign = 'left'
       ctx!.fillStyle = '#9ce3ae'
-      ctx!.font = '700 10px system-ui, sans-serif'
-      ctx!.fillText(`LV ${level}`, 10, H - 22)
-      // control hint
-      if (elapsed < 3000) {
-        ctx!.globalAlpha = Math.max(0, 1 - elapsed / 3000)
+      ctx!.font = `700 ${10 * HUD_S}px system-ui, sans-serif`
+      ctx!.fillText(`LV ${level}`, 10 * HUD_S, H - 22 * HUD_S)
+      // control hint (device-aware)
+      if (elapsed < 3200) {
+        const coarse = lastPointerType === 'touch' || (lastPointerType === null && window.matchMedia?.('(pointer: coarse)').matches)
+        ctx!.globalAlpha = Math.max(0, 1 - elapsed / 3200)
         ctx!.fillStyle = '#f5eee0'
-        ctx!.font = '600 12px system-ui, sans-serif'
+        ctx!.font = `600 ${12 * HUD_S}px system-ui, sans-serif`
         ctx!.textAlign = 'center'
-        ctx!.fillText('Drag to move · the tongs throw themselves', W / 2, H - 34)
+        ctx!.fillText(
+          coarse ? 'Hold & steer with the stick · the tongs auto-throw' : 'WASD or hold-click to move · the tongs auto-throw',
+          W / 2,
+          H - 34 * HUD_S,
+        )
         ctx!.globalAlpha = 1
       }
     }
@@ -602,6 +945,12 @@ function FrenzyCanvas({
           level,
           paused,
           composure: truck.composure,
+          S: Math.round(S * 100) / 100,
+          inputMode,
+          stickMag: Math.round(stickMag * 100) / 100,
+          tx: Math.round(truck.x),
+          ty: Math.round(truck.y),
+          range: Math.round(stats.range),
         }
       }
       raf = requestAnimationFrame(frame)
@@ -614,9 +963,13 @@ function FrenzyCanvas({
       window.removeEventListener('resize', resize)
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
-      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointerup', endPointer)
+      window.removeEventListener('blur', onBlur)
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointermove', onPointerMove)
+      canvas.removeEventListener('pointerup', endPointer)
+      canvas.removeEventListener('pointercancel', endPointer)
+      canvas.removeEventListener('lostpointercapture', endPointer)
     }
   }, [tier, onEnd, onLevelUp])
 

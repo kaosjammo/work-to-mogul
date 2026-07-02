@@ -4,6 +4,44 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Lunch Rush rework — background, mobile scaling, joystick/WASD/hold-click controls
+
+User: the Vampire-Survivors clone (Lunch Rush) "needs a background and everything should be
+smaller, it looks way too big on mobile"; controls should be a "toggle stick not drag around
+on mobile", WSAD, and "hold click and it moves towards the mouse when click held down at
+specific pace". Ran a 3-lens design panel (game-feel / mobile-UX / minimal-diff) → synthesized
+spec, implemented, then a 3-lens adversarial review → fixed all 6 findings. All in
+`ui/shared/FoodFrenzyGame.tsx` (+ one content intro line).
+
+- **Responsive scale**: one similarity factor `S = clamp(min(W,H)/640, 0.62, 1.15)` computed in
+  resize(), baked into `statsFrom(stacks, S)` (range/moveSpeed/magnet/splash) and multiplied at
+  every world/draw site (truck.r, fan.r via a stored `rBase`, fan/dog speed, spawn radius,
+  wobble, collision pads, emoji fonts; HUD by `HUD_S = max(S,0.72)` so text stays legible).
+  Times/counts/economy stay unscaled → geometrically similar, so the phone plays the SAME game
+  ~40% smaller (verified S=0.62 @375px, S=1.15 @1100px). resize() re-derives stats, re-assigns
+  truck.r, and rescales live fans; declarations were reordered so world state exists before the
+  first resize() call.
+- **Background**: `buildBackground()` bakes a warm food-festival scene (dusk gradient, ground
+  plane + horizon, faint paver seams, string-light bunting, distant stalls, light pools, seeded
+  confetti, edge vignette, contrast guard) ONCE per resize into an OffscreenCanvas (createElement
+  fallback), blitted each frame via drawImage (guarded flat fallback). Replaces the flat
+  `#141019` + per-frame grid loops → cheaper per frame. Skips the rebuild when device-pixel dims
+  are unchanged.
+- **Controls** (device-aware via `e.pointerType`, priority keyboard > joystick > hold-mouse):
+  touch → a floating analog joystick (anchored where the thumb lands, follow-past-max, dead-zone
+  remap, pace ∝ deflection); mouse → hold-left-click drives toward the cursor at a CONSTANT pace
+  (re-targets live, stops at cursor); WASD/arrows retained. `inputMode` state machine +
+  `activePointerId` single-owner latch; pointer capture in try/catch; endPointer on
+  up/cancel/lostpointercapture + window fallback. Hardening from the review: **multi-touch
+  hand-off** (lift the owning finger while a second is down → the stick hands off, no freeze);
+  **focus-loss reset** (a `blur` handler clears held keys + captured pointers so nothing latches
+  when no keyup/pointerup is delivered); level-up force-releases input. Device-aware on-canvas hint.
+- Verified in-browser via the rAF-pump + `window.__frenzy` bridge: mobile shrink, warm background
+  (44 distinct sampled colors), all three control modes move the truck, release→idle, multi-touch
+  hand-off, blur clears stuck input. 445 tests pass; build + oxlint clean.
+
+---
+
 ## The Log — replay mini-games + re-read past stories
 
 User ask: "have a 'log' button next to Spend cash after the first minigame event. there,

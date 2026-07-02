@@ -39,7 +39,7 @@ export const FOOD_FRENZY_TIERS: FrenzyTierDef[] = [
     intro: [
       'Boss! Someone posted the truck on SnackTok and now the WHOLE OFFICE DISTRICT is sprinting here on their lunch break.',
       'Grab the tongs. Feed anyone who gets close — a fed fan is a happy fan. Don’t let them mob the truck or we’ll lose our composure.',
-      'Move with a drag (or WASD). The tongs throw themselves. Go go go!',
+      'Steer with the on-screen stick on mobile, or WASD / hold-click on desktop. The tongs throw themselves. Go go go!',
     ],
     debrief: [
       'The crowd is fed, the till is FULL, and somebody started a fan club. Nacho salutes you with the spatula.',
