@@ -28,6 +28,6 @@ describe('arcade asset manifest', () => {
   it('ships a full 3-fleet / 4-damage-state / 3-pickup roster', () => {
     expect(Object.keys(ARCADE_FLEETS)).toEqual(['1', '2', '3'])
     expect(ARCADE_PLAYER.hull).toHaveLength(4)
-    expect(Object.keys(ARCADE_PICKUPS).sort()).toEqual(['core', 'salvage', 'shield'])
+    expect(Object.keys(ARCADE_PICKUPS).sort()).toEqual(['core', 'shield', 'weapon'])
   })
 })
