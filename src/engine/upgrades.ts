@@ -38,17 +38,27 @@ export function buyRepeatable(state: GameState, id: string): boolean {
   const cost = repeatableCost(state, id)
   if (!Number.isFinite(cost) || state.cash < cost) return false
   state.cash -= cost
-  if (!state.repeatableRanks) state.repeatableRanks = {}
-  state.repeatableRanks[id] = repeatableRank(state, id) + 1
+  // Clone-on-write: replacing the object (instead of mutating in place) gives the
+  // ranks a fresh identity, which is what invalidates the fold memo below.
+  state.repeatableRanks = { ...(state.repeatableRanks ?? {}), [id]: repeatableRank(state, id) + 1 }
   return true
 }
 
+// The fold below runs inside upgradeMultipliers → resolveBusiness — the hottest
+// path in the game (every business, every 100ms tick, plus every buildView pass).
+// Its result depends only on the ranks object, which changes identity exactly when
+// a rank is bought / a save loads / a prestige resets — so memoize by identity.
+const NO_RANKS = Object.freeze({ profit: 1, speed: 1 })
+const foldMemo = new WeakMap<object, { profit: number; speed: number }>()
+
 /** Combined GLOBAL profit/speed multipliers from all program ranks (1 when none). */
 export function repeatableMultipliers(state: GameState): { profit: number; speed: number } {
+  const ranks = state.repeatableRanks
+  if (!ranks) return NO_RANKS
+  const memo = foldMemo.get(ranks)
+  if (memo) return memo
   let profit = 1
   let speed = 1
-  const ranks = state.repeatableRanks
-  if (!ranks) return { profit, speed }
   for (const id in ranks) {
     const def = REPEATABLE_UPGRADES[id]
     const rank = repeatableRank(state, id)
@@ -57,5 +67,7 @@ export function repeatableMultipliers(state: GameState): { profit: number; speed
     if (def.effect.kind === 'profitMult') profit *= factor
     else speed *= factor
   }
-  return { profit, speed }
+  const result = { profit, speed }
+  foldMemo.set(ranks, result)
+  return result
 }

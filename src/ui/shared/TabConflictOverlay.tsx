@@ -15,11 +15,11 @@ export function TabConflictOverlay() {
   if (!conflict) return null
 
   const playHere = () => {
-    announceTakeover() // pauses the other tab
+    announceTakeover() // pauses the other tab (it replies with a final 'saved' broadcast)
+    resumeSaving() // FIRST — runOfflineCatchUp no-ops while saving is paused
     loadGame() // adopt whatever the other tab last saved (newest state)
     resetPublishTracking() // don't toast achievements the other tab unlocked
-    runOfflineCatchUp()
-    resumeSaving()
+    runOfflineCatchUp() // credit time since that save's wall-clock anchor
     startLoop()
     useUiStore.getState().setTabConflict(false)
     publishNow()

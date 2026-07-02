@@ -20,6 +20,17 @@ export function runOfflineCatchUp(): void {
   publishNow()
 }
 
+/**
+ * Credit an IN-SESSION frame stall (GC pause, throttled/occluded window, system
+ * sleep without a visibility event). Unlike a real absence this pays the plain
+ * steady rate — no Idle-Mastery/Homebody away bonuses (a visible window ticking
+ * at 1fps must not farm them) — and never pops the Welcome-Back banner mid-play.
+ */
+export function runStallCatchUp(): void {
+  if (isSavingPaused()) return
+  applyOfflineEarnings(getEngineState(), Date.now(), { awayBonuses: false })
+}
+
 export function startVisibilityCatchUp(): void {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') runOfflineCatchUp()

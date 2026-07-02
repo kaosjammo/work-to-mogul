@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { applyOfflineEarnings, automatedIncomePerSec, OFFLINE_CAP_MS } from './catchUp'
+import {
+  applyOfflineEarnings,
+  automatedIncomePerSec,
+  expireTransientsOffline,
+  OFFLINE_CAP_MS,
+} from './catchUp'
 import { resolveBusiness } from './resolveBusiness'
 import { hireEmployee, assignToFirstFreeSlot } from './employees/roster'
 import { PROFIT_FRENZY_MULT } from './economy'
@@ -117,5 +122,56 @@ describe('offline catch-up', () => {
     expect(s.golden.offerMsLeft).toBe(0)
     expect(s.golden.offerMega).toBe(false)
     expect(s.eventCards.offerCardId).toBe(null)
+  })
+
+  it('does NOT apply the away-earnings bonuses when awayBonuses is off (in-session stalls)', () => {
+    const withPerk = () => {
+      const s = withAutomatedLemonade()
+      s.lastWallClock = 0
+      s.prestige.founderPerk = 'homebody' // ×2 offline earnings perk
+      return s
+    }
+    const away = applyOfflineEarnings(withPerk(), 60_000)
+    const stall = applyOfflineEarnings(withPerk(), 60_000, { awayBonuses: false })
+    expect(stall.earned).toBeGreaterThan(0)
+    expect(away.earned).toBeGreaterThan(stall.earned) // perk applies only to real absences
+  })
+
+  // TRIP-WIRE for the tick↔offline mirror: expireTransientsOffline hand-mirrors the
+  // countdown half of every subsystem tick. This walks the WHOLE GameState for
+  // *MsLeft countdown fields (however deeply nested), so a NEW timed buff added to
+  // a tick without a matching offline-expiry line fails here instead of silently
+  // surviving (already fully paid) across an absence.
+  it('expires every *MsLeft countdown in GameState by the away time', () => {
+    const s = withAutomatedLemonade()
+    const armed: string[] = []
+    const arm = (obj: Record<string, unknown>, path: string) => {
+      for (const [k, v] of Object.entries(obj)) {
+        if (/MsLeft$/.test(k) && typeof v === 'number') {
+          obj[k] = 60_000 // 1 min — well inside the 10-min away span below
+          armed.push(`${path}.${k}`)
+        } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+          arm(v as Record<string, unknown>, `${path}.${k}`)
+        }
+      }
+    }
+    arm(s as unknown as Record<string, unknown>, 'state')
+    expect(armed.length).toBeGreaterThan(5) // sanity: the walk found the known timers
+    expireTransientsOffline(s, 10 * 60_000)
+    const survivors: string[] = []
+    const check = (obj: Record<string, unknown>, path: string) => {
+      for (const [k, v] of Object.entries(obj)) {
+        if (/MsLeft$/.test(k) && typeof v === 'number') {
+          if (v !== 0) survivors.push(`${path}.${k}`)
+        } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+          check(v as Record<string, unknown>, `${path}.${k}`)
+        }
+      }
+    }
+    check(s as unknown as Record<string, unknown>, 'state')
+    expect(
+      survivors,
+      `these countdown timers froze through an offline span — add them to expireTransientsOffline: ${survivors.join(', ')}`,
+    ).toEqual([])
   })
 })

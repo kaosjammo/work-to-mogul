@@ -43,8 +43,14 @@ export function maxAffordable(def: BusinessDef, owned: number, cash: Num, costMu
   const effectiveCash = costMult > 0 ? cash / costMult : cash
   const first = def.baseCost * Math.pow(r, owned)
   if (effectiveCash < first) return 0
-  const q = Math.log((effectiveCash * (r - 1)) / first + 1) / Math.log(r)
-  return Math.max(0, Math.floor(q + 1e-9)) // epsilon guards float drift at boundaries
+  const est = Math.log((effectiveCash * (r - 1)) / first + 1) / Math.log(r)
+  let q = Math.max(0, Math.floor(est + 1e-9)) // epsilon guards float drift at boundaries
+  // Verify with the SAME arithmetic purchase() charges (totalCost × costMult) —
+  // the log estimate and the division above can each round a hair the other way
+  // at exact-boundary cash, and purchase() rejects strictly; a Buy Max that quotes
+  // one unit too many would be a dead tap.
+  while (q > 0 && totalCost(def, owned, q) * costMult > cash) q--
+  return q
 }
 
 /** Resolve a buy mode into a desired quantity (cost-checked separately). */

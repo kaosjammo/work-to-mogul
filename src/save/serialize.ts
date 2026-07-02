@@ -16,7 +16,8 @@ import { talentCostAt } from '../engine/talents'
 import { FINANCE_COMPOUND_RAMP_MS, SUPERPOSITION_CYCLE_MS } from '../engine/economy'
 import { FOUNDER_PERKS } from '../content/founderPerks'
 import { SPECIALISATIONS } from '../content/specialisations'
-import { CONTRACTS, CONTRACT_BY_ID, CONTRACT_BOARD_SIZE } from '../content/contracts'
+import { CONTRACTS, CONTRACT_BY_ID } from '../content/contracts'
+import { refillBoard } from '../engine/contracts'
 import { REPEATABLE_UPGRADES } from '../content/upgrades'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
@@ -248,14 +249,11 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   if (loaded.contracts && typeof loaded.contracts === 'object') {
     if (Array.isArray(loaded.contracts.active)) {
       const active = strArray(loaded.contracts.active).filter((id) => id in CONTRACT_BY_ID)
-      let nextIndex = clamp(Math.floor(num(loaded.contracts.nextIndex)), 0, CONTRACTS.length)
-      // If a content change removed ids from the board, deal replacements from the
-      // pool (never re-deal something already on the board).
-      while (active.length < CONTRACT_BOARD_SIZE && nextIndex < CONTRACTS.length) {
-        const candidate = CONTRACTS[nextIndex++].id
-        if (!active.includes(candidate)) active.push(candidate)
-      }
+      const nextIndex = clamp(Math.floor(num(loaded.contracts.nextIndex)), 0, CONTRACTS.length)
       s.contracts = { active, nextIndex }
+      // If a content change removed ids from the board, the engine's one dealer
+      // fills the freed slots from the pool.
+      refillBoard(s.contracts)
     }
   }
 

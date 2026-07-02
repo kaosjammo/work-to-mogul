@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './App'
 import { startLoop, stopLoop } from './loop/gameLoop'
-import { loadGame, startAutosave, saveGame, pauseSaving } from './save/saveManager'
+import { loadGame, startAutosave, saveGame, pauseSaving, isSavingPaused } from './save/saveManager'
 import { runOfflineCatchUp, startVisibilityCatchUp } from './loop/offline'
+import { publishNow, resetPublishTracking } from './loop/publisher'
 import { startTabGuard } from './lib/tabGuard'
 import { useAccountStore } from './store/accountStore'
 import { useUiStore } from './store/uiStore'
@@ -30,12 +31,25 @@ startVisibilityCatchUp()
 // save what we have, then pause this tab (loop + saving) behind a blocking
 // overlay — two live tabs would clobber each other's saves and double-credit
 // offline time. "Play here" on the overlay reclaims ownership.
-startTabGuard(() => {
-  saveGame() // bank this tab's progress before the newer tab's autosaves take over
-  pauseSaving()
-  stopLoop()
-  useUiStore.getState().setTabConflict(true)
-})
+startTabGuard(
+  () => {
+    saveGame() // bank this tab's progress before the newer tab's autosaves take over
+    pauseSaving()
+    stopLoop()
+    useUiStore.getState().setTabConflict(true)
+  },
+  () => {
+    // A paused peer just banked its FINAL state — and because broadcast delivery
+    // is async, our own loadGame() at startup/reclaim ran before that save landed.
+    // Re-adopt the newest save now (we took over milliseconds ago, so nothing of
+    // ours is lost) instead of overwriting the peer's last progress on autosave.
+    if (isSavingPaused()) return // not the active tab — ignore
+    loadGame()
+    resetPublishTracking()
+    runOfflineCatchUp()
+    publishNow()
+  },
+)
 // Optional cloud account/sync (no-op in local-only mode when unconfigured).
 useAccountStore.getState().init()
 

@@ -55,8 +55,10 @@ export function buyBusiness(id: BusinessId): void {
   const def = BUSINESSES[id]
   const bs = s.businesses[id]
   if (!def || !bs) return
-  // Buy Max must count with the same discounted price purchase() charges.
-  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash, resolveBusiness(s, def).buyCostMult)
+  // Buy Max must count with the same discounted price purchase() charges. Only
+  // the 'max' branch reads the multiplier — skip the full economy fold otherwise.
+  const costMult = s.buyMode === 'max' ? resolveBusiness(s, def).buyCostMult : 1
+  const qty = resolveQuantity(s.buyMode, def, bs.owned, s.cash, costMult)
   const before = [...s.milestonesReached]
   // Entering a new industry (its first owned unit) is a major beat — detect it
   // before the purchase so we can celebrate the expansion.

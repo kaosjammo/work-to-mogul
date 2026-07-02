@@ -27,11 +27,22 @@ import { offlineMult } from './talents'
 import { founderOfflineMult } from './founderPerks'
 
 export const OFFLINE_CAP_MS = 2 * 60 * 60 * 1000 // 2 hours
-const MIN_REPORTABLE_MS = 1000
+/** Spans shorter than this are ignored (and NOT re-creditable — the anchor still
+ *  advances). gameLoop's STALL_MS is derived from this so a frame stall routed
+ *  here can't fall under the threshold and be silently swallowed. */
+export const MIN_REPORTABLE_MS = 1000
 
 export interface OfflineResult {
   elapsedMs: number
   earned: number
+}
+
+export interface OfflineOptions {
+  /** Apply the Idle Mastery talent + Homebody perk away-earnings bonuses.
+   *  True for real absences (load / tab-hidden). FALSE for in-session frame
+   *  stalls (gameLoop's STALL path) — a throttled-but-visible window rendering
+   *  at ~1fps must not farm the offline bonus indefinitely. */
+  awayBonuses?: boolean
 }
 
 /**
@@ -39,15 +50,19 @@ export interface OfflineResult {
  * Mutates state (cash, lifetimeEarnings, lastWallClock, timed-buff countdowns).
  * `now` is injected so the function stays deterministic/testable.
  */
-export function applyOfflineEarnings(state: GameState, now: number): OfflineResult {
+export function applyOfflineEarnings(
+  state: GameState,
+  now: number,
+  opts: OfflineOptions = { awayBonuses: true },
+): OfflineResult {
   const raw = now - state.lastWallClock
   const elapsed = Math.max(0, Math.min(raw, OFFLINE_CAP_MS))
   state.lastWallClock = now
   if (elapsed < MIN_REPORTABLE_MS) return { elapsedMs: 0, earned: 0 }
 
   const seconds = elapsed / 1000
-  const earned =
-    automatedIncomePerSec(state) * seconds * offlineMult(state) * founderOfflineMult(state) // Idle Mastery talent + Homebody perk
+  const bonus = opts.awayBonuses === false ? 1 : offlineMult(state) * founderOfflineMult(state) // Idle Mastery talent + Homebody perk
+  const earned = automatedIncomePerSec(state) * seconds * bonus
 
   if (earned > 0 && Number.isFinite(earned)) {
     state.cash += earned
@@ -94,7 +109,11 @@ export function expireTransientsOffline(state: GameState, elapsedMs: number): vo
     e.speedMsLeft = tick(e.speedMsLeft)
     if (e.offerMsLeft > 0) {
       e.offerMsLeft = tick(e.offerMsLeft)
-      if (e.offerMsLeft === 0) e.offerCardId = null // auto-declined while away
+      // Auto-declined while away. cooldownMs is left as-is on purpose: it was
+      // reset to the full spawn interval when this offer spawned and hasn't
+      // ticked since (the online tick pauses it during an offer), so this equals
+      // declineEventCard()'s cooldown reset without importing it (import cycle).
+      if (e.offerMsLeft === 0) e.offerCardId = null
     }
   }
   const a = state.angelDeal

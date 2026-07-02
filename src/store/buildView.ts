@@ -18,6 +18,13 @@ import { INDUSTRIES, INDUSTRY_ORDER } from '../content/industries'
 import { BUSINESSES } from '../content/businesses'
 import { UPGRADES, UPGRADE_ORDER, REPEATABLE_UPGRADES, REPEATABLE_ORDER } from '../content/upgrades'
 import { repeatableRank, repeatableCost } from '../engine/upgrades'
+
+// Cheapest Executive Program entry price (static content; computed once).
+let cheapestRepeatable: number | null = null
+function cheapestRepeatableCost(): number {
+  cheapestRepeatable ??= Math.min(...REPEATABLE_ORDER.map((id) => REPEATABLE_UPGRADES[id].baseCost))
+  return cheapestRepeatable
+}
 import { careerLevelDef, MAX_CAREER_LEVEL } from '../content/career'
 import { ROLE_DEFS, RARITY_MULT, MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { SYNERGY_LABEL } from '../content/synergies'
@@ -66,7 +73,7 @@ import { getMogulStory } from '../content/mogulStories'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
-import { canClaimDaily, dailyReward } from '../engine/daily'
+import { canClaimDaily, dailyReward, localDayIndex } from '../engine/daily'
 import { nextMilestone as nextDailyMilestone, prevMilestoneDay } from '../content/dailyMilestones'
 import {
   financeCompoundMult,
@@ -411,6 +418,7 @@ export interface ViewSnapshot {
   spaceShooter: SpaceShooterView
   daily: {
     available: boolean
+    dayIndex: number // today's local-day index (keys per-day UI dismissals)
     reward: number
     streak: number
     nextMilestone: { day: number; label: string } | null
@@ -799,8 +807,10 @@ export function buildView(
       currentLabel: rank > 0 ? `now +${cum}% ${channel}` : null,
     }
   })
+  // Reveal threshold derives from content (a tenth of the cheapest program) so a
+  // rebalanced cost table can't silently gate a purchasable program out of view.
   const repeatablesUnlocked =
-    state.lifetimeEarnings >= 1e8 || repeatables.some((r) => r.rank > 0)
+    state.lifetimeEarnings >= cheapestRepeatableCost() / 10 || repeatables.some((r) => r.rank > 0)
 
   const pendingTokens = prestigePending(state)
   const prestigeUnlocked = state.lifetimeEarnings >= PRESTIGE_UNLOCK_LIFETIME
@@ -969,6 +979,9 @@ export function buildView(
   const prevDay = prevMilestoneDay(dailyStreakVal)
   const daily = {
     available: canClaimDaily(state, Date.now()),
+    // Today's local-day index — lets the UI key a dismissal to THIS day's bonus
+    // (a session-long boolean would suppress tomorrow's bonus in a long-lived PWA).
+    dayIndex: localDayIndex(Date.now()),
     reward: dailyReward(state),
     streak: dailyStreakVal,
     // The next streak reward, so the streak reads as a goal (not a hidden counter).
@@ -1040,8 +1053,11 @@ export function buildView(
   const cdef = careerLevelDef(c.level)
   const isMaxLevel = c.level >= MAX_CAREER_LEVEL
   const nextDef = isMaxLevel ? null : careerLevelDef(c.level + 1)
-  // HUD shows the LIVE instantaneous rate (buffs included) so frenzies visibly spike.
-  const passivePerSec = automatedIncomePerSec(state, { steady: false })
+  // STEADY rate — these feed the shift/consulting payout PREVIEWS, and the engine
+  // settles those claims at the steady rate (career.ts). Advertising the live
+  // buffed rate here would promise 2× what collecting actually pays. (The HUD's
+  // live income readout is totalPps from the per-business fold, not this.)
+  const passivePerSec = automatedIncomePerSec(state)
   const retired = isRetired(state)
   const drawValue = shiftPayout(state, passivePerSec)
   const career: CareerView = {
