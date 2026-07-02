@@ -50,6 +50,10 @@ interface UiStore {
   automationTab: 'invest' | 'staff' | null
   openAutomation: (tab: 'invest' | 'staff') => void
   closeAutomation: () => void
+  // Marriage panel (upkeep + renew vows) — opened from the 💍 Married main-screen button.
+  marriageOpen: boolean
+  openMarriage: () => void
+  closeMarriage: () => void
   // Another tab took over the save — this tab is paused behind a blocking overlay.
   tabConflict: boolean
   setTabConflict: (v: boolean) => void
@@ -106,6 +110,9 @@ export const useUiStore = create<UiStore>((set) => ({
   automationTab: null,
   openAutomation: (automationTab) => set({ automationTab }),
   closeAutomation: () => set({ automationTab: null }),
+  marriageOpen: false,
+  openMarriage: () => set({ marriageOpen: true }),
+  closeMarriage: () => set({ marriageOpen: false }),
   tabConflict: false,
   setTabConflict: (tabConflict) => set({ tabConflict }),
 }))

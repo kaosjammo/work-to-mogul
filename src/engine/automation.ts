@@ -43,6 +43,7 @@ import { levelCostMult } from './talents'
 import { automatedIncomePerSec } from './catchUp'
 import { MAX_EMPLOYEE_LEVEL } from '../content/roles'
 import { REQUIRED_SPEC_LEVEL, MASTERY_SPEC_LEVEL } from '../content/specialisations'
+import { autoWorkCareer } from './execAssistant'
 import type { RoleId } from '../types/domain'
 
 // Per-cycle action caps — keep a tick cheap + bounded no matter the cash pile.
@@ -80,8 +81,7 @@ export function initialAutomationState(): AutomationState {
       unlocked: false,
       arcStage: 0,
       arcStarted: false,
-      advisorFee: false,
-      advisorFeeMs: 0,
+      autoWork: true,
       enabled: false,
       reservePct: 25,
       strategy: 'roi',
@@ -480,6 +480,7 @@ export function tickAutomation(state: GameState, dtMs: number): void {
 
   const inv = a.invest
   if (inv.enabled && eligible) {
+    autoWorkCareer(state) // clicks "Work Shift" every tick (shifts are short) — gated inside
     inv.cooldownMs -= dtMs
     if (inv.cooldownMs <= 0) {
       inv.cooldownMs = Math.max(1000, inv.intervalSec * 1000)
@@ -520,7 +521,7 @@ export function updateInvestConfig(state: GameState, patch: Partial<AutoInvestCo
   if (patch.strategy !== undefined) inv.strategy = patch.strategy
   if (patch.focusIndustry !== undefined) inv.focusIndustry = INDUSTRY_LIKE(patch.focusIndustry)
   if (patch.intervalSec !== undefined) inv.intervalSec = Math.max(3, Math.min(60, Math.round(patch.intervalSec)))
-  if (patch.advisorFee !== undefined) inv.advisorFee = !!patch.advisorFee && inv.unlocked
+  if (patch.autoWork !== undefined) inv.autoWork = !!patch.autoWork
 }
 
 export function updateStaffConfig(state: GameState, patch: Partial<AutoStaffConfig>): void {

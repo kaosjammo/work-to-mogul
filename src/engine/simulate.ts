@@ -20,7 +20,6 @@ import { tickLogistics } from './logistics'
 import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
 import { applyMarriageUpkeep } from './romance'
 import { tickAutomation } from './automation'
-import { tickAdvisorFee } from './execAssistant'
 import { tickEventCards } from './eventCards'
 import { tickMomentum } from './momentum'
 import { tickSpaceShooter } from './spaceShooter'
@@ -153,8 +152,6 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   // the harness bot never triggers them. Runs after income + upkeep so it spends
   // the tick's earnings, and BEFORE checkUnlocks so auto-bought units flip unlocks.
   tickAutomation(state, dtMs)
-  // Board Advisor Fee — a poached EA's hands-free income (off/unpoached → inert).
-  tickAdvisorFee(state, dtMs)
   checkUnlocks(state)
   checkAchievements(state)
 }

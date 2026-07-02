@@ -6,6 +6,7 @@ import {
   useLogistics,
   useBuyMode,
   useAutomation,
+  useRomance,
 } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
 import { INDUSTRIES } from '../../content/industries'
@@ -134,7 +135,9 @@ export function BusinessesScreen() {
   const logistics = useLogistics()
   const buyMode = useBuyMode()
   const automation = useAutomation()
+  const romance = useRomance()
   const openAutomation = useUiStore((s) => s.openAutomation)
+  const openMarriage = useUiStore((s) => s.openMarriage)
 
   if (!ind || !industryView) return null
 
@@ -212,15 +215,14 @@ export function BusinessesScreen() {
 
       <div className="section mb-2 flex items-center justify-between gap-1.5">
         <h2>Businesses</h2>
-        <div className="flex items-center gap-1.5">
-          {/* Executive Assistant: a Poach offer once you've courted all 3 episodes,
-              then a status/config chip once they're yours — right by Spend cash. */}
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {/* Manager + status buttons — each opens its own thing, right by Spend cash. */}
           {automation.ea.canPoach && (
             <button
               type="button"
               onClick={() => poachAssistant()}
               className="btn btn-primary btn-sm"
-              title={`${automation.ea.partnerName} is ready to jump — poach them as your Executive Assistant`}
+              title={`${automation.ea.partnerName} is ready to jump — poach her as your Executive Assistant`}
             >
               🤝 Poach {automation.ea.partnerName.split(' ')[0]}
             </button>
@@ -232,11 +234,31 @@ export function BusinessesScreen() {
               className={`btn btn-sm ${automation.invest.enabled ? 'btn-primary' : 'btn-secondary'}`}
               title={
                 automation.invest.enabled
-                  ? `EA on · reinvesting every ${automation.invest.intervalSec}s`
-                  : 'Executive Assistant (paused)'
+                  ? `${automation.ea.partnerName} on · reinvesting every ${automation.invest.intervalSec}s`
+                  : `${automation.ea.partnerName} (paused)`
               }
             >
-              🤖 EA
+              🤖 {automation.ea.partnerName.split(' ')[0]} · EA
+            </button>
+          )}
+          {automation.staff.unlocked && (
+            <button
+              type="button"
+              onClick={() => openAutomation('staff')}
+              className={`btn btn-sm ${automation.staff.enabled ? 'btn-primary' : 'btn-secondary'}`}
+              title={automation.staff.enabled ? `Chief of Staff on · managing every ${automation.staff.intervalSec}s` : 'Chief of Staff (paused)'}
+            >
+              👔 Chief
+            </button>
+          )}
+          {romance.married && (
+            <button
+              type="button"
+              onClick={() => openMarriage()}
+              className="btn btn-secondary btn-sm"
+              title={romance.drainPct > 0 ? `Lifestyle upkeep: ${romance.drainPct}% of income` : 'Married — no upkeep yet'}
+            >
+              💍 Married{romance.drainPct > 0 ? ` · ${romance.drainPct}%` : ''}
             </button>
           )}
           {hasAnyBusiness && (

@@ -12,10 +12,8 @@ import {
   applyEaOutcome,
   canPoachEa,
   poachEa,
-  tickAdvisorFee,
-  advisorFeeFraction,
+  autoWorkCareer,
   EA_EPISODE_IDS,
-  ADVISOR_FILL_MS,
 } from './execAssistant'
 
 /** A state that owns the (automated) Investment Fund → arc-eligible + has idle income. */
@@ -103,30 +101,31 @@ describe('EA arc — first Fund unlock pops episode 1', () => {
   })
 })
 
-describe('Board Advisor Fee', () => {
-  it('is inert unless the EA is poached AND the toggle is on', () => {
+describe('Auto-work — the EA taps Work Shift', () => {
+  it('is inert unless poached AND enabled AND the toggle is on', () => {
     const s = fundState()
-    expect(tickAdvisorFee(s, ADVISOR_FILL_MS)).toBe(0) // not poached
+    autoWorkCareer(s) // not poached
+    expect(s.career.shiftProgressMs).toBe(0)
     s.automation.invest.unlocked = true
-    expect(tickAdvisorFee(s, ADVISOR_FILL_MS)).toBe(0) // toggle off
+    s.automation.invest.enabled = true
+    s.automation.invest.autoWork = false
+    autoWorkCareer(s) // toggle off
+    expect(s.career.shiftProgressMs).toBe(0)
   })
 
-  it('accrues to 100%, banks a fee, and resets', () => {
+  it('auto-starts a Work Shift once poached + enabled', () => {
     const s = fundState()
     s.automation.invest.unlocked = true
-    s.automation.invest.advisorFee = true
-    expect(tickAdvisorFee(s, ADVISOR_FILL_MS / 2)).toBe(0) // half full
-    expect(advisorFeeFraction(s)).toBeCloseTo(0.5)
-    const cashBefore = s.cash
-    const fee = tickAdvisorFee(s, ADVISOR_FILL_MS / 2 + 100) // crosses 100%
-    expect(fee).toBeGreaterThan(0)
-    expect(s.cash).toBeCloseTo(cashBefore + fee)
-    expect(advisorFeeFraction(s)).toBeLessThan(0.1) // reset
+    s.automation.invest.enabled = true
+    s.automation.invest.autoWork = true
+    expect(s.career.shiftProgressMs).toBe(0) // idle
+    autoWorkCareer(s)
+    expect(s.career.shiftProgressMs).toBeGreaterThan(0) // a shift is now running
   })
 })
 
 describe('EA arc — HARNESS byte-inertness', () => {
-  it('applyTick with an un-poached EA never adds advisor income (income identical)', () => {
+  it('applyTick with an un-poached EA never auto-works or diverges (income identical)', () => {
     const off = fundState()
     const control = fundState()
     const rng = () => 0.5
@@ -140,7 +139,7 @@ describe('EA arc — HARNESS byte-inertness', () => {
 })
 
 describe('EA arc — save round-trip', () => {
-  it('persists arc progress + poach + advisor toggle (not the fill meter)', () => {
+  it('persists arc progress + poach + the auto-work toggle', () => {
     const s = fundState()
     s.automation.invest.arcStage = 2
     s.automation.invest.arcStarted = true
@@ -150,12 +149,10 @@ describe('EA arc — save round-trip', () => {
     expect(mid.automation.invest.unlocked).toBe(false)
 
     s.automation.invest.unlocked = true
-    s.automation.invest.advisorFee = true
-    s.automation.invest.advisorFeeMs = ADVISOR_FILL_MS / 2
+    s.automation.invest.autoWork = false
     const back = deserialize(serialize(s, 1))!
     expect(back.automation.invest.unlocked).toBe(true)
-    expect(back.automation.invest.advisorFee).toBe(true)
-    expect(back.automation.invest.advisorFeeMs).toBe(0) // meter is online-only → resets
+    expect(back.automation.invest.autoWork).toBe(false) // the toggle persists
     expect(back.automation.invest.arcStage).toBe(2) // arc progress preserved as-is
   })
 })

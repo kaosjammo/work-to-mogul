@@ -79,7 +79,7 @@ import {
   marriageLevelUpCost,
 } from '../engine/romance'
 import { automationEligible, chiefUnlockCost } from '../engine/automation'
-import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa, advisorFeeFraction, advisorFeeValue } from '../engine/execAssistant'
+import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa } from '../engine/execAssistant'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -389,9 +389,7 @@ export interface AutomationView {
     arcTotal: number // 3
     unlocked: boolean // poached → they're your EA
     canPoach: boolean // courted all 3, not yet poached → show the Poach widget
-    advisorFee: boolean // Board Advisor Fee auto-collect toggle
-    advisorFeePct: number // fee meter fill, 0..100
-    advisorFeeValue: number // cash a full fee banks right now
+    autoWork: boolean // the EA auto-clicks Work Shift
   }
 }
 
@@ -1130,9 +1128,7 @@ export function buildView(
       arcTotal: EA_EPISODE_IDS.length,
       unlocked: auto?.invest.unlocked ?? false,
       canPoach: canPoachEa(state),
-      advisorFee: auto?.invest.advisorFee ?? false,
-      advisorFeePct: Math.round(advisorFeeFraction(state) * 100),
-      advisorFeeValue: advisorFeeValue(state),
+      autoWork: auto?.invest.autoWork ?? true,
     },
   }
 

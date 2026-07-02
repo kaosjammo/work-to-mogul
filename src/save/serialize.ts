@@ -343,13 +343,11 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     if (la.invest && typeof la.invest === 'object') {
       const src = la.invest
       const inv = s.automation.invest
-      // Executive Assistant arc progress (permanent meta-progression). `advisorFeeMs`
-      // (the fill meter) is intentionally NOT restored — it's online-only, like the
-      // internal cooldowns, so it resets to 0 on load.
+      // Executive Assistant arc progress + config (permanent meta-progression).
       inv.unlocked = src.unlocked === true || src.enabled === true // grandfather a pre-arc EA
       inv.arcStage = clamp(Math.floor(num(src.arcStage)), 0, 3)
       inv.arcStarted = src.arcStarted === true || inv.unlocked || inv.arcStage > 0
-      inv.advisorFee = src.advisorFee === true && inv.unlocked
+      inv.autoWork = src.autoWork !== false // the EA auto-works Work Shift (default on)
       inv.enabled = src.enabled === true
       inv.reservePct = clamp(num(src.reservePct, inv.reservePct), 0, 90)
       inv.strategy = src.strategy === 'cheapest' || src.strategy === 'focus' ? src.strategy : 'roi'

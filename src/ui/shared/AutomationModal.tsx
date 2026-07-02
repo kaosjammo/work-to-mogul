@@ -104,30 +104,13 @@ const STRATEGIES: { id: AutoInvestStrategy; label: string; hint: string }[] = [
 export function AutomationModal() {
   const tab = useUiStore((s) => s.automationTab)
   const close = useUiStore((s) => s.closeAutomation)
-  const setTab = useUiStore((s) => s.openAutomation)
   const a = useAutomation()
   if (!tab) return null
 
   return (
     <Overlay accent={ACCENT} onBackdropClick={close} panelClassName="max-h-[88vh] overflow-y-auto">
-      {/* Tab switcher — only when BOTH managers are unlocked (else the modal is opened
-          straight to the single unlocked manager, so there's nothing to switch to). */}
-      {a.invest.unlocked && a.staff.unlocked && (
-      <div className="flex gap-1 rounded-full p-1" style={{ background: 'var(--surface-2)' }}>
-        {(['invest', 'staff'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className="flex flex-1 items-center justify-center rounded-full text-sm font-bold transition"
-            style={{ background: tab === t ? ACCENT : 'transparent', color: tab === t ? 'var(--accent-ink)' : 'var(--text-dim)', minHeight: 'var(--tap)' }}
-          >
-            {t === 'invest' ? '🤖 Assistant' : '👔 Chief of Staff'}
-          </button>
-        ))}
-      </div>
-      )}
-
+      {/* Each manager (Reyna · EA, Chief of Staff) opens straight to its own config from
+          its own main-screen button — so there's no tab switcher here. */}
       {tab === 'invest' ? (
         !a.invest.unlocked ? (
           <LockedNote>
@@ -198,25 +181,15 @@ export function AutomationModal() {
             </div>
           </Section>
 
-          {/* Board Advisor Fee — the poached EA auto-collects board fees at 100%. */}
+          {/* Auto-work: the EA taps "Work Shift" up top for you. */}
           <div>
-            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>Board Advisor Fee</div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>Work Shift</div>
             <Switch
-              label={a.ea.advisorFee ? 'Auto-collecting' : 'Off'}
-              hint={`${a.ea.partnerName.split(' ')[0]} banks ~${money(a.ea.advisorFeeValue)} in board fees when the meter fills`}
-              on={a.ea.advisorFee}
-              onToggle={() => setAutoInvest({ advisorFee: !a.ea.advisorFee })}
+              label={a.ea.autoWork ? 'Auto-working shifts' : 'Off'}
+              hint={`${a.ea.partnerName.split(' ')[0]} taps Work Shift for you — starts each shift, and collects the consulting bonus once you retire`}
+              on={a.ea.autoWork}
+              onToggle={() => setAutoInvest({ autoWork: !a.ea.autoWork })}
             />
-            {a.ea.advisorFee && (
-              <div className="mt-1.5">
-                <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--surface-3)' }}>
-                  <div className="h-full rounded-full transition-all" style={{ width: `${a.ea.advisorFeePct}%`, background: ACCENT }} />
-                </div>
-                <div className="mt-0.5 text-right text-[10px]" style={{ color: 'var(--text-faint)' }}>
-                  {a.ea.advisorFeePct}% · next ~{money(a.ea.advisorFeeValue)}
-                </div>
-              </div>
-            )}
           </div>
         </>
         )
