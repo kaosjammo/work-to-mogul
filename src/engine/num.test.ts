@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { format, money, formatRate, formatDuration, formatEta, sanitize } from './num'
+import { format, money, formatRate, formatLong, moneyLong, formatRateLong, formatDuration, formatEta, sanitize } from './num'
 
 describe('format', () => {
   it('shows small numbers as integers or one-decimal fractions', () => {
@@ -41,6 +41,29 @@ describe('format', () => {
   it('money and rate wrappers add the $ and /s', () => {
     expect(money(1e6)).toBe('$1.00M')
     expect(formatRate(1500)).toBe('$1.50K/s')
+  })
+})
+
+describe('formatLong (full name + short suffix in brackets)', () => {
+  it('spells the magnitude name with the short suffix in brackets', () => {
+    expect(formatLong(5.2e18)).toBe('5.20 Quintillion (Qi)')
+    expect(formatLong(1e6)).toBe('1.00 Million (M)')
+    expect(formatLong(1.24e12)).toBe('1.24 Trillion (T)')
+    expect(formatLong(4.6e15)).toBe('4.60 Quadrillion (Qa)')
+    expect(formatLong(1e33)).toBe('1.00 Decillion (Dc)')
+    expect(formatLong(1e36)).toBe('1.00 Undecillion (aa)') // first letter-pair tier, named
+  })
+
+  it('keeps small numbers plain and falls back to compact past the named tiers', () => {
+    expect(formatLong(0)).toBe('0')
+    expect(formatLong(999)).toBe('999')
+    expect(formatLong(-5.2e18)).toBe('-5.20 Quintillion (Qi)')
+    expect(formatLong(1e66)).toBe('1.00ak') // past Vigintillion → compact short only
+  })
+
+  it('money/rate long wrappers add $ and /s', () => {
+    expect(moneyLong(5.2e18)).toBe('$5.20 Quintillion (Qi)')
+    expect(formatRateLong(1.24e12)).toBe('$1.24 Trillion (T)/s')
   })
 })
 

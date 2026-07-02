@@ -56,6 +56,50 @@ export function money(value: Num): string {
   return '$' + format(value)
 }
 
+// Full magnitude names, parallel to SUFFIXES, then the short-scale continuation for the
+// letter-pair (aa, ab, …) tiers. Used by the long-form display (full name + short in brackets).
+const FULL_NAMES = [
+  '', 'Thousand', 'Million', 'Billion', 'Trillion', 'Quadrillion', 'Quintillion',
+  'Sextillion', 'Septillion', 'Octillion', 'Nonillion', 'Decillion',
+]
+const LETTER_FULL_NAMES = [
+  'Undecillion', 'Duodecillion', 'Tredecillion', 'Quattuordecillion', 'Quindecillion',
+  'Sexdecillion', 'Septendecillion', 'Octodecillion', 'Novemdecillion', 'Vigintillion',
+]
+
+function fullName(tier: number): string {
+  if (tier < FULL_NAMES.length) return FULL_NAMES[tier]
+  return LETTER_FULL_NAMES[tier - FULL_NAMES.length] ?? '' // '' past Vigintillion → short only
+}
+
+/**
+ * Long-form: the full magnitude name with the short suffix in brackets, e.g.
+ * 5.2e18 -> "5.20 Quintillion (Qi)", 1e6 -> "1.00 Million (M)". Numbers under 1000
+ * (no magnitude) and tiers beyond a named suffix fall back to the compact form.
+ */
+export function formatLong(value: Num): string {
+  const n = sanitize(value)
+  if (n < 0) return '-' + formatLong(-n)
+  if (n < 1000) return format(n)
+  const tier = Math.floor(Math.log10(n) / 3)
+  const scaled = n / Math.pow(10, tier * 3)
+  const short = tier < SUFFIXES.length ? SUFFIXES[tier] : letterSuffix(tier)
+  const decimals = scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2
+  const mantissa = scaled.toFixed(decimals)
+  const name = fullName(tier)
+  return name ? `${mantissa} ${name} (${short})` : `${mantissa}${short}`
+}
+
+/** Long-form money ("$5.20 Quintillion (Qi)"). */
+export function moneyLong(value: Num): string {
+  return '$' + formatLong(value)
+}
+
+/** Long-form per-second rate ("$1.24 Trillion (T)/s"). */
+export function formatRateLong(value: Num): string {
+  return '$' + formatLong(value) + '/s'
+}
+
 /** Format seconds as a compact duration ("2.4s", "1m 05s", "2h 05m"). */
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return seconds.toFixed(1) + 's'
