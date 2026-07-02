@@ -120,37 +120,65 @@ function drawExplosionFrame(
  * The player's shot — a short glowing "warped" energy bolt (gradient + soft
  * blur), color/width escalating with weapon tier. Procedural stand-in for a
  * future bespoke sprite: swap by adding an ARCADE_PLAYER_BULLET sheet to the
- * manifest and trying drawSprite() first, same fallback pattern as everywhere
- * else in this file.
+ * manifest and blitting it here, same fallback pattern as everywhere else in
+ * this file. Each tier is PRE-RENDERED once to a tiny offscreen canvas —
+ * shadowBlur is one of the most expensive canvas ops, and paying it per
+ * bullet per frame would chug on low-end phones.
  */
 const BOLT_STYLE: { core: string; edge: string; w: number; len: number }[] = [
   { core: '#ffffff', edge: '#6ee7ff', w: 5, len: 16 }, // tier 0
   { core: '#ffffff', edge: '#22d3ee', w: 6, len: 20 }, // tier 1 — twin
   { core: '#fff7d6', edge: '#ffd24a', w: 7, len: 24 }, // tier 2 — triple
 ]
-function drawBolt(ctx: CanvasRenderingContext2D, x: number, y: number, tier: number) {
-  const s = BOLT_STYLE[Math.min(2, tier)]
-  ctx.save()
-  ctx.shadowColor = s.edge
-  ctx.shadowBlur = 7
-  const grad = ctx.createLinearGradient(x, y + s.len * 0.4, x, y - s.len * 0.6)
-  grad.addColorStop(0, 'rgba(255,255,255,0)')
-  grad.addColorStop(0.55, s.edge)
-  grad.addColorStop(1, s.core)
-  ctx.fillStyle = grad
-  ctx.beginPath()
-  ctx.moveTo(x - s.w / 2, y + s.len * 0.4)
-  ctx.lineTo(x - s.w / 2, y - s.len * 0.3)
-  ctx.quadraticCurveTo(x, y - s.len * 0.6, x + s.w / 2, y - s.len * 0.3)
-  ctx.lineTo(x + s.w / 2, y + s.len * 0.4)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
+const BOLT_PAD = 8 // room for the glow around the shape
+interface BoltSprite {
+  canvas: HTMLCanvasElement
+  w: number // logical (CSS px) size — the canvas itself is scaled by dpr
+  h: number
+}
+function makeBoltSprites(dpr: number): BoltSprite[] {
+  return BOLT_STYLE.map((s) => {
+    const w = s.w + BOLT_PAD * 2
+    const h = s.len + BOLT_PAD * 2
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.ceil(w * dpr)
+    canvas.height = Math.ceil(h * dpr)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return { canvas, w, h }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    // Draw centered: bolt tip toward the top, tail toward the bottom.
+    const cx = w / 2
+    const top = BOLT_PAD
+    const bottom = BOLT_PAD + s.len
+    ctx.shadowColor = s.edge
+    ctx.shadowBlur = 7
+    const grad = ctx.createLinearGradient(cx, bottom, cx, top)
+    grad.addColorStop(0, 'rgba(255,255,255,0)')
+    grad.addColorStop(0.55, s.edge)
+    grad.addColorStop(1, s.core)
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.moveTo(cx - s.w / 2, bottom)
+    ctx.lineTo(cx - s.w / 2, top + s.len * 0.3)
+    ctx.quadraticCurveTo(cx, top, cx + s.w / 2, top + s.len * 0.3)
+    ctx.lineTo(cx + s.w / 2, bottom)
+    ctx.closePath()
+    ctx.fill()
+    return { canvas, w, h }
+  })
+}
+function drawBolt(ctx: CanvasRenderingContext2D, sprites: BoltSprite[], x: number, y: number, tier: number) {
+  const s = sprites[Math.min(2, tier)]
+  // Anchor roughly where the old rect bolt sat: centered on x, tip above y.
+  ctx.drawImage(s.canvas, x - s.w / 2, y - s.h * 0.6, s.w, s.h)
 }
 
 // ---------- entity types (plain objects held in refs, never React state) ----------
 interface P { x: number; y: number; vx: number; vy: number }
 interface Bullet extends P { r: number }
+/** Player shot — remembers the weapon tier it was FIRED at, so an in-flight
+ *  bolt keeps its look when the pickup expires mid-flight. */
+interface PlayerBullet extends Bullet { tier: number }
 interface Enemy extends P { r: number; hp: number; kind: number; fires: boolean; fireMs: number; boss: boolean; score: number; maxHp?: number }
 interface Pickup extends P { r: number; kind: 'weapon' | 'core' | 'shield' }
 interface Debris extends P { r: number; hp: number; spin: number; rot: number }
@@ -196,6 +224,7 @@ function ShooterCanvas({
     let W = 0
     let H = 0
     const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const boltSprites = makeBoltSprites(dpr)
     function resize() {
       const rect = canvas!.getBoundingClientRect()
       W = Math.max(1, rect.width)
@@ -209,7 +238,7 @@ function ShooterCanvas({
 
     // world
     const player = { x: W / 2, y: H - 74, r: 16, shields: maxShields, invMs: 0, fireMs: 0, flash: 0, weaponTier: 0, weaponMs: 0 }
-    const bullets: Bullet[] = []
+    const bullets: PlayerBullet[] = []
     const enemies: Enemy[] = []
     const eBullets: Bullet[] = []
     const debris: Debris[] = []
@@ -447,14 +476,14 @@ function ShooterCanvas({
         const tier = player.weaponTier
         const y0 = player.y - player.r - 2
         if (tier === 0) {
-          bullets.push({ x: player.x, y: y0, vx: 0, vy: -560, r: 4 })
+          bullets.push({ x: player.x, y: y0, vx: 0, vy: -560, r: 4, tier })
         } else if (tier === 1) {
-          bullets.push({ x: player.x - 6, y: y0, vx: 0, vy: -560, r: 4 })
-          bullets.push({ x: player.x + 6, y: y0, vx: 0, vy: -560, r: 4 })
+          bullets.push({ x: player.x - 6, y: y0, vx: 0, vy: -560, r: 4, tier })
+          bullets.push({ x: player.x + 6, y: y0, vx: 0, vy: -560, r: 4, tier })
         } else {
-          bullets.push({ x: player.x, y: y0, vx: 0, vy: -580, r: 4 })
-          bullets.push({ x: player.x - 7, y: y0, vx: -70, vy: -550, r: 4 })
-          bullets.push({ x: player.x + 7, y: y0, vx: 70, vy: -550, r: 4 })
+          bullets.push({ x: player.x, y: y0, vx: 0, vy: -580, r: 4, tier })
+          bullets.push({ x: player.x - 7, y: y0, vx: -70, vy: -550, r: 4, tier })
+          bullets.push({ x: player.x + 7, y: y0, vx: 70, vy: -550, r: 4, tier })
         }
         player.fireMs = WEAPON_FIRE_MS[Math.min(2, tier)]
       }
@@ -701,8 +730,9 @@ function ShooterCanvas({
       }
 
       // player bullets — glowing "warped" bolts, escalating with weapon tier
+      // (each bolt keeps the tier it was fired at — see PlayerBullet)
       for (const b of bullets) {
-        drawBolt(ctx!, b.x, b.y, player.weaponTier)
+        drawBolt(ctx!, boltSprites, b.x, b.y, b.tier)
       }
 
       // player (hull damage state by shields left)
@@ -722,15 +752,14 @@ function ShooterCanvas({
         }
       }
 
-      // explosion animations (drawn over the wreckage they came from)
+      // explosion animations (drawn over the wreckage they came from). No shape
+      // fallback needed on a failed asset load — spawnParticles() already fires
+      // at the same moment, so the kill still reads.
       for (const b of booms) {
         const t = Math.min(1, b.t / b.dur)
         const frame = Math.floor(t * 8)
         const size = b.r * (1 + t * 0.25) // a touch of expansion reads as punchier
-        if (!drawExplosionFrame(ctx!, bank.explosion, frame, b.x, b.y, size)) {
-          // No shape fallback needed here — spawnParticles() already covers the
-          // "asset failed to load" case at the same moment.
-        }
+        drawExplosionFrame(ctx!, bank.explosion, frame, b.x, b.y, size)
       }
 
       // particles
