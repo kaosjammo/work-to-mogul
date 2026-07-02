@@ -21,16 +21,18 @@ function unlockText(def: BusinessDef): string {
 export function LockedBusinessCard({
   def,
   progress,
+  accent = 'var(--text-dim)',
 }: {
   def: BusinessDef
   progress?: { current: number; target: number }
+  accent?: string
 }) {
   const pct =
     progress && progress.target > 0
       ? Math.min(100, Math.round((progress.current / progress.target) * 100))
       : 0
   return (
-    <div className="list-row relative py-2.5 pl-3 pr-3 opacity-60">
+    <div className="list-row relative py-2.5 pl-3 pr-3 opacity-70">
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg grayscale"
         style={{ background: 'var(--surface-2)' }}
@@ -49,10 +51,12 @@ export function LockedBusinessCard({
       {progress && progress.target > 0 && (
         <div
           className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden"
-          style={{ background: 'var(--surface-2)' }}
+          style={{ background: 'var(--surface-3)' }}
           aria-hidden
         >
-          <div className="h-full" style={{ background: 'var(--text-faint)', width: `${pct}%` }} />
+          {/* Visible against --surface-3 (the old --text-faint-on-surface-2 pairing
+              was nearly invisible — two dim grays on top of each other). */}
+          <div className="h-full" style={{ background: accent, width: `${pct}%` }} />
         </div>
       )}
     </div>

@@ -1,49 +1,48 @@
 import type { IndustryId } from '../../types/domain'
-import { industryBanner } from '../shared/art'
+import { Icon } from '../shared/Icon'
+import { industryArt } from '../shared/art'
 
 interface Props {
   industryId: IndustryId
   name: string
+  theme: string
   totalOwned: number
 }
 
 /**
- * Slim industry header that showcases the authored banner art for the active
- * industry, with a dark gradient scrim so the name stays legible. The banner is
- * decorative (aria-hidden background); the name is real text. Renders nothing if
- * the industry has no authored banner (graceful — no layout jump).
+ * Industry header: a theme-tinted gradient with the industry's icon as a large
+ * faded watermark — deterministic and always legible, unlike the old cropped
+ * banner-art treatment (a 1024×384 abstract SVG squeezed into a 64px strip read
+ * as random shapes/blobs at that aspect ratio). Reuses the same icon already
+ * proven legible in IndustryTabs, just bigger and faded.
  */
-export function IndustryBanner({ industryId, name, totalOwned }: Props) {
-  const src = industryBanner(industryId)
-  if (!src) return null
+export function IndustryBanner({ industryId, name, theme, totalOwned }: Props) {
   return (
     <div
-      className="relative mb-3 overflow-hidden rounded-2xl"
+      className="relative mb-3 flex items-center justify-between overflow-hidden rounded-2xl px-3.5 py-3"
       style={{
-        height: 64,
-        backgroundImage: `url(${src})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        background: `linear-gradient(115deg, color-mix(in srgb, ${theme} 30%, var(--surface-2)) 0%, var(--surface-2) 75%)`,
+        boxShadow: 'var(--hairline-top)',
       }}
     >
       <div
-        className="absolute inset-0"
+        className="pointer-events-none absolute -right-3 -top-3 opacity-[0.16]"
         aria-hidden
-        style={{
-          background:
-            'linear-gradient(90deg, rgba(15,17,21,0.92) 0%, rgba(15,17,21,0.4) 65%, rgba(15,17,21,0.05) 100%)',
-        }}
-      />
-      <div className="absolute inset-0 flex items-end justify-between p-3">
-        <span className="text-lg font-bold" style={{ color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          {name}
-        </span>
-        {totalOwned > 0 && (
-          <span className="tnum text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
-            {totalOwned} owned
-          </span>
-        )}
+        style={{ filter: 'blur(0.5px)' }}
+      >
+        <Icon art={industryArt(industryId)} size={96} alt="" />
       </div>
+      <span className="relative text-lg font-bold" style={{ color: '#fff' }}>
+        {name}
+      </span>
+      {totalOwned > 0 && (
+        <span
+          className="tnum relative shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
+          style={{ background: 'rgba(0,0,0,0.28)', color: 'rgba(255,255,255,0.92)' }}
+        >
+          {totalOwned} owned
+        </span>
+      )}
     </div>
   )
 }

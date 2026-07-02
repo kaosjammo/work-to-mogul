@@ -73,8 +73,19 @@ export function WorkCard() {
             <span className="shrink-0 text-xs font-bold" style={{ color: WORK_ACCENT }}>
               Lv {c.level + 1}
             </span>
+            {/* A standalone pill, not appended to the rate text below — inline text
+                there was already tight, and the badge would wrap onto its own line. */}
+            {c.nextShiftIsGolden && (
+              <span
+                className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+                title="Your next shift pays ×5"
+              >
+                ⭐ ×5 next
+              </span>
+            )}
           </div>
-          <div className="tnum text-xs" style={{ color: 'var(--text-dim)' }}>
+          <div className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
             {money(c.salaryDrawValue)} / shift · {formatDuration(c.shiftMs / 1000)}
             {c.salaryDrawMult > 1.01 && (
               <span
@@ -85,11 +96,6 @@ export function WorkCard() {
                 )} your ${money(c.wage)} base wage.`}
               >
                 · ×{format(c.salaryDrawMult)} salary draw
-              </span>
-            )}
-            {c.nextShiftIsGolden && (
-              <span className="ml-1 font-bold" style={{ color: 'var(--accent)' }}>
-                · ⭐ Golden ×5 next!
               </span>
             )}
           </div>
