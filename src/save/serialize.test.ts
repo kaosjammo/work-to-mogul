@@ -172,7 +172,7 @@ describe('persistence policy', () => {
     'foodFrenzy', 'prestige', 'onboardingStep', 'nextEmployeeSeq',
   ])
   const TRANSIENT: ReadonlySet<keyof GameState> = new Set<keyof GameState>([
-    'golden', 'rushHour', 'logistics', 'eventCards', 'hirePool',
+    'golden', 'rushHour', 'logistics', 'eventCards', 'momentum', 'hirePool',
   ])
 
   it('every GameState field has a declared persistence policy', () => {

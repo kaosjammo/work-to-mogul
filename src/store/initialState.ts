@@ -17,6 +17,7 @@ import { initialAngelDealState } from '../engine/angelDeal'
 import { initialRomanceState } from '../engine/romance'
 import { initialAutomationState } from '../engine/automation'
 import { initialEventCardsState } from '../engine/eventCards'
+import { initialMomentumState } from '../engine/momentum'
 import { initialContractsState } from '../engine/contracts'
 import { initialSpaceShooterState } from '../engine/spaceShooter'
 import { initialFoodFrenzyState } from '../engine/foodFrenzy'
@@ -60,6 +61,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     rushHour: initialRushHourState(),
     logistics: initialLogisticsState(),
     eventCards: initialEventCardsState(),
+    momentum: initialMomentumState(),
     angelDeal: initialAngelDealState(),
     romance: initialRomanceState(),
     automation: initialAutomationState(),

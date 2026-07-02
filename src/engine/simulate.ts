@@ -21,6 +21,7 @@ import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
 import { applyMarriageUpkeep } from './romance'
 import { tickAutomation } from './automation'
 import { tickEventCards } from './eventCards'
+import { tickMomentum } from './momentum'
 import { tickSpaceShooter } from './spaceShooter'
 import { tickFoodFrenzy } from './foodFrenzy'
 
@@ -127,6 +128,7 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   tickRushHour(state, dtMs)
   tickLogistics(state, dtMs)
   tickEventCards(state, dtMs)
+  tickMomentum(state, dtMs) // decays the Hot Streak; inert when there's no streak (bot)
   tickAngelDeal(state, dtMs)
   // Startup Combinator "exit" payouts — only compute its income when actually owned
   // (great-outcome reward; the sim bot never owns it, so this stays byte-identical).

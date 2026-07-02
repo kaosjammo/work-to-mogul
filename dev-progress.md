@@ -20,6 +20,19 @@ no ceiling, so an inflated/corrupt value (seen live at ~104 days) silently locke
 Stories — now clamped to ≤ 1h (directly serves "more frequent stories"). 409 tests
 (+1 clamp), build + lint clean; new cadences confirmed live via the `window.__game` bridge.
 
+**Slice 2 — Momentum "Hot Streak" combo.** The now-rarer tap events feed one shared streak
+(pure `engine/momentum.ts` + `MomentumState`): claiming a Golden Deal, Rush Hour, or Event
+Card climbs the streak (cap 5) and refreshes a 4-min window; a lapse eases it down one level.
+The streak's multiplier (`1 + 0.2 × streak`, up to ×2.0) amplifies the NEXT claimed reward —
+golden **cash** and rush **surge length** — read BEFORE the claim bumps it (so the first claim
+is ×1, chained claims escalate). Surfaced as a live **🔗 N× combo** chip in the TopHUD (beside
+the 🔥 frenzy chip) and appended to each claim's celebration. Harness-safe by construction: the
+sim bot never claims → streak stays 0 → `momentumMult` is exactly 1 and `tickMomentum`
+early-returns → idle income byte-identical. Transient (registered in the persistence-policy
+trip-wire; expired offline via `expireTransientsOffline`; reset on prestige via the fresh-state
+assign). 419 tests (+10), build + lint clean; browser-verified end-to-end (HUD chip at ×1.8,
+a boosted Golden claim, correct combo tag).
+
 ## Automation managers (Executive Assistant + Chief of Staff) + stuck-celebration fix
 
 Three user-directed items.

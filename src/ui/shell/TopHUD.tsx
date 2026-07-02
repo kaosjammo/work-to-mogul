@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { money, formatRate } from '../../engine/num'
-import { useCash, useTotalPps, useGolden } from '../../store/gameStore'
+import { useCash, useTotalPps, useGolden, useMomentum } from '../../store/gameStore'
 import { haptic } from '../../lib/haptics'
 import { AccountButton } from '../account/AccountButton'
 
@@ -13,6 +13,7 @@ export function TopHUD() {
   const cash = useCash()
   const pps = useTotalPps()
   const golden = useGolden()
+  const momentum = useMomentum()
 
   // Pop + buzz the cash only when it crosses into a new magnitude (a rare,
   // satisfying "you hit millions!" beat — never on ordinary idle ticks).
@@ -54,6 +55,11 @@ export function TopHUD() {
           {golden.frenzyActive && (
             <span className="ml-1 font-bold" style={{ color: '#ff7a18' }}>
               · 🔥 2× ({golden.frenzySecondsLeft}s)
+            </span>
+          )}
+          {momentum.active && (
+            <span className="ml-1 font-bold" style={{ color: '#38bdf8' }}>
+              · 🔗 {momentum.mult}× combo
             </span>
           )}
         </span>

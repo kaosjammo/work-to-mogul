@@ -39,6 +39,7 @@ import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } f
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
 import { updateInvestConfig, updateStaffConfig } from '../engine/automation'
 import type { AutoInvestConfig, AutoStaffConfig } from '../types/domain'
+import { momentumMult } from '../engine/momentum'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
@@ -244,14 +245,22 @@ export function claimContract(id: string): void {
   }
 }
 
+/** Hot Streak suffix for a claim's celebration — the multiplier this claim actually
+ *  received (read from the streak BEFORE the claim bumped it), matching the HUD chip. */
+function comboTag(mult: number): string {
+  return mult > 1 ? ` · 🔗 ${+mult.toFixed(2)}× combo` : ''
+}
+
 /** Tap the active Golden Deal → Time Warp (instant idle income).
  *  Returns the cash actually earned (0 if the offer had already expired). */
 export function claimGolden(): number {
-  const earned = claimGoldenDeal(getEngineState())
+  const es = getEngineState()
+  const mult = momentumMult(es) // the Hot Streak boost this claim gets, before it bumps
+  const earned = claimGoldenDeal(es)
   if (earned > 0) {
     haptic(24)
     playSound('coin')
-    useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}`])
+    useUiStore.getState().pushCelebrations([`⚡ Time Warp! +${money(earned)}${comboTag(mult)}`])
     publishNow()
   }
   return earned
@@ -259,10 +268,12 @@ export function claimGolden(): number {
 
 /** Tap the active Food Rush Hour window → start a Food speed surge (×3 for 25s). */
 export function claimRush(): void {
-  if (claimRushHour(getEngineState())) {
+  const es = getEngineState()
+  const mult = momentumMult(es)
+  if (claimRushHour(es)) {
     haptic(20)
     playSound('tap')
-    useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed`])
+    useUiStore.getState().pushCelebrations([`🍔 Rush Hour! Food ×${RUSH_SPEED_MULT} speed${comboTag(mult)}`])
     publishNow()
   }
 }
@@ -281,11 +292,13 @@ export function dispatchCargo(): void {
 
 /** Resolve the active event card by picking option 'a' or 'b'. */
 export function resolveCard(choice: 'a' | 'b'): void {
-  const opt = resolveEventCard(getEngineState(), choice)
+  const es = getEngineState()
+  const mult = momentumMult(es)
+  const opt = resolveEventCard(es, choice)
   if (opt) {
     haptic(18)
     playSound('tap')
-    useUiStore.getState().pushCelebrations([`📋 ${opt.label}`])
+    useUiStore.getState().pushCelebrations([`📋 ${opt.label}${comboTag(mult)}`])
     publishNow()
   }
 }

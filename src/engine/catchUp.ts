@@ -116,6 +116,11 @@ export function expireTransientsOffline(state: GameState, elapsedMs: number): vo
       if (e.offerMsLeft === 0) e.offerCardId = null
     }
   }
+  const m = state.momentum
+  if (m) {
+    m.decayMsLeft = tick(m.decayMsLeft)
+    if (m.decayMsLeft === 0) m.streak = 0 // a long absence ends the Hot Streak
+  }
   const a = state.angelDeal
   if (a && (a.boostMsLeft ?? 0) > 0) {
     a.boostMsLeft = tick(a.boostMsLeft)

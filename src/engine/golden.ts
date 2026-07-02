@@ -8,6 +8,7 @@ import type { GameState, GoldenState } from '../types/domain'
 import { automatedIncomePerSec } from './catchUp'
 import { offlineMult, goldenValueMult, goldenFreqMult } from './talents'
 import { founderGoldenMult } from './founderPerks'
+import { momentumMult, bumpMomentum } from './momentum'
 
 export const GOLDEN_SPAWN_INTERVAL_MS = 240_000 // ~4 min between deals (rarer → each one matters more)
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
@@ -73,7 +74,8 @@ export function tickGolden(state: GameState, dtMs: number): void {
 export function claimGoldenDeal(state: GameState): number {
   const g = state.golden
   if (!g || g.offerMsLeft <= 0) return 0
-  const earned = goldenOfferValue(state) // MEGA offers pay more
+  // MEGA jackpot AND the current Hot Streak both amplify the payout.
+  const earned = goldenOfferValue(state) * momentumMult(state)
   g.offerMsLeft = 0
   g.offerMega = false
   g.cooldownMs = GOLDEN_SPAWN_INTERVAL_MS / goldenFreqMult(state)
@@ -82,5 +84,6 @@ export function claimGoldenDeal(state: GameState): number {
     state.cash += earned
     state.lifetimeEarnings += earned
   }
+  bumpMomentum(state) // this claim feeds the streak for the next one
   return earned
 }

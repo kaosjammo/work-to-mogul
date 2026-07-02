@@ -59,6 +59,7 @@ import {
 import { prestigePending, nextTokenLifetime, nextTokenProgress } from '../engine/prestige'
 import { goldenOfferValue, GOLDEN_WARP_SECONDS, GOLDEN_MEGA_MULT } from '../engine/golden'
 import { RUSH_SPEED_MULT } from '../engine/rushHour'
+import { momentumMult, MOMENTUM_MAX } from '../engine/momentum'
 import {
   LOGISTICS_INDUSTRY_ID,
   ownsLogistics,
@@ -320,6 +321,14 @@ export interface RushHourView {
   speedMult: number // the Food speed multiplier during a surge (for the label)
 }
 
+export interface MomentumView {
+  active: boolean // streak > 0 → show the Hot Streak pill
+  streak: number // current level (0..MOMENTUM_MAX)
+  max: number // the cap, for the "×N/M" label
+  mult: number // reward multiplier the streak grants right now (1 = none)
+  secondsLeft: number // countdown until the streak eases down a level
+}
+
 export interface CombinatorView {
   unlocked: boolean // player owns the Startup Combinator (great-outcome reward)
   business: BusinessView | null // its business row (owned / pps / buy) — null until unlocked
@@ -489,6 +498,7 @@ export interface ViewSnapshot {
   newTabs: RevealedTabs
   golden: GoldenView
   rushHour: RushHourView
+  momentum: MomentumView
   logistics: LogisticsView
   angelDeal: AngelDealView
   romance: RomanceView
@@ -989,11 +999,22 @@ export function buildView(
   const golden: GoldenView = {
     offerActive: (state.golden?.offerMsLeft ?? 0) > 0,
     offerSecondsLeft: Math.ceil((state.golden?.offerMsLeft ?? 0) / 1000),
-    warpValue: goldenOfferValue(state),
+    // Show the amount the tap actually banks — MEGA × Hot Streak, so the pill never
+    // understates the payout (claimGoldenDeal applies the same momentum multiplier).
+    warpValue: goldenOfferValue(state) * momentumMult(state),
     warpMinutes: Math.round((GOLDEN_WARP_SECONDS * (goldenMega ? GOLDEN_MEGA_MULT : 1)) / 60),
     mega: goldenMega,
     frenzyActive: frenzyMs > 0,
     frenzySecondsLeft: Math.ceil(frenzyMs / 1000),
+  }
+
+  const momentumStreak = state.momentum?.streak ?? 0
+  const momentum: MomentumView = {
+    active: momentumStreak > 0,
+    streak: momentumStreak,
+    max: MOMENTUM_MAX,
+    mult: momentumMult(state),
+    secondsLeft: Math.ceil((state.momentum?.decayMsLeft ?? 0) / 1000),
   }
 
   const rushHour: RushHourView = {
@@ -1278,6 +1299,7 @@ export function buildView(
     newTabs,
     golden,
     rushHour,
+    momentum,
     logistics,
     angelDeal,
     romance,

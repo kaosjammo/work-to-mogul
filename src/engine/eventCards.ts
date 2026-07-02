@@ -12,6 +12,7 @@
 import type { EventCardsState, GameState } from '../types/domain'
 import { EVENT_CARDS, EVENT_CARD_BY_ID, type CardOption } from '../content/eventCards'
 import { automatedIncomePerSec } from './catchUp'
+import { bumpMomentum } from './momentum'
 
 export const CARD_SPAWN_INTERVAL_MS = 540_000 // ~9 min between cards (rarest of the tap events)
 export const CARD_OFFER_WINDOW_MS = 90_000 // 90s to decide before it auto-declines
@@ -99,6 +100,7 @@ export function resolveEventCard(state: GameState, choice: 'a' | 'b'): CardOptio
   if (!card) return null
   const opt = choice === 'a' ? card.a : card.b
   applyOption(state, opt)
+  bumpMomentum(state) // deciding a card counts as engagement → feeds the Hot Streak
   e.offerCardId = null
   e.offerMsLeft = 0
   e.cooldownMs = CARD_SPAWN_INTERVAL_MS

@@ -76,6 +76,7 @@ export const useFounderPerks = () => useGameStore(useShallow((s) => s.founderPer
 export const usePrestigeMilestones = () => useGameStore(useShallow((s) => s.prestigeMilestones))
 export const useGolden = () => useGameStore(useShallow((s) => s.golden))
 export const useRushHour = () => useGameStore(useShallow((s) => s.rushHour))
+export const useMomentum = () => useGameStore(useShallow((s) => s.momentum))
 export const useLogistics = () => useGameStore(useShallow((s) => s.logistics))
 export const useAngelDeal = () => useGameStore(useShallow((s) => s.angelDeal))
 export const useRomance = () => useGameStore(useShallow((s) => s.romance))

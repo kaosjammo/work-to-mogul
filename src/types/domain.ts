@@ -242,6 +242,15 @@ export interface EventCardsState {
   speedMsLeft: number
 }
 
+/** Momentum "Hot Streak" — a shared combo meter fed by claiming the tap events
+ *  (Golden Deal / Rush Hour / Event Card). A live streak amplifies the NEXT claimed
+ *  reward, then decays if you stop engaging. Transient (not persisted; fresh on
+ *  load/prestige) and harness-inert (the sim bot never claims → streak stays 0). */
+export interface MomentumState {
+  streak: number // consecutive tap-event claims kept alive (0..MOMENTUM_MAX)
+  decayMsLeft: number // > 0 while the streak is held; on lapse it drops one level
+}
+
 /** Contracts board — the currently-offered missions + pool pointer. */
 export interface ContractsState {
   active: string[] // contract ids currently on the board
@@ -368,6 +377,7 @@ export interface GameState {
   rushHour: RushHourState
   logistics: LogisticsState // Logistics' signature: Just-In-Time Dispatch (transient)
   eventCards: EventCardsState // the active-decision layer (transient)
+  momentum: MomentumState // "Hot Streak" combo shared by the tap events (transient)
   angelDeal: AngelDealState // Mogul Story session runtime (offers/stages/scores)
   romance: RomanceState // the love-story arc + marriage sink (persists through prestige)
   automation: AutomationState // Executive Assistant + Chief of Staff (persists through prestige)

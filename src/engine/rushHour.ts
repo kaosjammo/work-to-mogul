@@ -10,6 +10,7 @@
 // ============================================================
 import type { GameState, RushHourState } from '../types/domain'
 import { INDUSTRIES } from '../content/industries'
+import { momentumMult, bumpMomentum } from './momentum'
 
 export const FOOD_INDUSTRY_ID = 'food'
 export const RUSH_SPAWN_INTERVAL_MS = 360_000 // ~6 min between Rush Hour windows (rarer → less naggy)
@@ -64,7 +65,8 @@ export function claimRushHour(state: GameState): boolean {
   const r = state.rushHour
   if (!r || r.offerMsLeft <= 0) return false
   r.offerMsLeft = 0
-  r.surgeMsLeft = RUSH_SURGE_MS
+  r.surgeMsLeft = RUSH_SURGE_MS * momentumMult(state) // Hot Streak lengthens the surge
   r.cooldownMs = RUSH_SPAWN_INTERVAL_MS
+  bumpMomentum(state) // this claim feeds the streak for the next one
   return true
 }
