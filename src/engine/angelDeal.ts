@@ -239,9 +239,14 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
     a.cooldownMs = Math.max(0, a.cooldownMs - dtMs)
     if (a.cooldownMs > 0) return // still cooling down
   }
-  // A date that went well reserved this (shortened) slot for the NEXT episode —
-  // courtship momentum must actually surface the courtship, not a business pitch.
-  const nextDate = a.nextIsDate ? eligible.find((s) => isArcStory(s.id)) : undefined
+  // An arc episode that went well reserved this (shortened) slot for the NEXT episode —
+  // momentum must surface the SAME arc the player was just in, not a business pitch and not
+  // the OTHER arc. `a.storyId` still holds the just-completed episode here (dismissAngelOutcome
+  // doesn't clear it), so match its arc first; fall back to any arc episode, then any pitch.
+  const sameArc = isEaStory(a.storyId) ? isEaStory : isRomanceStory
+  const nextDate = a.nextIsDate
+    ? (eligible.find((s) => sameArc(s.id)) ?? eligible.find((s) => isArcStory(s.id)))
+    : undefined
   a.nextIsDate = false
   // Arc episodes (romance + EA) are RARE, one-time, non-repeatable content. In a strict
   // round-robin they were 1-of-~7 eligible pitches, so a Finance player almost never saw
