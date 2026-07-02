@@ -1,6 +1,6 @@
 // ============================================================
 //  Mogul Story — "The Getaway" (Romance, episode 3 of 4). Months into the thing with
-//  Quinn Harlow, they book a coastal cottage weekend with exactly one rule: no laptops.
+//  Quinn Harlow, she books a coastal cottage weekend with exactly one rule: no laptops.
 //  Then the rain kills every plan, your empire catches fire with Harlow & Co. on the
 //  other side of the clashing deal, and somewhere between board games, a sulking
 //  espresso machine, and a 2am beach, three words start demanding to be said first.
@@ -26,7 +26,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'rule',
     title: 'The One Rule',
     speaker: 'narrator',
-    text: 'Months in, and Quinn Harlow — rival CEO, dry wit, undefeated at everything — hands you a key and a printed itinerary for a cottage on the coast. One rule, taped to the door in Quinn’s handwriting: NO LAPTOPS. “The empires will survive us for two days,” they say. “Probably.”',
+    text: 'Months in, and Quinn Harlow — rival CEO, dry wit, undefeated at everything — hands you a key and a printed itinerary for a cottage on the coast. One rule, taped to the door in Quinn’s handwriting: NO LAPTOPS. “The empires will survive us for two days,” she says. “Probably.”',
     choices: [
       {
         id: 'rule_smuggle',
@@ -117,7 +117,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'games',
     title: 'House Rules',
     speaker: 'protagonist',
-    text: '“House rules,” Quinn says, dealing cards by firelight. In the corner, unpacked from their car like a family heirloom, sits the ancient espresso machine from their office — the temperamental one they refuse to replace. “It sulks in new places,” they warn. “Don’t take it personally.”',
+    text: '“House rules,” Quinn says, dealing cards by firelight. In the corner, unpacked from her car like a family heirloom, sits the ancient espresso machine from her office — the temperamental one she refuses to replace. “It sulks in new places,” she warns. “Don’t take it personally.”',
     choices: [
       {
         id: 'games_gloat',
@@ -148,26 +148,26 @@ const STAGES: MogulStoryStage[] = [
     id: 'open',
     title: 'The Armour',
     speaker: 'protagonist',
-    text: 'Late. Fire low. Quinn turns a chess piece over in their fingers and doesn’t look at you. “You know what nobody tells you about being the person across the table? Everyone wants a piece of the company, or a piece of the legend. I stopped bringing people here years ago. It got easier to just… be the armour.” A pause. “You’re the first in a long time.”',
+    text: 'Late. Fire low. Quinn turns a chess piece over in her fingers and doesn’t look at you. “You know what nobody tells you about being the person across the table? Everyone wants a piece of the company, or a piece of the legend. I stopped bringing people here years ago. It got easier to just… be the armour.” A pause. “You’re the first in a long time.”',
     choices: [
       {
         id: 'open_topthat',
         label: '“I know exactly what you mean — when I closed my third acquisition, the loneliness was unreal—”',
-        result: 'You turned their confession into your anecdote. Quinn nods, and the armour slides quietly back on.',
+        result: 'You turned her confession into your anecdote. Quinn nods, and the armour slides quietly back on.',
         effects: { confidence: 1, risk: 2, leverage: -1 },
         next: 'fight',
       },
       {
         id: 'open_listen',
         label: 'Say nothing clever. Ask one small question — “When did it get easier to stop trying?” — and then just listen.',
-        result: 'Quinn talks for a long time, in a voice you haven’t heard before. Later they’ll pretend they didn’t. You’ll both know they did.',
+        result: 'Quinn talks for a long time, in a voice you haven’t heard before. Later she’ll pretend she didn’t. You’ll both know she did.',
         effects: { dueDiligence: 2, founderTrust: 2 },
         next: 'fight',
       },
       {
         id: 'open_match',
         label: 'Offer your own truth back, brief and unvarnished: the empty penthouse, the calendar full of people who want something.',
-        result: '“Look at us,” Quinn says softly. “Two fortresses comparing moats.” But they’ve moved closer on the couch.',
+        result: '“Look at us,” Quinn says softly. “Two fortresses comparing moats.” But she’s moved closer on the couch.',
         effects: { founderTrust: 2, valuationDiscipline: 1 },
         next: 'fight',
       },
@@ -183,7 +183,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'fight_win',
         label: 'Win it. Deploy every fact, every number, every weakness in Harlow & Co.’s position. Take the point.',
-        result: 'You win the argument. Quinn goes quiet and precise, the way they do with opponents. You’ve just been reclassified.',
+        result: 'You win the argument. Quinn goes quiet and precise, the way she does with opponents. You’ve just been reclassified.',
         effects: { confidence: 1, leverage: 1, risk: 3, founderTrust: -2 },
         next: 'beach',
       },
@@ -239,7 +239,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'say',
     title: 'Three Words',
     speaker: 'you',
-    text: 'The words have been sitting in your chest since the espresso machine forgave you — maybe since the rain, maybe since the auction. Quinn stands beside you, salt in their hair, watching the horizon like it owes them money. You could say it right now. First. Out loud. No armour.',
+    text: 'The words have been sitting in your chest since the espresso machine forgave you — maybe since the rain, maybe since the auction. Quinn stands beside you, salt in her hair, watching the horizon like it owes her money. You could say it right now. First. Out loud. No armour.',
     choices: [
       {
         id: 'say_plain',
@@ -281,7 +281,7 @@ export const ROMANCE_GETAWAY: MogulStory = {
   outcome: {
     great: {
       title: '“I Love You Too, You Absolute Menace”',
-      line: 'You said it first, armour off, details right — the machine, the rain, the sign that says EAT. Quinn stares at you for one terrifying second, then breaks into the smile they never use in boardrooms: “I love you too, you absolute menace.” The horizon can wait.',
+      line: 'You said it first, armour off, details right — the machine, the rain, the sign that says EAT. Quinn stares at you for one terrifying second, then breaks into the smile she never uses in boardrooms: “I love you too, you absolute menace.” The horizon can wait.',
     },
     good: {
       title: 'Said Back, Quietly',
@@ -297,10 +297,10 @@ export const ROMANCE_GETAWAY: MogulStory = {
     },
   },
   hintCopy: {
-    highRisk: '💔 You\u2019re losing them.',
+    highRisk: '💔 You\u2019re losing her.',
     someRisk: 'That landed a little awkwardly.',
     solid: 'You\u2019re really listening \u2014 and it shows.',
-    leading: 'They\u2019re leaning in.',
+    leading: 'She\u2019s leaning in.',
     trailing: 'You\u2019re chasing the conversation.',
     warm: 'There\u2019s real chemistry here.',
   },

@@ -32,14 +32,14 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'venue_upgrade',
         label: 'Joke that you know a place with a tasting menu and a wine cellar.',
-        result: 'Quinn’s smile stays exactly the same and drops ten degrees. “There it is,” they say, mostly to their coffee.',
+        result: 'Quinn’s smile stays exactly the same and drops ten degrees. “There it is,” she says, mostly to her coffee.',
         effects: { risk: 2, founderTrust: -2, leverage: -1 },
         next: 'order',
       },
       {
         id: 'venue_settle',
         label: 'Slide into the booth like you belong there. “Good light, better smell. You’ve been coming here for years.”',
-        result: 'Quinn blinks — you read the room instead of grading it. “Fifteen years,” they admit. First test: passed.',
+        result: 'Quinn blinks — you read the room instead of grading it. “Fifteen years,” she admits. First test: passed.',
         effects: { dueDiligence: 2, founderTrust: 2, risk: -1 },
         next: 'order',
         roleBoost: 'operator',
@@ -78,7 +78,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'order_match',
         label: '“I’ll have whatever the usual is.”',
-        result: '“Bold,” Quinn says. “The usual has opinions.” But they’re smiling when they say it.',
+        result: '“Bold,” Quinn says. “The usual has opinions.” But she’s smiling when she says it.',
         effects: { confidence: 1, leverage: 1 },
         next: 'phones',
       },
@@ -89,19 +89,19 @@ const STAGES: MogulStoryStage[] = [
     id: 'phones',
     title: 'House Rule',
     speaker: 'protagonist',
-    text: '"House rule." Quinn sets their phone face-down between the napkin dispenser and the hot sauce, screen dark. "The empires can burn for ninety minutes. Both of ours." They look at you over the rim of a chipped coffee cup, waiting to see what you do with your hands.',
+    text: '"House rule." Quinn sets her phone face-down between the napkin dispenser and the hot sauce, screen dark. "The empires can burn for ninety minutes. Both of ours." She looks at you over the rim of a chipped coffee cup, waiting to see what you do with your hands.',
     choices: [
       {
         id: 'phones_hedge',
         label: 'Set yours face-up. “I just need line of sight. Big week.”',
-        result: '“Line of sight,” Quinn repeats, in the tone they reserve for bad quarterly numbers.',
+        result: '“Line of sight,” Quinn repeats, in the tone she reserves for bad quarterly numbers.',
         effects: { risk: 2, dueDiligence: -1 },
         next: 'buzz',
       },
       {
         id: 'phones_down',
-        label: 'Set it face-down next to theirs without a word, screens together.',
-        result: '“That’s either very smooth or deeply corny,” Quinn observes. They don’t move the phones apart, though.',
+        label: 'Set it face-down next to hers without a word, screens together.',
+        result: '“That’s either very smooth or deeply corny,” Quinn observes. She doesn’t move the phones apart, though.',
         effects: { founderTrust: 2, valuationDiscipline: 2, risk: -1 },
         next: 'buzz',
       },
@@ -119,7 +119,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'buzz',
     title: 'The Buzz',
     speaker: 'narrator',
-    text: 'Twenty minutes in — right as Quinn is mid-story about a hostile takeover they once won with a fruit basket — your pocket buzzes. Then again. Then a third time: the pattern your assistant only uses when something is on fire and the fire is expensive.',
+    text: 'Twenty minutes in — right as Quinn is mid-story about a hostile takeover she once won with a fruit basket — your pocket buzzes. Then again. Then a third time: the pattern your assistant only uses when something is on fire and the fire is expensive.',
     choices: [
       {
         id: 'buzz_take',
@@ -131,14 +131,14 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'buzz_sneak',
         label: 'Nod along to Quinn’s story while reading the email under the table.',
-        result: 'Quinn stops mid-sentence. “The fruit basket was full of bees. Just checking.” You heard none of it. They noticed all of it.',
+        result: 'Quinn stops mid-sentence. “The fruit basket was full of bees. Just checking.” You heard none of it. She noticed all of it.',
         effects: { risk: 2, dueDiligence: -1, leverage: -1 },
         next: 'gran',
       },
       {
         id: 'buzz_kill',
         label: 'Hold the power button until the phone dies. “You were saying — the fruit basket.”',
-        result: '“It can wait?” Quinn asks. “It can burn,” you say. Something in their expression un-crosses its arms. You built a company that survives ninety minutes without you — that’s the flex.',
+        result: '“It can wait?” Quinn asks. “It can burn,” you say. Something in her expression un-crosses its arms. You built a company that survives ninety minutes without you — that’s the flex.',
         effects: { dueDiligence: 1, valuationDiscipline: 2, founderTrust: 1, risk: -1 },
         next: 'gran',
         roleBoost: 'operator',
@@ -150,19 +150,19 @@ const STAGES: MogulStoryStage[] = [
     id: 'gran',
     title: 'The Real Talk',
     speaker: 'protagonist',
-    text: '"You want to know why a diner." Quinn turns their cup a slow quarter-turn. "My gran ran one. Two counters, five booths, a neon sign out front that just said EAT — no name, no slogan. Her whole philosophy in one word. It went under when I was twelve. The bank took everything except the sign." They stop turning the cup. "I don’t tell people that."',
+    text: '"You want to know why a diner." Quinn turns her cup a slow quarter-turn. "My gran ran one. Two counters, five booths, a neon sign out front that just said EAT — no name, no slogan. Her whole philosophy in one word. It went under when I was twelve. The bank took everything except the sign." She stops turning the cup. "I don’t tell people that."',
     choices: [
       {
         id: 'gran_pivot',
         label: '“I get it — my first company nearly died too. So there I was, twenty-three, leveraged to the eyebrows—”',
-        result: 'You just took the most fragile thing Quinn owns and used it as a segue. They flag down more coffee like it’s a lifeboat.',
+        result: 'You just took the most fragile thing Quinn owns and used it as a segue. She flags down more coffee like it’s a lifeboat.',
         effects: { risk: 2, founderTrust: -1, leverage: -1 },
         next: 'bill',
       },
       {
         id: 'gran_sign',
         label: '“The charity auction. That’s why you bid like that on the EAT sign — it was hers.”',
-        result: 'Quinn goes very still. “You remembered,” they say, quietly, like it costs something. “Nobody ever connects it.” The armor doesn’t come off — but it unbuckles.',
+        result: 'Quinn goes very still. “You remembered,” she says, quietly, like it costs something. “Nobody ever connects it.” The armor doesn’t come off — but it unbuckles.',
         effects: { dueDiligence: 3, founderTrust: 2, leverage: 1 },
         next: 'bill',
       },
@@ -185,14 +185,14 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'bill_flash',
         label: 'Produce the heavy black card and tell Gus to “take care of everyone in here.”',
-        result: 'Gus takes the card, because Gus isn’t proud. Quinn watches you turn a two-digit check into a performance. “The diner isn’t a stage,” they say — lightly, in the way that means it wasn’t light.',
+        result: 'Gus takes the card, because Gus isn’t proud. Quinn watches you turn a two-digit check into a performance. “The diner isn’t a stage,” she says — lightly, in the way that means it wasn’t light.',
         effects: { risk: 3, valuationDiscipline: -2 },
         next: 'stroll',
       },
       {
         id: 'bill_simple',
         label: 'Pay in cash, quietly — the right number plus a good tip, folded under the sugar.',
-        result: 'No flourish, no announcement. Gus finds it later and nods at you like a colleague. Quinn clocks the entire transaction and pretends they didn’t.',
+        result: 'No flourish, no announcement. Gus finds it later and nods at you like a colleague. Quinn clocks the entire transaction and pretends she didn’t.',
         effects: { valuationDiscipline: 2, dueDiligence: 1, founderTrust: 1 },
         next: 'stroll',
         roleBoost: 'buyer',
@@ -241,11 +241,11 @@ const STAGES: MogulStoryStage[] = [
     id: 'night',
     title: 'The Goodnight',
     speaker: 'protagonist',
-    text: 'You end up outside Quinn’s building anyway, both of you pretending it was on the way. Quinn turns, backlit, keys in hand, and does not reach for the door. "Well," they say. "Statistically, this is where the evening ends." They don’t move. The word statistically is doing a great deal of work.',
+    text: 'You end up outside Quinn’s building anyway, both of you pretending it was on the way. Quinn turns, backlit, keys in hand, and does not reach for the door. "Well," she says. "Statistically, this is where the evening ends." She doesn’t move. The word statistically is doing a great deal of work.',
     choices: [
       {
         id: 'night_kiss',
-        label: 'Close the distance — slow, sure, and stoppable — and kiss them goodnight.',
+        label: 'Close the distance — slow, sure, and stoppable — and kiss her goodnight.',
         result: 'Stoppable was the important part. Quinn doesn’t stop it.',
         effects: { confidence: 2, founderTrust: 1 },
         next: 'invest',
@@ -284,15 +284,15 @@ export const ROMANCE_DATE: MogulStory = {
   outcome: {
     great: {
       title: '“Okay. You’re Not Boring.”',
-      line: 'The kiss lands — or the plan does, which with Quinn amounts to the same thing. “Okay,” they murmur. “You’re not boring.” From Quinn Harlow, that is a declaration of intent. Thursday is already circled, and somewhere an ancient espresso machine hisses its blessing.',
+      line: 'The kiss lands — or the plan does, which with Quinn amounts to the same thing. “Okay,” she murmurs. “You’re not boring.” From Quinn Harlow, that is a declaration of intent. Thursday is already circled, and somewhere an ancient espresso machine hisses its blessing.',
     },
     good: {
       title: 'A Warm Goodnight',
-      line: 'No fireworks — just the steady kind of warmth that outlasts them. Quinn says yes to Thursday before you’ve finished asking, then pretends they were going to suggest it anyway. The second date is real. So was the smile they carried down the hall.',
+      line: 'No fireworks — just the steady kind of warmth that outlasts them. Quinn says yes to Thursday before you’ve finished asking, then pretends she was going to suggest it anyway. The second date is real. So was the smile she carried down the hall.',
     },
     neutral: {
       title: 'Left Perfect',
-      line: 'One lovely evening, ended on your own terms — no push, no overtime. Quinn respects a clean exit more than almost anything, and the look they give you says the ledger stays open. Some other night, then.',
+      line: 'One lovely evening, ended on your own terms — no push, no overtime. Quinn respects a clean exit more than almost anything, and the look she gives you says the ledger stays open. Some other night, then.',
     },
     bad: {
       title: 'Quinn Notices Everything',
@@ -300,10 +300,10 @@ export const ROMANCE_DATE: MogulStory = {
     },
   },
   hintCopy: {
-    highRisk: '💔 You’re losing them.',
+    highRisk: '💔 You’re losing her.',
     someRisk: 'That landed a little awkwardly.',
     solid: 'You’re really listening — and it shows.',
-    leading: 'They’re leaning in.',
+    leading: 'She’s leaning in.',
     trailing: 'You’re chasing the conversation.',
     warm: 'There’s real chemistry here.',
   },

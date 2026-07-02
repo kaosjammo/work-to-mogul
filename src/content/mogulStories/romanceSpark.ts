@@ -28,27 +28,27 @@ const STAGES: MogulStoryStage[] = [
     id: 'lot7',
     title: 'Lot Seven',
     speaker: 'narrator',
-    text: 'A charity gala, black tie, a ballroom that smells like lilies and money. Lot seven is the odd one out: a rusty neon diner sign that just says EAT, half the tubes dead, salvage-yard honest among the yachts and wine lots. You raise a paddle on a whim — and across the room a stranger raises theirs. You raise; they raise. Paddle for paddle, like a metronome. And they’re smiling.',
+    text: 'A charity gala, black tie, a ballroom that smells like lilies and money. Lot seven is the odd one out: a rusty neon diner sign that just says EAT, half the tubes dead, salvage-yard honest among the yachts and wine lots. You raise a paddle on a whim — and across the room a stranger raises hers. You raise; she raises. Paddle for paddle, like a metronome. And she’s smiling.',
     choices: [
       {
         id: 'lot7_flex',
         label: 'Raise the paddle without looking up from your phone. Let the room see the number bores you.',
-        result: 'The room sees. So does the stranger — and their smile sharpens, like you’ve just made this interesting for the wrong reason.',
+        result: 'The room sees. So does the stranger — and her smile sharpens, like you’ve just made this interesting for the wrong reason.',
         effects: { confidence: 2, risk: 2, valuationDiscipline: -1 },
         next: 'war',
       },
       {
         id: 'lot7_watch',
         label: 'Lower the paddle a beat and watch the stranger instead. Who fights this hard for a broken sign?',
-        result: 'You notice things: no entourage, a thumb tapping the paddle like a countdown, and eyes that keep returning to lot seven like it owes them a memory.',
+        result: 'You notice things: no entourage, a thumb tapping the paddle like a countdown, and eyes that keep returning to lot seven like it owes her a memory.',
         effects: { dueDiligence: 2, leverage: 1 },
         next: 'war',
         roleBoost: 'operator',
       },
       {
         id: 'lot7_eyebrow',
-        label: 'Catch their eye across the ballroom and raise an eyebrow before you raise the paddle.',
-        result: 'They raise an eyebrow right back. Somewhere in there, a bid becomes a conversation.',
+        label: 'Catch her eye across the ballroom and raise an eyebrow before you raise the paddle.',
+        result: 'She raises an eyebrow right back. Somewhere in there, a bid becomes a conversation.',
         effects: { confidence: 1, leverage: 1 },
         next: 'war',
       },
@@ -79,7 +79,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'war_charity',
         label: 'Keep bidding, and mouth “it’s for charity” across the room with a shrug.',
-        result: 'They mouth back "so noble" with an eye-roll you can hear from here. The duel acquires a soundtrack.',
+        result: 'She mouths back "so noble" with an eye-roll you can hear from here. The duel acquires a soundtrack.',
         effects: { founderTrust: 1, leverage: 1 },
         next: 'hammer',
       },
@@ -90,26 +90,26 @@ const STAGES: MogulStoryStage[] = [
     id: 'hammer',
     title: 'The Hammer',
     speaker: 'narrator',
-    text: 'The hammer falls — the sign is yours, for a figure the charity will be quoting at board meetings for years. Applause, flashbulbs. And then the stranger is crossing the floor toward you with two glasses of champagne and zero embarrassment. "You overpaid," they say, offering you one. "Magnificently."',
+    text: 'The hammer falls — the sign is yours, for a figure the charity will be quoting at board meetings for years. Applause, flashbulbs. And then the stranger is crossing the floor toward you with two glasses of champagne and zero embarrassment. "You overpaid," she says, offering you one. "Magnificently."',
     choices: [
       {
         id: 'hammer_brag',
         label: '“I don’t lose auctions. I don’t lose anything, actually.”',
-        result: '"How exhausting for everyone," the stranger says pleasantly, and drinks the champagne they had meant to hand you.',
+        result: '"How exhausting for everyone," the stranger says pleasantly, and drinks the champagne she had meant to hand you.',
         effects: { confidence: 2, risk: 2, leverage: -1 },
         next: 'rival',
       },
       {
         id: 'hammer_banter',
         label: '“I overpaid for the sign. The look on your face when the hammer fell? That part was free.”',
-        result: 'The laugh escapes before they can stop it — quick, real, immediately repossessed. "Fine," they concede. "That was worth something."',
+        result: 'The laugh escapes before she can stop it — quick, real, immediately repossessed. "Fine," she concedes. "That was worth something."',
         effects: { founderTrust: 2, leverage: 1, risk: -1 },
         next: 'rival',
       },
       {
         id: 'hammer_why',
         label: '“Out of every lot in this room — why that sign?”',
-        result: 'The wit pauses. "Because it’s honest," they say at last. "One word, half-broken, still on." There’s a story under that, and you both know you nearly touched it.',
+        result: 'The wit pauses. "Because it’s honest," she says at last. "One word, half-broken, still on." There’s a story under that, and you both know you nearly touched it.',
         effects: { dueDiligence: 1, leverage: 1 },
         next: 'rival',
       },
@@ -120,7 +120,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'rival',
     title: 'The Headline',
     speaker: 'you',
-    text: 'The stranger shifts the glass to their left hand and offers the right. "Quinn Harlow." The name detonates quietly. Harlow & Co. — the rival. The counter-bid that cost you a shipping line last spring; the quarterly calls that read like dares; the profile you claimed you never finished. You’ve studied this person’s footnotes. The temperature of the evening changes.',
+    text: 'The stranger shifts the glass to her left hand and offers the right. "Quinn Harlow." The name detonates quietly. Harlow & Co. — the rival. The counter-bid that cost you a shipping line last spring; the quarterly calls that read like dares; the profile you claimed you never finished. You’ve studied this person’s footnotes. The temperature of the evening changes.',
     choices: [
       {
         id: 'rival_score',
@@ -139,7 +139,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'rival_light',
         label: 'Shake the hand. “That explains the bidding. Your reputation for not blinking is well earned.”',
-        result: '"And yours for buying the room is under-reported," Quinn returns — but they’re still standing here, which is its own information.',
+        result: '"And yours for buying the room is under-reported," Quinn returns — but she’s still standing here, which is its own information.',
         effects: { leverage: 1, valuationDiscipline: 1 },
         next: 'terrace',
       },
@@ -150,7 +150,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'terrace',
     title: 'The Terrace',
     speaker: 'protagonist',
-    text: 'The terrace bar, later. "Everyone in that ballroom wants something from me," Quinn says, claiming a corner stool like it owes them rent. "A term sheet, a quote, a kidney. You wanted a broken diner sign. I can’t decide if that’s the dumbest or the most honest thing I’ve seen all year." Behind the bar, an elderly espresso machine coughs; Quinn regards it with real tenderness. "Mine’s older than that. Louder. People keep telling me to replace it."',
+    text: 'The terrace bar, later. "Everyone in that ballroom wants something from me," Quinn says, claiming a corner stool like it owes her rent. "A term sheet, a quote, a kidney. You wanted a broken diner sign. I can’t decide if that’s the dumbest or the most honest thing I’ve seen all year." Behind the bar, an elderly espresso machine coughs; Quinn regards it with real tenderness. "Mine’s older than that. Louder. People keep telling me to replace it."',
     choices: [
       {
         id: 'terrace_bottle',
@@ -169,7 +169,7 @@ const STAGES: MogulStoryStage[] = [
       },
       {
         id: 'terrace_trade',
-        label: 'Trade them one true story about your worst quarter for one of theirs.',
+        label: 'Trade her one true story about your worst quarter for one of hers.',
         result: 'A fair exchange, honestly brokered. Quinn’s story is funnier and sadder than the headlines ever told it.',
         effects: { founderTrust: 1, valuationDiscipline: 1 },
         next: 'barb',
@@ -181,19 +181,19 @@ const STAGES: MogulStoryStage[] = [
     id: 'barb',
     title: 'The Test',
     speaker: 'protagonist',
-    text: 'Quinn sets the glass down with the click of a chess piece. "Question. And I’ll know if you rehearse the answer." A measured pause. "Is everything a transaction to you? The gala, the sign, this drink — me. Is there one thing in your week that doesn’t have a return baked in?" Their voice is light. Their eyes are not.',
+    text: 'Quinn sets the glass down with the click of a chess piece. "Question. And I’ll know if you rehearse the answer." A measured pause. "Is everything a transaction to you? The gala, the sign, this drink — me. Is there one thing in your week that doesn’t have a return baked in?" Her voice is light. Her eyes are not.',
     choices: [
       {
         id: 'barb_mic',
         label: '“Everything’s a transaction. That’s why I win.” Grin like it’s a mic drop.',
-        result: 'The temperature drops four degrees. "Thank you for your candour," Quinn says, in the voice they use on analysts.',
+        result: 'The temperature drops four degrees. "Thank you for your candour," Quinn says, in the voice she uses on analysts.',
         effects: { confidence: 1, risk: 3, founderTrust: -2 },
         next: 'gran',
       },
       {
         id: 'barb_true',
         label: '“Most things, honestly. It’s simpler that way. Tonight keeps refusing to fit the model, and I haven’t decided how I feel about that.”',
-        result: 'Silence — the good kind. "Huh," Quinn says at last, softer than anything they’ve said all night. "An honest answer. Those trade at a premium."',
+        result: 'Silence — the good kind. "Huh," Quinn says at last, softer than anything she’s said all night. "An honest answer. Those trade at a premium."',
         effects: { valuationDiscipline: 2, founderTrust: 2, risk: -1 },
         next: 'gran',
         roleBoost: 'closer',
@@ -201,7 +201,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'barb_turn',
         label: '“You bid on a rusted sign until it cost real money. You tell me what a transaction looks like.”',
-        result: 'Quinn’s mouth twitches — caught, and not entirely unhappy about it. "Deflection," they note. "Competent deflection."',
+        result: 'Quinn’s mouth twitches — caught, and not entirely unhappy about it. "Deflection," she notes. "Competent deflection."',
         effects: { leverage: 2, dueDiligence: 1 },
         next: 'gran',
       },
@@ -212,12 +212,12 @@ const STAGES: MogulStoryStage[] = [
     id: 'gran',
     title: 'The Sign',
     speaker: 'protagonist',
-    text: 'Quinn turns the glass a slow quarter-turn, and something in their posture unlocks. "My gran ran a diner," they say, mostly to the skyline. "Neon sign over the door, half the letters burnt out, so it just said EAT. She’d flip it on at five in the morning and call it her sunrise." A breath. "I saw lot seven in the catalogue and — I wasn’t bidding against you. I was bidding against time." They stop, visibly surprised at their own mouth.',
+    text: 'Quinn turns the glass a slow quarter-turn, and something in her posture unlocks. "My gran ran a diner," she says, mostly to the skyline. "Neon sign over the door, half the letters burnt out, so it just said EAT. She’d flip it on at five in the morning and call it her sunrise." A breath. "I saw lot seven in the catalogue and — I wasn’t bidding against you. I was bidding against time." She stops, visibly surprised at her own mouth.',
     choices: [
       {
         id: 'gran_buy',
         label: '“I’ll have a new one made for you. Custom. Any word you like, every letter working.”',
-        result: '"Every letter working," Quinn repeats slowly, and you hear it land wrong — you’ve offered to fix the exact thing that made it hers. The skyline gets their attention back.',
+        result: '"Every letter working," Quinn repeats slowly, and you hear it land wrong — you’ve offered to fix the exact thing that made it hers. The skyline gets her attention back.',
         effects: { confidence: 1, risk: 2, dueDiligence: -1, founderTrust: -1 },
         next: 'valet',
       },
@@ -231,7 +231,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'gran_give',
         label: '“Then it was never my sign to win. It’s yours — no trade, no terms.”',
-        result: 'Quinn goes very still. "I’ll pay you back," they say automatically, and then, quieter: "Nobody’s done that in a while."',
+        result: 'Quinn goes very still. "I’ll pay you back," she says automatically, and then, quieter: "Nobody’s done that in a while."',
         effects: { founderTrust: 2, valuationDiscipline: 1 },
         next: 'valet',
       },
@@ -247,14 +247,14 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'valet_card',
         label: 'Produce a business card. “My people will set something up with your people.”',
-        result: 'Quinn looks at the card like it’s a subpoena. "People," they repeat. The pause you could have lived in closes, politely.',
+        result: 'Quinn looks at the card like it’s a subpoena. "People," she repeats. The pause you could have lived in closes, politely.',
         effects: { risk: 2, founderTrust: -1, leverage: -1 },
         next: 'ask',
       },
       {
         id: 'valet_rosie',
         label: '“For what it’s worth — I think I’d have liked Rosie’s. Terrible coffee, sunrise at five, all of it.”',
-        result: 'Quinn’s guard doesn’t drop so much as forget its job. "The coffee was legendarily bad," they agree, and neither of you signals the valet.',
+        result: 'Quinn’s guard doesn’t drop so much as forget its job. "The coffee was legendarily bad," she agrees, and neither of you signals the valet.',
         effects: { founderTrust: 2, valuationDiscipline: 1, leverage: 1, risk: -1 },
         next: 'ask',
       },
@@ -308,7 +308,7 @@ export const ROMANCE_SPARK: MogulStory = {
   outcome: {
     great: {
       title: '“One Date. Don’t Be Boring.”',
-      line: 'Quinn stares at you for three long seconds, then laughs — a real one, ambushed out of them. "One date. Don’t be boring." They’re in the car before you can gloat, but the window rolls down: "Bring the sign."',
+      line: 'Quinn stares at you for three long seconds, then laughs — a real one, ambushed out of her. "One date. Don’t be boring." She’s in the car before you can gloat, but the window rolls down: "Bring the sign."',
     },
     good: {
       title: 'A Guarded Yes',
@@ -324,10 +324,10 @@ export const ROMANCE_SPARK: MogulStory = {
     },
   },
   hintCopy: {
-    highRisk: '💔 You’re losing them.',
+    highRisk: '💔 You’re losing her.',
     someRisk: 'That landed a little awkwardly.',
     solid: 'You’re really listening — and it shows.',
-    leading: 'They’re leaning in.',
+    leading: 'She’s leaning in.',
     trailing: 'You’re chasing the conversation.',
     warm: 'There’s real chemistry here.',
   },

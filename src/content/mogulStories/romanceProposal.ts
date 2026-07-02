@@ -99,7 +99,7 @@ const STAGES: MogulStoryStage[] = [
       },
       {
         id: 'priya_ask',
-        label: 'Ask her straight: "What does Quinn actually want that they’d never say out loud?"',
+        label: 'Ask her straight: "What does Quinn actually want that she’d never say out loud?"',
         result: 'Priya sets down her tea. Then, for four unbroken minutes, she tells you — and you write nothing down, because you will forget none of it.',
         effects: { dueDiligence: 3, founderTrust: 1 },
         next: 'suspect',
@@ -108,7 +108,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'priya_honest',
         label: '"I’m not asking permission. I’m asking if I’ve missed anything that matters."',
-        result: '"Better question than I expected," Priya admits. "They hate surprises but love being known. Don’t confuse the two."',
+        result: '"Better question than I expected," Priya admits. "She hates surprises but loves being known. Don’t confuse the two."',
         effects: { dueDiligence: 1, valuationDiscipline: 1, leverage: 1 },
         next: 'suspect',
       },
@@ -119,12 +119,12 @@ const STAGES: MogulStoryStage[] = [
     id: 'suspect',
     title: 'Made',
     speaker: 'protagonist',
-    text: '"Okay, no," Quinn says, setting down their cup — the ancient espresso machine behind them still ticking as it cools. "You’ve been weird for three weeks. You check your left pocket like it owes you money. You turned down a hostile takeover on a Friday. Either you’re dying or you’re up to something, and you don’t have the decency to look guilty about either. So."',
+    text: '"Okay, no," Quinn says, setting down her cup — the ancient espresso machine behind her still ticking as it cools. "You’ve been weird for three weeks. You check your left pocket like it owes you money. You turned down a hostile takeover on a Friday. Either you’re dying or you’re up to something, and you don’t have the decency to look guilty about either. So."',
     choices: [
       {
         id: 'suspect_deny',
         label: '"Weird? Me? I have literally never been weird in my life."',
-        result: 'Quinn stares at you for a full three seconds. "Sure," they say, in the voice they use on inflated valuations.',
+        result: 'Quinn stares at you for a full three seconds. "Sure," she says, in the voice she uses on inflated valuations.',
         effects: { risk: 2, founderTrust: -1 },
         next: 'fakeout',
       },
@@ -181,7 +181,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'sign',
     title: 'EAT',
     speaker: 'narrator',
-    text: 'The rusty neon sign from the charity auction — the one that just says EAT, the one you overpaid for magnificently and Quinn quietly claimed for their hallway — has hung there ever since, humming its warm red hum at everyone who visits. It takes nine days, three favours, and one deeply unimpressed Priya to smuggle it out for a single night without Quinn noticing. Now the crate sits in your loading bay. The question is what you build around it.',
+    text: 'The rusty neon sign from the charity auction — the one that just says EAT, the one you overpaid for magnificently and Quinn quietly claimed for her hallway — has hung there ever since, humming its warm red hum at everyone who visits. It takes nine days, three favours, and one deeply unimpressed Priya to smuggle it out for a single night without Quinn noticing. Now the crate sits in your loading bay. The question is what you build around it.',
     choices: [
       {
         id: 'sign_spectacle',
@@ -223,7 +223,7 @@ const STAGES: MogulStoryStage[] = [
       },
       {
         id: 'speech_true',
-        label: 'Throw out the drafts. Keep three true things — one of them about that machine, and how Quinn keeps what they love and fixes it.',
+        label: 'Throw out the drafts. Keep three true things — one of them about that machine, and how Quinn keeps what she loves and fixes it.',
         result: 'Three lines on an index card you will never look at. The machine hisses downstairs, right on cue. You finally know what you’re going to say, because it’s just what’s true.',
         effects: { founderTrust: 2, dueDiligence: 2, valuationDiscipline: 1 },
         next: 'doorway',
@@ -242,7 +242,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'doorway',
     title: 'The Hum',
     speaker: 'narrator',
-    text: 'Quinn arrives at eight, mid-complaint about a regulator, and stops one step onto the terrace. The EAT sign hums its warm red hum against the dusk. You watch them read it — the squint, the recognition, the slow turn towards you with an expression you have never once seen across a negotiating table. Nobody says anything. The city is very quiet.',
+    text: 'Quinn arrives at eight, mid-complaint about a regulator, and stops one step onto the terrace. The EAT sign hums its warm red hum against the dusk. You watch her read it — the squint, the recognition, the slow turn towards you with an expression you have never once seen across a negotiating table. Nobody says anything. The city is very quiet.',
     choices: [
       {
         id: 'doorway_rush',
@@ -254,14 +254,14 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'doorway_wait',
         label: 'Say nothing. Let the sign hum. Wait for Quinn’s eyes to come back to you.',
-        result: 'It takes eleven seconds. When their eyes find yours they’re bright, and the banter is nowhere in sight — maybe for the first time ever.',
+        result: 'It takes eleven seconds. When her eyes find yours they’re bright, and the banter is nowhere in sight — maybe for the first time ever.',
         effects: { dueDiligence: 2, founderTrust: 2, leverage: 1 },
         next: 'ask',
       },
       {
         id: 'doorway_coffee',
-        label: 'Hand them a cup from the ancient machine — pulled just before eight, the way they take it.',
-        result: 'Quinn holds the cup, looks at the sign, looks at you. "You’re up to something," they say softly, and it isn’t a complaint.',
+        label: 'Hand her a cup from the ancient machine — pulled just before eight, the way she takes it.',
+        result: 'Quinn holds the cup, looks at the sign, looks at you. "You’re up to something," she says softly, and it isn’t a complaint.',
         effects: { founderTrust: 1, confidence: 1 },
         next: 'ask',
       },
@@ -272,7 +272,7 @@ const STAGES: MogulStoryStage[] = [
     id: 'ask',
     title: 'The Question',
     speaker: 'protagonist',
-    text: '"Okay," Quinn says, and their voice does something small on the second syllable. They’re standing under the sign, red light on their face, cup in hand. "You bought the sign. You’ve been strange for three weeks. Priya has been suspiciously kind to me. Say the thing — or I’m going to say it first, and you know how much I hate letting you win."',
+    text: '"Okay," Quinn says, and her voice does something small on the second syllable. She’s standing under the sign, red light on her face, cup in hand. "You bought the sign. You’ve been strange for three weeks. Priya has been suspiciously kind to me. Say the thing — or I’m going to say it first, and you know how much I hate letting you win."',
     choices: [
       {
         id: 'ask_plain',
@@ -291,7 +291,7 @@ const STAGES: MogulStoryStage[] = [
       {
         id: 'ask_pocket',
         label: '"…I was going to ask what you want for dinner." Not tonight. The ring stays where it is.',
-        result: 'Quinn narrows their eyes, smiles, and lets it go. Whatever it is, they’ll let you keep it a little longer.',
+        result: 'Quinn narrows her eyes, smiles, and lets it go. Whatever it is, she’ll let you keep it a little longer.',
         effects: {},
         next: 'walkaway',
         walkAway: true,
@@ -315,11 +315,11 @@ export const ROMANCE_PROPOSAL: MogulStory = {
   outcome: {
     great: {
       title: '"Yes. Obviously Yes."',
-      line: '"What took you so long?" Quinn says it against your collar, laughing, the ring not even on yet. The auction, the diner, the sign humming warm and red above you — the whole long rivalry pays off in one word. The espresso machine stays. So do they.',
+      line: '"What took you so long?" Quinn says it against your collar, laughing, the ring not even on yet. The auction, the diner, the sign humming warm and red above you — the whole long rivalry pays off in one word. The espresso machine stays. So does she.',
     },
     good: {
       title: 'A Tearful, Laughing Yes',
-      line: 'Quinn cries, then laughs at themselves for crying, then says yes twice more so it’s on the record. It wasn’t flawless — it didn’t need to be. Under the hum of the EAT sign, the rival you couldn’t beat becomes the partner you never will.',
+      line: 'Quinn cries, then laughs at herself for crying, then says yes twice more so it’s on the record. It wasn’t flawless — it didn’t need to be. Under the hum of the EAT sign, the rival you couldn’t beat becomes the partner you never will.',
     },
     neutral: {
       title: 'Another Night Will Come',
@@ -327,14 +327,14 @@ export const ROMANCE_PROPOSAL: MogulStory = {
     },
     bad: {
       title: '"Not Like This."',
-      line: 'Somewhere between the jumbotron and the production budget, the question stopped being about Quinn — and standing inside the spectacle, they whispered it: "Not like this." Not a no. Not tonight. The ring goes back in the pocket, Quinn takes your hand anyway, and you learn the difference between an audience and a witness.',
+      line: 'Somewhere between the jumbotron and the production budget, the question stopped being about Quinn — and standing inside the spectacle, she whispered it: "Not like this." Not a no. Not tonight. The ring goes back in the pocket, Quinn takes your hand anyway, and you learn the difference between an audience and a witness.',
     },
   },
   hintCopy: {
-    highRisk: '💔 You’re losing them.',
+    highRisk: '💔 You’re losing her.',
     someRisk: 'That landed a little awkwardly.',
     solid: 'You’re really listening — and it shows.',
-    leading: 'They’re leaning in.',
+    leading: 'She’s leaning in.',
     trailing: 'You’re chasing the conversation.',
     warm: 'There’s real chemistry here.',
   },
