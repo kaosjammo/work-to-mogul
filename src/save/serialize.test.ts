@@ -276,6 +276,16 @@ describe('Startup Combinator reward reconciliation', () => {
     expect(locked.businesses.startup_combinator.unlocked).toBe(false)
     expect(locked.businesses.startup_combinator.owned).toBe(0)
   })
+
+  it('ceilings an inflated Mogul Story re-offer cooldown so stories can never lock for days', () => {
+    // A corrupt/inflated cooldownMs (seen in the wild at ~104 days) would otherwise
+    // restore verbatim and silently suppress every story pitch. Clamp it to ≤ 1h.
+    const loaded = tolerantLoad({ angelDeal: { cooldownMs: 8_999_940_000 } } as never)
+    expect(loaded.angelDeal.cooldownMs).toBeLessThanOrEqual(60 * 60_000)
+    // A legitimate mid-cooldown value is preserved unchanged.
+    const ok = tolerantLoad({ angelDeal: { cooldownMs: 120_000 } } as never)
+    expect(ok.angelDeal.cooldownMs).toBe(120_000)
+  })
 })
 
 describe('employee validation on load', () => {

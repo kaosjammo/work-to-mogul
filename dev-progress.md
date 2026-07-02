@@ -4,6 +4,22 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Events: rarer but deeper (frequency rebalance + Momentum combo + meaningful choices)
+
+User feedback: the three tap-to-collect events (Rush Hour, Golden Deal, Event Cards) are
+"annoying/boring after a while" — too frequent and too shallow — while the richer beats
+(Mogul Stories, Romance episodes) are too rare. Shipping in three slices: **(1)** rebalance
+frequency both directions, **(2)** a Momentum "Hot Streak" combo that ties the now-rarer tap
+events together, **(3)** meaningful two-option choices on Golden Deal + Rush Hour.
+
+**Slice 1 — frequency rebalance.** Tap events made rarer: Golden Deal `2min → 4min`, Rush
+Hour `3min → 6min`, Event Cards `5min → 9min`. Story beats made more frequent: Mogul Story
+re-offer `30min → 14min`, first pitch `4min → 3min`, Romance next-date `15min → 8min`. Plus a
+save-hardening fix found while verifying: `tolerantLoad` restored `angelDeal.cooldownMs` with
+no ceiling, so an inflated/corrupt value (seen live at ~104 days) silently locked all Mogul
+Stories — now clamped to ≤ 1h (directly serves "more frequent stories"). 409 tests
+(+1 clamp), build + lint clean; new cadences confirmed live via the `window.__game` bridge.
+
 ## Automation managers (Executive Assistant + Chief of Staff) + stuck-celebration fix
 
 Three user-directed items.

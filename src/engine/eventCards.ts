@@ -13,7 +13,7 @@ import type { EventCardsState, GameState } from '../types/domain'
 import { EVENT_CARDS, EVENT_CARD_BY_ID, type CardOption } from '../content/eventCards'
 import { automatedIncomePerSec } from './catchUp'
 
-export const CARD_SPAWN_INTERVAL_MS = 300_000 // ~5 min between cards (less often than golden)
+export const CARD_SPAWN_INTERVAL_MS = 540_000 // ~9 min between cards (rarest of the tap events)
 export const CARD_OFFER_WINDOW_MS = 90_000 // 90s to decide before it auto-declines
 
 export function initialEventCardsState(): EventCardsState {

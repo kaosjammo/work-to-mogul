@@ -12,7 +12,7 @@ import type { GameState, RushHourState } from '../types/domain'
 import { INDUSTRIES } from '../content/industries'
 
 export const FOOD_INDUSTRY_ID = 'food'
-export const RUSH_SPAWN_INTERVAL_MS = 180_000 // ~3 min between Rush Hour windows
+export const RUSH_SPAWN_INTERVAL_MS = 360_000 // ~6 min between Rush Hour windows (rarer → less naggy)
 export const RUSH_OFFER_WINDOW_MS = 12_000 // 12s to tap the window before it closes
 export const RUSH_SURGE_MS = 25_000 // a claimed window boosts Food for 25s
 export const RUSH_SPEED_MULT = 3 // Food businesses run ×3 speed during the surge

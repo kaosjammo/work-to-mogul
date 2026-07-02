@@ -27,8 +27,8 @@ export const EXIT_INTERVAL_MS = 120_000
 const EXIT_SECONDS = [75, 180, 45, 420, 120, 900, 60, 240]
 
 // ── Tuning ───────────────────────────────────────────────────────────────────
-export const ANGEL_FIRST_OFFER_MS = 4 * 60_000 // ~4 min of eligible Finance time before the first pitch
-export const ANGEL_REOFFER_MS = 30 * 60_000 // long cooldown between pitches (rare)
+export const ANGEL_FIRST_OFFER_MS = 3 * 60_000 // ~3 min of eligible time before the first pitch
+export const ANGEL_REOFFER_MS = 14 * 60_000 // cooldown between pitches — stories are a highlight, so surface them more often
 export const ANGEL_MIN_CASH = 1_000_000 // "enough to plausibly invest" — a modest floor (Finance is already mid-late)
 export const ANGEL_INVEST_FRACTION = 0.12 // the cheque = 12% of current cash (bounded, never ruinous)
 

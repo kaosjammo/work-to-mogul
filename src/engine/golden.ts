@@ -9,7 +9,7 @@ import { automatedIncomePerSec } from './catchUp'
 import { offlineMult, goldenValueMult, goldenFreqMult } from './talents'
 import { founderGoldenMult } from './founderPerks'
 
-export const GOLDEN_SPAWN_INTERVAL_MS = 120_000 // ~2 min between deals
+export const GOLDEN_SPAWN_INTERVAL_MS = 240_000 // ~4 min between deals (rarer → each one matters more)
 export const GOLDEN_OFFER_WINDOW_MS = 12_000 // 12s to tap before it's gone
 export const GOLDEN_WARP_SECONDS = 900 // reward = 15 min of idle income
 export const GOLDEN_MEGA_EVERY = 5 // every Nth deal is a MEGA jackpot (deterministic)

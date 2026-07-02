@@ -268,7 +268,10 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     a.storyId = typeof la.storyId === 'string' && getMogulStory(la.storyId) ? la.storyId : a.storyId
     a.combinatorUnlocked = !!la.combinatorUnlocked
     a.completedCount = Math.max(0, Math.floor(num(la.completedCount)))
-    a.cooldownMs = Math.max(0, num(la.cooldownMs, a.cooldownMs))
+    // Ceiling the re-offer cooldown at 1h: no legit value exceeds ANGEL_REOFFER_MS
+    // (14 min), and an inflated/corrupt value here would silently lock Mogul Stories
+    // for days — the exact opposite of "surface the stories more often".
+    a.cooldownMs = clamp(num(la.cooldownMs, a.cooldownMs), 0, 60 * 60_000)
     a.boostMult = num(la.boostMult, 1) || 1
     a.boostMsLeft = Math.max(0, num(la.boostMsLeft))
     if (typeof la.boostIndustryId === 'string') a.boostIndustryId = la.boostIndustryId
