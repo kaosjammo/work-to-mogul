@@ -15,6 +15,7 @@ import { FloatingSalvageSignal } from './ui/shared/FloatingSalvageSignal'
 import { SpaceSalvageShooter } from './ui/shared/SpaceSalvageShooter'
 import { FloatingFrenzySignal } from './ui/shared/FloatingFrenzySignal'
 import { FoodFrenzyGame } from './ui/shared/FoodFrenzyGame'
+import { AutomationModal } from './ui/shared/AutomationModal'
 import { DailyBonusModal } from './ui/shared/DailyBonusModal'
 import { AscensionCelebration } from './ui/shared/AscensionCelebration'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
@@ -59,6 +60,7 @@ export function App() {
       <MilestoneCelebration />
       <EventCardModal />
       <MogulStoryModal />
+      <AutomationModal />
       <CombinatorExitWatcher />
       <AscensionCelebration />
       <DailyBonusModal />

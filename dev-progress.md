@@ -4,6 +4,44 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Automation managers (Executive Assistant + Chief of Staff) + stuck-celebration fix
+
+Three user-directed items.
+
+**A) Bug — the stuck "Startup Combinator: ×3 profit!" celebration.** A single Max buy of a
+high-count business (the Combinator at ×410) crosses many milestone thresholds at once, and
+`pushCelebrations` had no cap or de-dupe → the ~2.5s toasts piled into a minute-long backlog
+that reads as "stuck". Fix: `engine/milestones.ts` `milestoneCelebrations()` collapses a
+multi-threshold burst into ONE `"<Business>: N milestones!"` summary per business (used in
+`buyBusiness` + `spendCash`); `uiStore.pushCelebrations` drops consecutive duplicates and
+caps the queue at 5. Verified: single toasts still drain (8.8s), a 26-message flood collapses
+to ≤5.
+
+**B) Executive Assistant 🤖 (auto-reinvest)** and **C) Chief of Staff 👔 (auto hire/level/
+assign)** — two opt-in managers configured from a **menu** (Stats tab → AUTOMATION →
+Configure), all in `engine/automation.ts` (see [docs/automation-managers.md](docs/automation-managers.md)):
+- **EA:** reinvests `cash × (1 − reserve%)` every `intervalSec` via a chosen **strategy**
+  (Best ROI / Cheapest / Focus-one-industry). Reserve % is a rolling war-chest; strategy +
+  interval + reserve are all set in the modal. Shows lifetime reinvested + units.
+- **Chief:** within a `budgetPct`-of-cash budget, runs Auto-Assign-Best, hires to fill empty
+  slots (**operators first**, to automate), and levels the roster cheapest-first. Each duty
+  (Hire / Level / Assign) is a toggle. Shows lifetime spent + hires.
+- **OFF by default → harness byte-inert** (the bot uses `initialGameState` → never triggers
+  them; income byte-identical). Bounded (per-cycle caps + budget), deterministic (no RNG),
+  online-only (cooldowns don't advance offline), and the config **persists through prestige**
+  + save (tolerant, clamped, policy-registered). Runs in `applyTick` after income/upkeep,
+  before `checkUnlocks`.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **408 tests** (+16 automation: eligibility,
+reinvest-within-budget for all 3 strategies, operator-first hiring, cheapest-level, cadence,
+the disabled-tick byte-identity equivalence, clamps, save + prestige; +5 milestone-collapse).
+Browser-verified 375px: the AUTOMATION Stats section, both config modals (strategy menu,
+reserve/budget steppers, duty toggles), EA live-reinvested $996M / 57 units over 20s, the
+Chief hired 10 + staffed 8 businesses + leveled over 40s; no overflow, no console errors.
+Adversarially reviewed via a 4-lens find→verify workflow.
+
+---
+
 ## "Lunch Rush" — a Vampire-Survivors mini-game + the Event Cards 2.0 plan
 
 Two user-directed items: a plan for giving event cards "more meat" (they're "just a

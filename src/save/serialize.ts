@@ -332,6 +332,36 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     }
   }
 
+  // Automation managers — restore the player's config + lifetime stats (a
+  // set-and-forget convenience). Clamp everything; the internal cooldowns reset to
+  // a prompt tick on load (they don't advance offline). Old saves keep the defaults.
+  if (loaded.automation && typeof loaded.automation === 'object') {
+    const la = loaded.automation as Partial<GameState['automation']>
+    if (la.invest && typeof la.invest === 'object') {
+      const src = la.invest
+      const inv = s.automation.invest
+      inv.enabled = src.enabled === true
+      inv.reservePct = clamp(num(src.reservePct, inv.reservePct), 0, 90)
+      inv.strategy = src.strategy === 'cheapest' || src.strategy === 'focus' ? src.strategy : 'roi'
+      inv.focusIndustry = typeof src.focusIndustry === 'string' ? src.focusIndustry : null
+      inv.intervalSec = clamp(Math.round(num(src.intervalSec, inv.intervalSec)), 3, 60)
+      inv.lifetimeSpent = Math.max(0, num(src.lifetimeSpent))
+      inv.lifetimeUnits = Math.max(0, Math.floor(num(src.lifetimeUnits)))
+    }
+    if (la.staff && typeof la.staff === 'object') {
+      const src = la.staff
+      const st = s.automation.staff
+      st.enabled = src.enabled === true
+      st.budgetPct = clamp(num(src.budgetPct, st.budgetPct), 0, 90)
+      st.hire = src.hire !== false
+      st.level = src.level !== false
+      st.assign = src.assign !== false
+      st.intervalSec = clamp(Math.round(num(src.intervalSec, st.intervalSec)), 3, 60)
+      st.lifetimeSpent = Math.max(0, num(src.lifetimeSpent))
+      st.lifetimeHires = Math.max(0, Math.floor(num(src.lifetimeHires)))
+    }
+  }
+
   // Space Salvage Shooter — persist ONLY the campaign progress (the transient buff +
   // AI-salvage timers stay at their fresh initial defaults, like golden/eventCards;
   // the in-mission simulation is never persisted). Old saves (no field) keep the

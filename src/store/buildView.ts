@@ -77,6 +77,7 @@ import {
   marriageDrainFraction,
   marriageLevelUpCost,
 } from '../engine/romance'
+import { automationEligible } from '../engine/automation'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -342,6 +343,32 @@ export interface AngelDealView {
   hints: string[] // qualitative read on the hidden scores (never raw numbers)
 }
 
+/** The automation managers' config + stats (the config modal + Stats-tab section). */
+export interface AutomationView {
+  eligible: boolean // owns ≥1 business → the managers are available
+  invest: {
+    enabled: boolean
+    reservePct: number
+    strategy: 'roi' | 'cheapest' | 'focus'
+    focusIndustry: string | null
+    intervalSec: number
+    lifetimeSpent: number
+    lifetimeUnits: number
+  }
+  staff: {
+    enabled: boolean
+    budgetPct: number
+    hire: boolean
+    level: boolean
+    assign: boolean
+    intervalSec: number
+    lifetimeSpent: number
+    lifetimeHires: number
+  }
+  spendableNow: number // cash above the EA's reserve — a live "it would deploy ~$X" preview
+  staffBudgetNow: number // cash the Chief would spend this cycle
+}
+
 /** The love-story arc's progress + the marriage money-sink (Stats-tab panel). */
 export interface RomanceView {
   stage: number // romance episodes completed (0..4)
@@ -465,6 +492,7 @@ export interface ViewSnapshot {
   logistics: LogisticsView
   angelDeal: AngelDealView
   romance: RomanceView
+  automation: AutomationView
   combinator: CombinatorView
   financeCompound: { industryId: string; pct: number }
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
@@ -1026,6 +1054,33 @@ export function buildView(
     totalSpent: rm?.totalSpent ?? 0,
   }
 
+  // Automation managers — config mirror + live "it would deploy ~$X" previews.
+  const auto = state.automation
+  const automation: AutomationView = {
+    eligible: automationEligible(state),
+    invest: {
+      enabled: auto?.invest.enabled ?? false,
+      reservePct: auto?.invest.reservePct ?? 25,
+      strategy: auto?.invest.strategy ?? 'roi',
+      focusIndustry: auto?.invest.focusIndustry ?? null,
+      intervalSec: auto?.invest.intervalSec ?? 5,
+      lifetimeSpent: auto?.invest.lifetimeSpent ?? 0,
+      lifetimeUnits: auto?.invest.lifetimeUnits ?? 0,
+    },
+    staff: {
+      enabled: auto?.staff.enabled ?? false,
+      budgetPct: auto?.staff.budgetPct ?? 20,
+      hire: auto?.staff.hire ?? true,
+      level: auto?.staff.level ?? true,
+      assign: auto?.staff.assign ?? true,
+      intervalSec: auto?.staff.intervalSec ?? 10,
+      lifetimeSpent: auto?.staff.lifetimeSpent ?? 0,
+      lifetimeHires: auto?.staff.lifetimeHires ?? 0,
+    },
+    spendableNow: state.cash * (1 - (auto?.invest.reservePct ?? 25) / 100),
+    staffBudgetNow: state.cash * ((auto?.staff.budgetPct ?? 20) / 100),
+  }
+
   // Startup Combinator business (great-outcome reward) — its row + the exit-payout timer.
   const combinator: CombinatorView = {
     unlocked: ad.combinatorUnlocked,
@@ -1226,6 +1281,7 @@ export function buildView(
     logistics,
     angelDeal,
     romance,
+    automation,
     combinator,
     financeCompound,
     quantumSuperposition,

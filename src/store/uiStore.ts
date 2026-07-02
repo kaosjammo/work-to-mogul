@@ -46,6 +46,10 @@ interface UiStore {
   foodFrenzyOpen: boolean
   openFoodFrenzy: () => void
   closeFoodFrenzy: () => void
+  // Automation config modal ('invest' | 'staff' | null → closed).
+  automationTab: 'invest' | 'staff' | null
+  openAutomation: (tab: 'invest' | 'staff') => void
+  closeAutomation: () => void
   // Another tab took over the save — this tab is paused behind a blocking overlay.
   tabConflict: boolean
   setTabConflict: (v: boolean) => void
@@ -72,7 +76,23 @@ export const useUiStore = create<UiStore>((set) => ({
   setAscension: (tokens) => set({ ascension: { tokens } }),
   dismissAscension: () => set({ ascension: null }),
   celebrations: [],
-  pushCelebrations: (msgs) => set((s) => ({ celebrations: [...s.celebrations, ...msgs] })),
+  pushCelebrations: (msgs) =>
+    set((s) => {
+      // Each toast shows ~2.5s, so an unbounded queue reads as "stuck": a single
+      // Max buy of a high-count business crosses many milestone thresholds at once,
+      // and exits/achievements can pile on. Drop consecutive duplicates and cap the
+      // backlog so a burst clears in seconds, not a minute.
+      const next = [...s.celebrations]
+      for (const m of msgs) {
+        if (next.length > 0 && next[next.length - 1] === m) continue // no repeats back-to-back
+        next.push(m)
+      }
+      // Keep the CURRENTLY-showing toast (index 0) plus the most-recent few, so a
+      // flood collapses to a short, current tail instead of a stale minute-long queue.
+      const MAX = 5
+      if (next.length > MAX) return { celebrations: [next[0], ...next.slice(next.length - (MAX - 1))] }
+      return { celebrations: next }
+    }),
   shiftCelebration: () => set((s) => ({ celebrations: s.celebrations.slice(1) })),
   accountOpen: false,
   openAccount: () => set({ accountOpen: true }),
@@ -83,6 +103,9 @@ export const useUiStore = create<UiStore>((set) => ({
   foodFrenzyOpen: false,
   openFoodFrenzy: () => set({ foodFrenzyOpen: true }),
   closeFoodFrenzy: () => set({ foodFrenzyOpen: false }),
+  automationTab: null,
+  openAutomation: (automationTab) => set({ automationTab }),
+  closeAutomation: () => set({ automationTab: null }),
   tabConflict: false,
   setTabConflict: (tabConflict) => set({ tabConflict }),
 }))

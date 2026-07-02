@@ -37,6 +37,8 @@ import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
 import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
+import { updateInvestConfig, updateStaffConfig } from '../engine/automation'
+import type { AutoInvestConfig, AutoStaffConfig } from '../types/domain'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
@@ -44,7 +46,7 @@ import { PRESTIGE_MILESTONE_NAME } from '../content/prestigeMilestones'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { money } from '../engine/num'
 import { haptic } from '../lib/haptics'
-import { describeMilestone, newlyReached } from '../engine/milestones'
+import { newlyReached, milestoneCelebrations } from '../engine/milestones'
 import type { UpgradeId } from '../types/domain'
 import { BUSINESSES } from '../content/businesses'
 import { INDUSTRIES } from '../content/industries'
@@ -80,12 +82,9 @@ export function buyBusiness(id: BusinessId): void {
     if (fresh.length) {
       haptic(26) // a milestone crossed — celebratory buzz
       playSound('chime')
-      msgs.push(
-        ...fresh
-          .map(describeMilestone)
-          .filter((m): m is NonNullable<typeof m> => m != null)
-          .map((m) => m.text),
-      )
+      // Collapse a multi-threshold burst (a Max buy can cross many at once) into a
+      // compact summary so the celebration queue doesn't clog.
+      msgs.push(...milestoneCelebrations(fresh))
     }
     if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
     publishNow()
@@ -105,10 +104,7 @@ export function spendCash(): void {
   const before = [...s.milestonesReached]
   const { units, spent } = spendCashBestValue(s)
   if (units <= 0) return
-  const msgs = newlyReached(before, s.milestonesReached)
-    .map(describeMilestone)
-    .filter((m): m is NonNullable<typeof m> => m != null)
-    .map((m) => m.text)
+  const msgs = milestoneCelebrations(newlyReached(before, s.milestonesReached))
   msgs.push(`💸 Spent ${money(spent)} · +${units} ${units === 1 ? 'unit' : 'units'}`)
   haptic(24)
   playSound('buy')
@@ -362,6 +358,30 @@ export function abortFrenzyRun(): void {
 /** "Not now" on the floating rush chip — snoozes it for a long while. */
 export function snoozeFrenzySignal(): void {
   snoozeFrenzy(getEngineState(), Date.now())
+  publishNow()
+}
+
+// ----- Automation managers (Executive Assistant + Chief of Staff) -----
+
+/** Update the Executive Assistant's auto-reinvest config (clamped in the engine). */
+export function setAutoInvest(patch: Partial<AutoInvestConfig>): void {
+  const s = getEngineState()
+  updateInvestConfig(s, patch)
+  if (patch.enabled === true) {
+    haptic(18)
+    playSound('chime')
+  }
+  publishNow()
+}
+
+/** Update the Chief of Staff's auto-roster config (clamped in the engine). */
+export function setAutoStaff(patch: Partial<AutoStaffConfig>): void {
+  const s = getEngineState()
+  updateStaffConfig(s, patch)
+  if (patch.enabled === true) {
+    haptic(18)
+    playSound('chime')
+  }
   publishNow()
 }
 

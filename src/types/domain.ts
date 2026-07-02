@@ -326,6 +326,39 @@ export interface FoodFrenzyState {
   buffMsLeft: number // countdown for the buff (0 = inactive)
 }
 
+/** The Executive Assistant's auto-reinvest policy (the player sets it in a menu).
+ *  All config PERSISTS through prestige (a set-and-forget convenience). */
+export type AutoInvestStrategy = 'roi' | 'cheapest' | 'focus'
+export interface AutoInvestConfig {
+  enabled: boolean
+  reservePct: number // keep this % of cash as a war-chest; reinvest the rest (0..90)
+  strategy: AutoInvestStrategy // roi = best $/s per $; cheapest = fastest unit count; focus = one industry
+  focusIndustry: IndustryId | null // the industry to pour into when strategy === 'focus'
+  intervalSec: number // how often the EA acts (3..60)
+  cooldownMs: number // internal countdown (does NOT advance offline — automation pauses while away)
+  lifetimeSpent: number // stat: total cash the EA has reinvested
+  lifetimeUnits: number // stat: total units the EA has bought
+}
+
+/** The Chief of Staff's auto-roster policy: hire, level, and assign within a budget. */
+export interface AutoStaffConfig {
+  enabled: boolean
+  budgetPct: number // max % of cash to spend on staff per cycle (0..90)
+  hire: boolean // auto-hire to fill empty slots (operators first, to automate)
+  level: boolean // auto-level existing staff (cheapest-first)
+  assign: boolean // auto-assign the roster (Auto-Assign Best)
+  intervalSec: number // how often the Chief acts (3..60)
+  cooldownMs: number // internal countdown (does NOT advance offline)
+  lifetimeSpent: number // stat
+  lifetimeHires: number // stat
+}
+
+/** Both automation managers. META-PROGRESSION: persists through prestige. */
+export interface AutomationState {
+  invest: AutoInvestConfig
+  staff: AutoStaffConfig
+}
+
 export interface GameState {
   cash: Num
   lifetimeEarnings: Num
@@ -337,6 +370,7 @@ export interface GameState {
   eventCards: EventCardsState // the active-decision layer (transient)
   angelDeal: AngelDealState // Mogul Story session runtime (offers/stages/scores)
   romance: RomanceState // the love-story arc + marriage sink (persists through prestige)
+  automation: AutomationState // Executive Assistant + Chief of Staff (persists through prestige)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator
   buyMode: BuyMode

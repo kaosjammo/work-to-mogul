@@ -19,6 +19,7 @@ import { tickRushHour } from './rushHour'
 import { tickLogistics } from './logistics'
 import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
 import { applyMarriageUpkeep } from './romance'
+import { tickAutomation } from './automation'
 import { tickEventCards } from './eventCards'
 import { tickSpaceShooter } from './spaceShooter'
 import { tickFoodFrenzy } from './foodFrenzy'
@@ -145,6 +146,10 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
   if (ownsQuantum(state)) {
     state.quantumPhaseMs = ((state.quantumPhaseMs ?? 0) + dtMs) % SUPERPOSITION_CYCLE_MS
   }
+  // Automation managers (EA auto-reinvest, Chief-of-Staff) — OFF by default, so
+  // the harness bot never triggers them. Runs after income + upkeep so it spends
+  // the tick's earnings, and BEFORE checkUnlocks so auto-bought units flip unlocks.
+  tickAutomation(state, dtMs)
   checkUnlocks(state)
   checkAchievements(state)
 }

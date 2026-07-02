@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { money, formatRate, format } from '../../engine/num'
 import { CAREER_LEVELS } from '../../content/career'
-import { useStats, useContracts, useDaily, useRomance } from '../../store/gameStore'
+import { useStats, useContracts, useDaily, useRomance, useAutomation } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
+import { useUiStore } from '../../store/uiStore'
 import type { ContractView } from '../../store/buildView'
 import { claimContract, claimDailyBonus, renewVows } from '../../store/actions'
 import { DailyStreakProgress } from '../shared/DailyStreakProgress'
@@ -97,6 +98,30 @@ function ContractRow({ c }: { c: ContractView }) {
   )
 }
 
+/** An automation manager row: icon, name, status, and an accent stripe when ON. */
+function AutomationRow({ icon, name, desc, on, onClick }: { icon: string; name: string; desc: string; on: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="list-row w-full py-2.5 pr-3 text-left"
+      style={{ paddingLeft: on ? '10px' : '12px', borderLeft: on ? '2px solid var(--accent)' : undefined, minHeight: 'var(--tap)' }}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg" style={{ background: 'var(--surface-2)' }}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold">{name}</span>
+          {on && <span className="shrink-0 text-[10px] font-bold" style={{ color: 'var(--good)' }}>● ON</span>}
+        </div>
+        <div className="truncate text-xs" style={{ color: 'var(--text-dim)' }}>{desc}</div>
+      </div>
+      <span className="shrink-0 text-xs font-semibold" style={{ color: 'var(--accent)' }}>Configure ›</span>
+    </button>
+  )
+}
+
 /** A lightweight section: uppercase label header + a single flat .card list of rows. */
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -112,6 +137,8 @@ export function StatsScreen() {
   const contracts = useContracts()
   const daily = useDaily()
   const romance = useRomance()
+  const automation = useAutomation()
+  const openAutomation = useUiStore((st) => st.openAutomation)
   const careerTitle = CAREER_LEVELS[s.stats.careerLevel]?.title ?? '—'
   const bonusPct = s.prestigeProfitBonusPct
   const haptics = useSettingsStore((st) => st.haptics)
@@ -183,6 +210,25 @@ export function StatsScreen() {
         <Row label="Empire tokens" value={format(s.prestige.totalPoints)} />
         <Row label="Achievements" value={`${s.achievements}/${s.achievementsTotal}`} />
       </Section>
+
+      {automation.eligible && (
+        <Section title="AUTOMATION">
+          <AutomationRow
+            icon="🤖"
+            name="Executive Assistant"
+            desc={automation.invest.enabled ? `On · reinvesting every ${automation.invest.intervalSec}s` : 'Auto-reinvest your spare cash'}
+            on={automation.invest.enabled}
+            onClick={() => openAutomation('invest')}
+          />
+          <AutomationRow
+            icon="👔"
+            name="Chief of Staff"
+            desc={automation.staff.enabled ? `On · managing staff every ${automation.staff.intervalSec}s` : 'Auto hire, level & assign staff'}
+            on={automation.staff.enabled}
+            onClick={() => openAutomation('staff')}
+          />
+        </Section>
+      )}
 
       {romance.married && (
         <Section title={`💍 MARRIAGE · ${romance.partner}`}>
