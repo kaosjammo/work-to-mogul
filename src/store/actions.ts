@@ -35,7 +35,7 @@ import {
 } from '../engine/angelDeal'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
-import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
+import { buyMarriageLevel, grantWeddingGift, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
 import { updateInvestConfig, updateStaffConfig, unlockChiefOfStaff } from '../engine/automation'
 import { poachEa, EA_PARTNER_NAME } from '../engine/execAssistant'
@@ -473,9 +473,9 @@ export function closeAngelOutcome(): void {
   if (isRomanceStory(storyId)) {
     const proposalId = ROMANCE_EPISODE_IDS[ROMANCE_EPISODE_IDS.length - 1]
     if (storyId === proposalId && progressed) {
-      useUiStore
-        .getState()
-        .pushCelebrations([`💍 You married ${PARTNER_NAME}! The marriage panel is on the Stats tab.`])
+      // Wedding payoff: a one-time honeymoon gift + a festive full-screen moment.
+      const gift = grantWeddingGift(s)
+      useUiStore.getState().setWedding(PARTNER_NAME, gift)
     } else if (progressed) {
       useUiStore.getState().pushCelebrations([`💕 ${PARTNER_NAME} wants to see you again…`])
     }

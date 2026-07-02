@@ -31,6 +31,9 @@ interface UiStore {
   ascension: { tokens: number } | null // a just-completed prestige, for the celebration overlay
   setAscension: (tokens: number) => void
   dismissAscension: () => void
+  wedding: { partner: string; gift: number } | null // a just-landed proposal, for the wedding overlay
+  setWedding: (partner: string, gift: number) => void
+  dismissWedding: () => void
   celebrations: string[]
   pushCelebrations: (msgs: string[]) => void
   shiftCelebration: () => void
@@ -79,6 +82,9 @@ export const useUiStore = create<UiStore>((set) => ({
   ascension: null,
   setAscension: (tokens) => set({ ascension: { tokens } }),
   dismissAscension: () => set({ ascension: null }),
+  wedding: null,
+  setWedding: (partner, gift) => set({ wedding: { partner, gift } }),
+  dismissWedding: () => set({ wedding: null }),
   celebrations: [],
   pushCelebrations: (msgs) =>
     set((s) => {

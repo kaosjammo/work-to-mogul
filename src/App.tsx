@@ -19,6 +19,7 @@ import { AutomationModal } from './ui/shared/AutomationModal'
 import { MarriageModal } from './ui/shared/MarriageModal'
 import { DailyBonusModal } from './ui/shared/DailyBonusModal'
 import { AscensionCelebration } from './ui/shared/AscensionCelebration'
+import { WeddingCelebration } from './ui/shared/WeddingCelebration'
 import { FloatingProfitLayer } from './ui/shared/FloatingProfitLayer'
 import { WealthStage } from './ui/shared/WealthStage'
 import { AccountModal } from './ui/account/AccountModal'
@@ -65,6 +66,7 @@ export function App() {
       <MarriageModal />
       <CombinatorExitWatcher />
       <AscensionCelebration />
+      <WeddingCelebration />
       <DailyBonusModal />
       <WelcomeBackBanner />
       <SoundNudge />

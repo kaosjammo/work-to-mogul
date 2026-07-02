@@ -90,7 +90,7 @@ export function MogulStoryModal() {
     const loss = a.payout < 0
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={scrimStyle}>
-        <div className="card m-3 flex w-full max-w-sm flex-col gap-3 p-5 text-center" style={{ borderColor: color }}>
+        <div className="card m-3 flex max-h-[92vh] w-full max-w-sm flex-col gap-3 overflow-y-auto p-5 text-center" style={{ borderColor: color }}>
           <div className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
             {STORY.subject} · {STORY.title}
           </div>

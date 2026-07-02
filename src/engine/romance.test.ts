@@ -19,6 +19,7 @@ import {
   marriageLevelUpCost,
   buyMarriageLevel,
   applyMarriageUpkeep,
+  grantWeddingGift,
 } from './romance'
 import {
   eligibleStories,
@@ -187,6 +188,25 @@ describe('Romance arc — progression + marriage through the shared runtime', ()
     dismissAngelOutcome(s)
     expect(s.angelDeal.cooldownMs).toBe(ANGEL_REOFFER_MS)
     expect(s.angelDeal.nextIsDate).toBe(false)
+  })
+})
+
+describe('Wedding payoff — the honeymoon gift', () => {
+  it('grants a one-time windfall scaled to idle income (0 without any)', () => {
+    const s = richState()
+    expect(grantWeddingGift(s)).toBe(0) // no automated income yet → no gift
+
+    s.businesses.lemonade.owned = 20
+    s.businesses.lemonade.unlocked = true
+    s.employees.op = {
+      id: 'op', templateId: 'mickey_gears', name: 'Op', role: 'operator',
+      rarity: 'common', level: 1, affinity: null, traits: [], specialisation: null,
+    }
+    s.businesses.lemonade.assigned = ['op']
+    const before = s.cash
+    const gift = grantWeddingGift(s)
+    expect(gift).toBeGreaterThan(0)
+    expect(s.cash).toBeCloseTo(before + gift)
   })
 })
 

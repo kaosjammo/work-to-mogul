@@ -121,6 +121,21 @@ export function applyRomanceOutcome(state: GameState, storyId: string, band: Out
   }
 }
 
+/** A one-time "honeymoon gift" the moment the proposal lands: a generous cash windfall
+ *  (idle income × the window) so marriage opens on a high note, not just a running bill.
+ *  Player-triggered (the proposal) → the sim bot never marries, so this stays inert. */
+export const WEDDING_GIFT_SECONDS = 30 * 60 // 30 minutes of idle income
+
+export function grantWeddingGift(state: GameState): number {
+  const gift = automatedIncomePerSec(state) * WEDDING_GIFT_SECONDS
+  if (Number.isFinite(gift) && gift > 0) {
+    state.cash += gift
+    state.lifetimeEarnings += gift
+    return gift
+  }
+  return 0
+}
+
 // ── The marriage money-sink ──────────────────────────────────────────────────
 
 /** Share of business income drained per second at the current marriage level. */

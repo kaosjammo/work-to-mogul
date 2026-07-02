@@ -1,14 +1,15 @@
 // ============================================================
 //  Executive Assistant — the "poach a rival's right hand" arc (pure over GameState).
-//  Three episodic Mogul Stories: you keep crossing paths with Wes Vaughn, the razor-
+//  Three episodic Mogul Stories: you keep crossing paths with Reyna Vaughn, the razor-
 //  sharp EA who runs a rival CEO's entire operation. Court all three successfully and
-//  they're ready to jump — POACH them and they become YOUR Executive Assistant
-//  (auto-reinvest), and can auto-collect a "Board Advisor Fee" from the boards they
-//  still sit on. Gated on RELATIONSHIP PROGRESS (arcStage), like the romance arc.
+//  she's ready to jump — POACH her and she becomes YOUR Executive Assistant: she
+//  auto-reinvests (hire/level/assign/upgrades) AND taps "Work Shift" for you — starting
+//  each shift, or collecting the Board Advisor payout once retired. Gated on
+//  RELATIONSHIP PROGRESS (arcStage), like the romance arc.
 //
 //  Harness-safe by construction: every entry point is PLAYER-triggered — the greedy
-//  sim bot never resolves a story or poaches, so `unlocked` stays false, the EA tick
-//  is inert, and the advisor fee never accrues → idle income stays byte-identical.
+//  sim bot never resolves a story or poaches, so `unlocked` stays false and the EA
+//  tick is inert → idle income stays byte-identical.
 //
 //  Meta-progression: the EA config (incl. `unlocked`) lives on `automation.invest`,
 //  which persists through prestige — a poached EA carries into the new empire.

@@ -56,7 +56,7 @@ const STAGES: MogulStoryStage[] = [
   {
     id: 'venue',
     title: 'The Where',
-    speaker: 'you',
+    speaker: 'narrator',
     text: 'Where do you ask? You’ve built companies from nothing; this should not be the hardest logistics problem of your career, and yet. Your events people could have the stadium jumbotron by Thursday. The diner from your first real date still holds your booth. And the auction house where Quinn ran your bidding into the stratosphere out of pure spite has a certain symmetry.',
     choices: [
       {
@@ -211,7 +211,7 @@ const STAGES: MogulStoryStage[] = [
   {
     id: 'speech',
     title: 'The Words',
-    speaker: 'you',
+    speaker: 'narrator',
     text: 'The night of. The terrace is swept, the sign is wired, and you’re at your desk with a legal pad, drafting the most important pitch of your life. Drafts one through six read like eulogies. Draft seven is a shareholder letter. Downstairs, Quinn’s espresso machine — moved into your place months ago, still refusing to die — clears its throat like it’s waiting to hear what you’ve got.',
     choices: [
       {
