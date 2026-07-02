@@ -256,6 +256,28 @@ describe('contracts board persistence', () => {
   })
 })
 
+describe('Startup Combinator reward reconciliation', () => {
+  it('a combinatorUnlocked save always loads with a BUYABLE combinator row (owned ≥ 1)', () => {
+    // Saves from before the Combinator became a standalone business have the
+    // angel-deal flag but a locked, 0-owned business row → the card rendered
+    // but its Buy button was a dead tap (purchase() checks business.unlocked).
+    const loaded = tolerantLoad({ angelDeal: { combinatorUnlocked: true } } as never)
+    expect(loaded.businesses.startup_combinator.unlocked).toBe(true)
+    expect(loaded.businesses.startup_combinator.owned).toBe(1) // the founding unit
+  })
+
+  it('keeps a higher owned count and never grants without the flag', () => {
+    const rich = tolerantLoad({
+      angelDeal: { combinatorUnlocked: true },
+      businesses: { startup_combinator: { owned: 7 } },
+    } as never)
+    expect(rich.businesses.startup_combinator.owned).toBe(7) // not clobbered down
+    const locked = tolerantLoad({ cash: 0 } as never)
+    expect(locked.businesses.startup_combinator.unlocked).toBe(false)
+    expect(locked.businesses.startup_combinator.owned).toBe(0)
+  })
+})
+
 describe('employee validation on load', () => {
   it('drops employees with an unknown role and clamps/filters the rest', () => {
     const loaded = tolerantLoad({
