@@ -66,8 +66,11 @@ export const ARCADE_ENEMY_BULLET: SpriteRef = {
 }
 
 // Pickups are 15-frame spin sheets (480×32). The shooter animates the spin.
-export const ARCADE_PICKUPS: Record<'salvage' | 'core' | 'shield', SheetRef> = {
-  salvage: { src: `${BASE}/pickups/salvage-weapon.png`, frameW: 32, frameH: 32, frames: 15 },
+// 'weapon' (salvage-weapon.png) grants a temporary firepower tier on pickup —
+// previously mislabeled 'salvage' and treated as a third flavour of plain
+// currency identical to 'core', despite shipping its own distinct sprite.
+export const ARCADE_PICKUPS: Record<'weapon' | 'core' | 'shield', SheetRef> = {
+  weapon: { src: `${BASE}/pickups/salvage-weapon.png`, frameW: 32, frameH: 32, frames: 15 },
   core: { src: `${BASE}/pickups/salvage-core.png`, frameW: 32, frameH: 32, frames: 15 },
   shield: { src: `${BASE}/pickups/shield.png`, frameW: 32, frameH: 32, frames: 15 },
 }

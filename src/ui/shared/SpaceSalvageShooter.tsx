@@ -55,10 +55,13 @@ function makeBank(fleetId: 1 | 2 | 3) {
     enemies: [f.fighter, f.scout, f.frigate, f.bomber].map((s) => loadImg(s.src)),
     boss: loadImg(f.dreadnought.src),
     bullet: loadImg(ARCADE_ENEMY_BULLET.src),
-    salvage: loadImg(ARCADE_PICKUPS.salvage.src),
+    weapon: loadImg(ARCADE_PICKUPS.weapon.src),
     core: loadImg(ARCADE_PICKUPS.core.src),
     shield: loadImg(ARCADE_PICKUPS.shield.src),
     asteroid: loadImg(ARCADE_ENV.asteroid.src),
+    // Was preloaded but never actually drawn — kills just spawned generic circle
+    // particles. Wired into spawnBoom()/render() below for a real impact frame.
+    explosion: loadImg(ARCADE_ENV.asteroidExplode.src),
   }
 }
 type Bank = ReturnType<typeof makeBank>
@@ -97,17 +100,106 @@ function drawSpin(
   ctx.drawImage(rec.img, sx, 0, fw, fw, x - size / 2, y - size / 2, size, size)
   return true
 }
+// Draw one 96×96 frame of the (non-looping) 8-frame explosion strip.
+function drawExplosionFrame(
+  ctx: CanvasRenderingContext2D,
+  rec: Loaded,
+  frame: number,
+  x: number,
+  y: number,
+  size: number,
+): boolean {
+  if (!rec.ok) return false
+  const fw = 96
+  const f = Math.max(0, Math.min(7, frame))
+  ctx.drawImage(rec.img, f * fw, 0, fw, fw, x - size / 2, y - size / 2, size, size)
+  return true
+}
+
+/**
+ * The player's shot — a short glowing "warped" energy bolt (gradient + soft
+ * blur), color/width escalating with weapon tier. Procedural stand-in for a
+ * future bespoke sprite: swap by adding an ARCADE_PLAYER_BULLET sheet to the
+ * manifest and blitting it here, same fallback pattern as everywhere else in
+ * this file. Each tier is PRE-RENDERED once to a tiny offscreen canvas —
+ * shadowBlur is one of the most expensive canvas ops, and paying it per
+ * bullet per frame would chug on low-end phones.
+ */
+const BOLT_STYLE: { core: string; edge: string; w: number; len: number }[] = [
+  { core: '#ffffff', edge: '#6ee7ff', w: 5, len: 16 }, // tier 0
+  { core: '#ffffff', edge: '#22d3ee', w: 6, len: 20 }, // tier 1 — twin
+  { core: '#fff7d6', edge: '#ffd24a', w: 7, len: 24 }, // tier 2 — triple
+]
+const BOLT_PAD = 8 // room for the glow around the shape
+interface BoltSprite {
+  canvas: HTMLCanvasElement
+  w: number // logical (CSS px) size — the canvas itself is scaled by dpr
+  h: number
+}
+function makeBoltSprites(dpr: number): BoltSprite[] {
+  return BOLT_STYLE.map((s) => {
+    const w = s.w + BOLT_PAD * 2
+    const h = s.len + BOLT_PAD * 2
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.ceil(w * dpr)
+    canvas.height = Math.ceil(h * dpr)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return { canvas, w, h }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    // Draw centered: bolt tip toward the top, tail toward the bottom.
+    const cx = w / 2
+    const top = BOLT_PAD
+    const bottom = BOLT_PAD + s.len
+    ctx.shadowColor = s.edge
+    ctx.shadowBlur = 7
+    const grad = ctx.createLinearGradient(cx, bottom, cx, top)
+    grad.addColorStop(0, 'rgba(255,255,255,0)')
+    grad.addColorStop(0.55, s.edge)
+    grad.addColorStop(1, s.core)
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.moveTo(cx - s.w / 2, bottom)
+    ctx.lineTo(cx - s.w / 2, top + s.len * 0.3)
+    ctx.quadraticCurveTo(cx, top, cx + s.w / 2, top + s.len * 0.3)
+    ctx.lineTo(cx + s.w / 2, bottom)
+    ctx.closePath()
+    ctx.fill()
+    return { canvas, w, h }
+  })
+}
+function drawBolt(ctx: CanvasRenderingContext2D, sprites: BoltSprite[], x: number, y: number, tier: number) {
+  const s = sprites[Math.min(2, tier)]
+  // Anchor roughly where the old rect bolt sat: centered on x, tip above y.
+  ctx.drawImage(s.canvas, x - s.w / 2, y - s.h * 0.6, s.w, s.h)
+}
 
 // ---------- entity types (plain objects held in refs, never React state) ----------
 interface P { x: number; y: number; vx: number; vy: number }
 interface Bullet extends P { r: number }
-interface Enemy extends P { r: number; hp: number; kind: number; fires: boolean; fireMs: number; boss: boolean; score: number }
-interface Pickup extends P { r: number; kind: 'salvage' | 'core' | 'shield' }
+/** Player shot — remembers the weapon tier it was FIRED at, so an in-flight
+ *  bolt keeps its look when the pickup expires mid-flight. */
+interface PlayerBullet extends Bullet { tier: number }
+interface Enemy extends P { r: number; hp: number; kind: number; fires: boolean; fireMs: number; boss: boolean; score: number; maxHp?: number }
+interface Pickup extends P { r: number; kind: 'weapon' | 'core' | 'shield' }
 interface Debris extends P { r: number; hp: number; spin: number; rot: number }
 interface Particle extends P { life: number; max: number; color: string; r: number }
+interface Boom extends P { r: number; t: number; dur: number }
 interface Star { x: number; y: number; z: number }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
+
+// Temporary firepower tier from a weapon pickup: renews on pickup (doesn't
+// stack duration), decays to base abruptly when it runs out (a clear, readable
+// countdown rather than a fiddly per-tier fade).
+const WEAPON_DURATION_MS = 8000
+const WEAPON_FIRE_MS = [180, 150, 130] // faster reload each tier
+// A short kill streak within this window builds a score multiplier — skill
+// expression only (score never feeds the band/reward calc — see computeBand in
+// engine/spaceShooter.ts — so this is purely cosmetic/bragging-rights safe).
+const COMBO_WINDOW_MS = 1400
+function comboMult(combo: number): number {
+  return combo >= 15 ? 3 : combo >= 8 ? 2 : combo >= 4 ? 1.5 : 1
+}
 
 // ---------- the canvas game (own rAF loop; mounts only while playing) ----------
 function ShooterCanvas({
@@ -132,6 +224,7 @@ function ShooterCanvas({
     let W = 0
     let H = 0
     const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const boltSprites = makeBoltSprites(dpr)
     function resize() {
       const rect = canvas!.getBoundingClientRect()
       W = Math.max(1, rect.width)
@@ -144,13 +237,14 @@ function ShooterCanvas({
     window.addEventListener('resize', resize)
 
     // world
-    const player = { x: W / 2, y: H - 74, r: 16, shields: maxShields, invMs: 0, fireMs: 0, flash: 0 }
-    const bullets: Bullet[] = []
+    const player = { x: W / 2, y: H - 74, r: 16, shields: maxShields, invMs: 0, fireMs: 0, flash: 0, weaponTier: 0, weaponMs: 0 }
+    const bullets: PlayerBullet[] = []
     const enemies: Enemy[] = []
     const eBullets: Bullet[] = []
     const debris: Debris[] = []
     const pickups: Pickup[] = []
     const parts: Particle[] = []
+    const booms: Boom[] = []
     const stars: Star[] = Array.from({ length: 80 }, () => ({ x: rand(0, W), y: rand(0, H), z: rand(0.3, 1) }))
 
     let elapsed = 0
@@ -162,6 +256,33 @@ function ShooterCanvas({
     let enemiesDestroyed = 0
     let salvageCollected = 0
     let finished = false
+
+    // combo + juice state
+    let combo = 0
+    let comboMs = 0
+    let shakeMs = 0
+    let shakeDur = 0
+    let shakeMag = 0
+    let hitStopMs = 0
+
+    function addShake(ms: number, mag: number) {
+      shakeMs = ms
+      shakeDur = ms
+      shakeMag = mag
+    }
+    function addHitStop(ms: number) {
+      hitStopMs = Math.max(hitStopMs, ms)
+    }
+    function spawnBoom(x: number, y: number, r: number) {
+      booms.push({ x, y, vx: 0, vy: 0, r, t: 0, dur: 0.42 })
+    }
+    function registerKill(): number {
+      // Returns the multiplier for THIS kill's score, then extends the streak.
+      const mult = comboMult(combo)
+      combo += 1
+      comboMs = COMBO_WINDOW_MS
+      return mult
+    }
 
     // input
     const keys = new Set<string>()
@@ -210,6 +331,10 @@ function ShooterCanvas({
       player.flash = 1
       haptic(30)
       spawnParticles(player.x, player.y, '#6ee7ff', 14)
+      addShake(180, 6)
+      addHitStop(70)
+      combo = 0 // a hit breaks the streak — mirrors the shield-loss stakes
+      comboMs = 0
       if (player.shields <= 0) end(false)
     }
     function end(survived: boolean) {
@@ -246,13 +371,15 @@ function ShooterCanvas({
       })
     }
     function spawnBoss() {
+      const hp = 18 + stage.number * 4
       enemies.push({
         x: W / 2,
         y: -70,
         vx: 40,
         vy: d.fallSpeed * 0.35,
         r: 48,
-        hp: 18 + stage.number * 4,
+        hp,
+        maxHp: hp,
         kind: 0,
         fires: true,
         fireMs: 800,
@@ -266,13 +393,32 @@ function ShooterCanvas({
     }
     function spawnPickup() {
       const roll = Math.random()
-      const kind: Pickup['kind'] = roll < 0.25 ? 'shield' : roll < 0.6 ? 'core' : 'salvage'
+      const kind: Pickup['kind'] = roll < 0.25 ? 'shield' : roll < 0.6 ? 'core' : 'weapon'
       const r = 14
       pickups.push({ x: rand(r, W - r), y: -r, vx: 0, vy: 70, r, kind })
     }
 
     function update(dt: number) {
       elapsed += dt
+      const dtm = dt * 1000
+
+      // combo decay
+      if (comboMs > 0) {
+        comboMs -= dtm
+        if (comboMs <= 0) combo = 0
+      }
+      // screen-shake decay
+      if (shakeMs > 0) shakeMs = Math.max(0, shakeMs - dtm)
+      // weapon tier countdown — abrupt drop to base once it runs out (a fresh
+      // pickup is always required to keep firepower up, so it stays a choice).
+      if (player.weaponTier > 0) {
+        player.weaponMs -= dtm
+        if (player.weaponMs <= 0) {
+          player.weaponTier = 0
+          player.weaponMs = 0
+        }
+      }
+
       // stars
       for (const s of stars) {
         s.y += (30 + s.z * 90) * dt
@@ -282,7 +428,6 @@ function ShooterCanvas({
         }
       }
       // spawns (timers in ms)
-      const dtm = dt * 1000
       enemyT -= dtm
       if (enemyT <= 0) {
         spawnEnemy()
@@ -324,16 +469,29 @@ function ShooterCanvas({
       if (player.invMs > 0) player.invMs -= dtm
       if (player.flash > 0) player.flash = Math.max(0, player.flash - dt * 3)
 
-      // auto-fire (always on; Space also counts as held)
+      // auto-fire (always on; Space also counts as held) — bullet count + spread
+      // scale with weapon tier (0 = single, 1 = twin, 2 = triple spread).
       player.fireMs -= dtm
       if (player.fireMs <= 0) {
-        bullets.push({ x: player.x, y: player.y - player.r - 2, vx: 0, vy: -560, r: 4 })
-        player.fireMs = 180
+        const tier = player.weaponTier
+        const y0 = player.y - player.r - 2
+        if (tier === 0) {
+          bullets.push({ x: player.x, y: y0, vx: 0, vy: -560, r: 4, tier })
+        } else if (tier === 1) {
+          bullets.push({ x: player.x - 6, y: y0, vx: 0, vy: -560, r: 4, tier })
+          bullets.push({ x: player.x + 6, y: y0, vx: 0, vy: -560, r: 4, tier })
+        } else {
+          bullets.push({ x: player.x, y: y0, vx: 0, vy: -580, r: 4, tier })
+          bullets.push({ x: player.x - 7, y: y0, vx: -70, vy: -550, r: 4, tier })
+          bullets.push({ x: player.x + 7, y: y0, vx: 70, vy: -550, r: 4, tier })
+        }
+        player.fireMs = WEAPON_FIRE_MS[Math.min(2, tier)]
       }
 
       // player bullets
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i]
+        b.x += b.vx * dt
         b.y += b.vy * dt
         if (b.y < -10) {
           bullets.splice(i, 1)
@@ -347,11 +505,17 @@ function ShooterCanvas({
             bullets.splice(i, 1)
             spawnParticles(b.x, b.y, '#ffd24a', 3)
             if (e.hp <= 0) {
-              spawnParticles(e.x, e.y, e.boss ? '#ff7a18' : '#ff4d6d', e.boss ? 34 : 12)
+              const mult = registerKill()
+              spawnParticles(e.x, e.y, e.boss ? '#ff7a18' : '#ff4d6d', e.boss ? 20 : 8)
+              spawnBoom(e.x, e.y, e.boss ? e.r * 3.2 : e.r * 2.4)
               enemies.splice(j, 1)
               enemiesDestroyed += 1
-              score += e.score
-              if (e.boss) haptic(45)
+              score += Math.round(e.score * mult)
+              if (e.boss) {
+                haptic(45)
+                addShake(260, 10)
+                addHitStop(140)
+              }
             }
             break
           }
@@ -367,9 +531,11 @@ function ShooterCanvas({
             bullets.splice(i, 1)
             spawnParticles(b.x, b.y, '#cbd5e1', 3)
             if (a.hp <= 0) {
-              spawnParticles(a.x, a.y, '#94a3b8', 14)
+              const mult = registerKill()
+              spawnParticles(a.x, a.y, '#94a3b8', 8)
+              spawnBoom(a.x, a.y, a.r * 2.2)
               debris.splice(j, 1)
-              score += 40
+              score += Math.round(40 * mult)
             }
             break
           }
@@ -453,13 +619,29 @@ function ShooterCanvas({
           if (p.kind === 'shield') {
             if (player.shields < maxShields) player.shields += 1
             spawnParticles(p.x, p.y, '#46d369', 12)
+          } else if (p.kind === 'weapon') {
+            // Renews (doesn't stack duration) and bumps the tier by one, capped
+            // at 2 — repeat pickups keep firepower topped up, not infinite.
+            player.weaponTier = Math.min(2, player.weaponTier + 1)
+            player.weaponMs = WEAPON_DURATION_MS
+            salvageCollected += 1
+            score += 80
+            spawnParticles(p.x, p.y, '#ffd24a', 14)
+            haptic(18)
           } else {
             salvageCollected += 1
-            score += p.kind === 'core' ? 180 : 120
+            score += 180
             spawnParticles(p.x, p.y, '#ffd24a', 10)
           }
-          haptic(12)
+          if (p.kind !== 'weapon') haptic(12)
         }
+      }
+
+      // explosion animations (one-shot, not looping)
+      for (let i = booms.length - 1; i >= 0; i--) {
+        const b = booms[i]
+        b.t += dt
+        if (b.t >= b.dur) booms.splice(i, 1)
       }
 
       // particles
@@ -483,6 +665,16 @@ function ShooterCanvas({
       // background
       ctx!.fillStyle = '#070b1a'
       ctx!.fillRect(0, 0, W, H)
+
+      // World layer: everything that should shake gets drawn inside this
+      // save/translate/restore pair. HUD (below) is drawn AFTER restore so it
+      // stays pinned and readable even during a big hit/boss-kill shake.
+      ctx!.save()
+      if (shakeMs > 0) {
+        const k = shakeDur > 0 ? shakeMs / shakeDur : 0
+        ctx!.translate((Math.random() * 2 - 1) * shakeMag * k, (Math.random() * 2 - 1) * shakeMag * k)
+      }
+
       ctx!.fillStyle = '#9fb4e0'
       for (const s of stars) {
         ctx!.globalAlpha = 0.4 + s.z * 0.6
@@ -493,9 +685,9 @@ function ShooterCanvas({
       // pickups (spinning salvage)
       const frame = Math.floor(elapsed * 12)
       for (const p of pickups) {
-        const rec = p.kind === 'shield' ? bank.shield : p.kind === 'core' ? bank.core : bank.salvage
+        const rec = p.kind === 'shield' ? bank.shield : p.kind === 'core' ? bank.core : bank.weapon
         if (!drawSpin(ctx!, rec, frame, p.x, p.y, p.r * 2.2)) {
-          ctx!.fillStyle = p.kind === 'shield' ? '#46d369' : '#ffd24a'
+          ctx!.fillStyle = p.kind === 'shield' ? '#46d369' : p.kind === 'weapon' ? '#ff9f1c' : '#ffd24a'
           ctx!.beginPath()
           ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2)
           ctx!.fill()
@@ -537,10 +729,10 @@ function ShooterCanvas({
         }
       }
 
-      // player bullets
-      ctx!.fillStyle = '#6ee7ff'
+      // player bullets — glowing "warped" bolts, escalating with weapon tier
+      // (each bolt keeps the tier it was fired at — see PlayerBullet)
       for (const b of bullets) {
-        ctx!.fillRect(b.x - b.r / 2, b.y - 8, b.r, 12)
+        drawBolt(ctx!, boltSprites, b.x, b.y, b.tier)
       }
 
       // player (hull damage state by shields left)
@@ -560,6 +752,16 @@ function ShooterCanvas({
         }
       }
 
+      // explosion animations (drawn over the wreckage they came from). No shape
+      // fallback needed on a failed asset load — spawnParticles() already fires
+      // at the same moment, so the kill still reads.
+      for (const b of booms) {
+        const t = Math.min(1, b.t / b.dur)
+        const frame = Math.floor(t * 8)
+        const size = b.r * (1 + t * 0.25) // a touch of expansion reads as punchier
+        drawExplosionFrame(ctx!, bank.explosion, frame, b.x, b.y, size)
+      }
+
       // particles
       for (const p of parts) {
         ctx!.globalAlpha = Math.max(0, 1 - p.life / p.max)
@@ -569,6 +771,8 @@ function ShooterCanvas({
         ctx!.fill()
       }
       ctx!.globalAlpha = 1
+
+      ctx!.restore() // end world/shake layer — HUD below is always screen-locked
 
       // ---------- HUD ----------
       // extraction progress bar (top)
@@ -581,6 +785,22 @@ function ShooterCanvas({
       ctx!.font = '600 11px system-ui, sans-serif'
       ctx!.textAlign = 'center'
       ctx!.fillText(`EXTRACTION ${Math.floor(pct * 100)}%`, W / 2, 32)
+
+      // boss health bar (only while a boss is alive) — readability for the
+      // stage 4/5 set-piece fights, which previously had zero HP feedback.
+      const boss = enemies.find((e) => e.boss)
+      if (boss && boss.maxHp) {
+        const bpct = Math.max(0, boss.hp / boss.maxHp)
+        ctx!.fillStyle = '#cbd5e1'
+        ctx!.font = '700 10px system-ui, sans-serif'
+        ctx!.textAlign = 'center'
+        ctx!.fillText('DREADNOUGHT', W / 2, 46)
+        ctx!.fillStyle = 'rgba(255,255,255,0.12)'
+        ctx!.fillRect(W / 2 - 70, 50, 140, 5)
+        ctx!.fillStyle = bpct > 0.3 ? '#ff7a18' : '#f43f5e'
+        ctx!.fillRect(W / 2 - 70, 50, 140 * bpct, 5)
+      }
+
       // shields (top-left pips)
       ctx!.textAlign = 'left'
       for (let i = 0; i < maxShields; i++) {
@@ -589,18 +809,38 @@ function ShooterCanvas({
         ctx!.arc(18 + i * 16, 46, 5, 0, Math.PI * 2)
         ctx!.fill()
       }
-      // score (top-right)
+      // weapon tier (below shields) — only while a pickup is active
+      if (player.weaponTier > 0) {
+        const label = player.weaponTier === 1 ? 'WPN II' : 'WPN III'
+        ctx!.fillStyle = '#ff9f1c'
+        ctx!.font = '700 9px system-ui, sans-serif'
+        ctx!.fillText(label, 18, 66)
+        const wfrac = Math.max(0, player.weaponMs / WEAPON_DURATION_MS)
+        ctx!.fillStyle = 'rgba(255,255,255,0.15)'
+        ctx!.fillRect(18, 70, 46, 3)
+        ctx!.fillStyle = '#ff9f1c'
+        ctx!.fillRect(18, 70, 46 * wfrac, 3)
+      }
+
+      // score (top-right) + combo streak just under it
+      ctx!.textAlign = 'right'
       ctx!.fillStyle = '#ffd24a'
       ctx!.font = '700 14px system-ui, sans-serif'
-      ctx!.textAlign = 'right'
       ctx!.fillText(String(score), W - 12, 50)
+      if (combo >= 4) {
+        const mult = comboMult(combo)
+        ctx!.fillStyle = '#ff9f1c'
+        ctx!.font = '700 11px system-ui, sans-serif'
+        ctx!.fillText(`${combo} STREAK ×${mult}`, W - 12, 66)
+      }
+
       // one-time control hint
       if (elapsed < 3) {
         ctx!.globalAlpha = Math.max(0, 1 - elapsed / 3)
         ctx!.fillStyle = '#e8f0ff'
         ctx!.font = '600 12px system-ui, sans-serif'
         ctx!.textAlign = 'center'
-        ctx!.fillText('Drag to move · auto-fire on', W / 2, H - 18)
+        ctx!.fillText('Drag to move · auto-fire on · grab weapon crates', W / 2, H - 18)
         ctx!.globalAlpha = 1
       }
     }
@@ -611,6 +851,15 @@ function ShooterCanvas({
       if (finished) return
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
+      if (hitStopMs > 0) {
+        // A brief freeze-frame on big impacts (boss kill, taking a hit) — the
+        // world holds still for a beat instead of everything updating through
+        // it, which reads as much punchier than a plain particle burst alone.
+        hitStopMs -= dt * 1000
+        render()
+        raf = requestAnimationFrame(frame)
+        return
+      }
       update(dt)
       if (!finished) render()
       raf = requestAnimationFrame(frame)
