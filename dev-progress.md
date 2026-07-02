@@ -4,6 +4,27 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Managers as unlockables + EA story arc + romance visibility (in slices)
+
+User asks: (1) romance episodes never appear — surface them + next-date to 6 min; (2) the
+EA/Chief time Steppers are laggy/multi-click; (3) make the managers UNLOCKABLE — Chief hired
+in the Staff section, EA won via a 3-episode mogul-story arc (rival CEO's assistant) that
+starts on first Investment Fund unlock, "court all 3 then poach", after which the EA sits by
+the Spend Cash button and auto-collects a Board Advisor Fee at 100% (toggle). Mapped every
+seam via a 5-agent understand workflow first.
+
+**Slice A — romance visibility + stepper lag.**
+- Romance root cause: strict round-robin in `tickAngelDeal` made an eligible romance episode
+  1-of-~7 pitches → surfaced ~once every 90 min. Fix: the tick now PREFERS any eligible arc
+  (romance) episode over the repeatable business pitches, so the finite love arc actually
+  shows; business pitches resume between/after episodes. `ROMANCE_NEXT_DATE_MS` 8→6 min.
+- Stepper lag root cause: the `−/＋` `Btn` was a component defined INSIDE `Stepper`, so it got
+  a new type identity every render; the modal re-renders ~7 Hz from the loop publish, so React
+  was unmounting+remounting both buttons continuously and taps landing mid-remount were
+  dropped ("takes multiple clicks"). Fix: render them as inline `<button>`s (stable identity).
+- 420 tests (+1 romance-preference, 1 rotation test re-scoped), build + oxlint clean;
+  browser-verified deliberate stepper clicks now increment reliably (5→6→7).
+
 ## Events: rarer but deeper (frequency rebalance + Momentum combo + meaningful choices)
 
 User feedback: the three tap-to-collect events (Rush Hour, Golden Deal, Event Cards) are

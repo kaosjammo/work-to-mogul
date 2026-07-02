@@ -34,25 +34,33 @@ function Switch({ label, hint, on, onToggle }: { label: string; hint: string; on
 /** A −/＋ stepper row for a bounded numeric setting. */
 function Stepper({ label, value, suffix, min, max, step, onChange }: { label: string; value: number; suffix: string; min: number; max: number; step: number; onChange: (v: number) => void }) {
   const clamp = (v: number) => Math.max(min, Math.min(max, v))
-  const Btn = ({ d, sym }: { d: number; sym: string }) => (
-    <button
-      type="button"
-      onClick={() => onChange(clamp(value + d))}
-      disabled={clamp(value + d) === value}
-      className="btn btn-secondary btn-sm shrink-0"
-      style={{ minWidth: 40, opacity: clamp(value + d) === value ? 0.4 : 1 }}
-      aria-label={`${sym} ${label}`}
-    >
-      {sym}
-    </button>
-  )
+  // Render the −/＋ as plain <button>s via a helper that RETURNS JSX — NOT a nested
+  // <Btn/> component. A component defined inside Stepper gets a new type identity every
+  // render, and this modal re-renders ~7Hz from the loop publish, so React was unmounting
+  // + remounting both buttons continuously → taps landing mid-remount were dropped, which
+  // read as "laggy / takes multiple clicks to adjust". Inlined buttons keep stable identity.
+  const stepBtn = (d: number, sym: string) => {
+    const atLimit = clamp(value + d) === value
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(clamp(value + d))}
+        disabled={atLimit}
+        className="btn btn-secondary btn-sm shrink-0"
+        style={{ minWidth: 40, opacity: atLimit ? 0.4 : 1 }}
+        aria-label={`${sym} ${label}`}
+      >
+        {sym}
+      </button>
+    )
+  }
   return (
     <div className="list-row justify-between px-3 py-2">
       <span className="text-sm" style={{ color: 'var(--text-dim)' }}>{label}</span>
       <span className="flex items-center gap-2">
-        <Btn d={-step} sym="−" />
+        {stepBtn(-step, '−')}
         <span className="tnum w-16 text-center text-sm font-bold">{value}{suffix}</span>
-        <Btn d={step} sym="＋" />
+        {stepBtn(step, '＋')}
       </span>
     </div>
   )

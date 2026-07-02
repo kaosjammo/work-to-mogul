@@ -39,7 +39,7 @@ export const ROMANCE_MIN_CASH = 1_000_000
 
 /** After a successful date, the next episode offers sooner than the usual story
  *  cadence — momentum matters in a courtship. */
-export const ROMANCE_NEXT_DATE_MS = 8 * 60_000
+export const ROMANCE_NEXT_DATE_MS = 6 * 60_000
 
 // ── Marriage money-sink tuning ────────────────────────────────────────────────
 export const MARRIAGE_MAX_LEVEL = 20

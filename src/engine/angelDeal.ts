@@ -212,8 +212,14 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
   // courtship momentum must actually surface the courtship, not a business pitch.
   const nextDate = a.nextIsDate ? eligible.find((s) => isRomanceStory(s.id)) : undefined
   a.nextIsDate = false
-  // Otherwise rotate through the eligible stories by completions so pitches vary.
-  a.storyId = (nextDate ?? eligible[a.completedCount % eligible.length]).id
+  // Arc episodes (the love story) are RARE, one-time, non-repeatable content. In a strict
+  // round-robin they were 1-of-~7 eligible pitches, so a Finance player almost never saw
+  // them (~once every 90 min). PREFER any eligible arc episode over the repeatable business
+  // pitches so the arc actually surfaces; business pitches resume between/after episodes.
+  const arcEpisodes = eligible.filter((s) => isRomanceStory(s.id))
+  const preferred =
+    nextDate ?? (arcEpisodes.length > 0 ? arcEpisodes[a.completedCount % arcEpisodes.length] : undefined)
+  a.storyId = (preferred ?? eligible[a.completedCount % eligible.length]).id
   a.offered = true // cooldown elapsed → a pitch is waiting
 }
 

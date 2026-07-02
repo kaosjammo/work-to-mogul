@@ -275,16 +275,27 @@ describe('Mogul Story #2 — The Lease (Retail): shared runtime, generic resolut
     expect(storyEligible(noRetail, LEASE_SHOWDOWN)).toBe(false)
   })
 
-  it('a Retail-only player is offered the lease (rotation picks an eligible story)', () => {
+  it('a Retail-only player is offered the lease (business rotation picks an eligible story)', () => {
     const s = retailState()
-    // Eligible: the Retail story + the first romance episode (relationship-gated,
-    // industry-free). Registry order puts the lease first, so completion 0 offers it.
+    // Romance (arc) episodes are now PREFERRED over business pitches, so isolate the
+    // business rotation by completing the love arc (married → no romance episode eligible).
+    s.romance.married = true
+    s.romance.stage = 4
     const ids = eligibleStories(s).map((x) => x.id)
-    expect(ids).toContain(LEASE_SHOWDOWN.id)
-    expect(ids.filter((id) => !id.startsWith('love_'))).toEqual([LEASE_SHOWDOWN.id])
+    expect(ids).toEqual([LEASE_SHOWDOWN.id]) // only the Retail story remains
     tickAngelDeal(s, ANGEL_FIRST_OFFER_MS + 1)
     expect(s.angelDeal.offered).toBe(true)
     expect(s.angelDeal.storyId).toBe(LEASE_SHOWDOWN.id)
+  })
+
+  it('an eligible romance episode is PREFERRED over business pitches (surfaces the arc)', () => {
+    const s = retailState() // owns Retail + >$1M → both the lease AND love_spark are eligible
+    const ids = eligibleStories(s).map((x) => x.id)
+    expect(ids).toContain(LEASE_SHOWDOWN.id)
+    expect(ids).toContain('love_spark')
+    tickAngelDeal(s, ANGEL_FIRST_OFFER_MS + 1)
+    expect(s.angelDeal.offered).toBe(true)
+    expect(s.angelDeal.storyId).toBe('love_spark') // the rare arc episode wins the slot
   })
 
   it('a great lease boosts RETAIL (not Finance) and never unlocks the Combinator', () => {
