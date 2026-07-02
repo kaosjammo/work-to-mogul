@@ -22,6 +22,14 @@ function isArcStory(id: string): boolean {
   return isRomanceStory(id) || isEaStory(id)
 }
 
+/** Record a resolved story in the player's re-readable Log (unique, in completion
+ *  order). Only reached on a PLAYER resolve → the greedy sim bot never runs this, so
+ *  storyLog stays empty in the harness and income is byte-identical. */
+function recordStory(state: GameState, storyId: string): void {
+  if (!Array.isArray(state.storyLog)) state.storyLog = []
+  if (!state.storyLog.includes(storyId)) state.storyLog.push(storyId)
+}
+
 export type OutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 
 export const FINANCE_INDUSTRY_ID = 'finance'
@@ -374,6 +382,7 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       a.payout = applyOutcome(state, band, false)
     }
     a.completedCount += 1
+    recordStory(state, a.storyId)
     return true
   }
   if (choice.next === 'walkaway') {
@@ -390,6 +399,7 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       a.payout = applyOutcome(state, 'neutral', disciplined)
     }
     a.completedCount += 1
+    recordStory(state, a.storyId)
     return true
   }
   if (story.stages[choice.next]) {

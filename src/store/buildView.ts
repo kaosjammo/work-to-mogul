@@ -70,16 +70,17 @@ import {
 } from '../engine/logistics'
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { ANGEL_DEAL } from '../content/angelDeal'
-import { getMogulStory, type MogulStoryHintCopy } from '../content/mogulStories'
+import { getMogulStory, MOGUL_STORY_BY_ID, type MogulStoryHintCopy } from '../content/mogulStories'
 import {
   PARTNER_NAME,
   MARRIAGE_MAX_LEVEL,
   MARRIAGE_TITLES,
   marriageDrainFraction,
   marriageLevelUpCost,
+  isRomanceStory,
 } from '../engine/romance'
 import { automationEligible, chiefUnlockCost } from '../engine/automation'
-import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa } from '../engine/execAssistant'
+import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa, isEaStory } from '../engine/execAssistant'
 import { COMBINATOR_ID } from '../content/businesses'
 import { EXIT_INTERVAL_MS } from '../engine/angelDeal'
 import type { AngelScores, AngelOutcomeBand } from '../types/domain'
@@ -479,6 +480,7 @@ export interface FoodFrenzyView {
   buffSecondsLeft: number
   buffPct: number // e.g. 50 for a ×1.5 buff
   bestScore: number // best score for the targeted tier
+  bestScores: number[] // best score per tier (for the Log's replay picker)
   runsPlayed: number
 }
 
@@ -498,7 +500,28 @@ export interface SpaceShooterView {
   buffSecondsLeft: number
   buffPct: number // e.g. 50 for a ×1.5 buff
   bestScore: number // best score for the current next stage
+  bestScores: number[] // best score per stage (for the Log's replay picker)
+  missionsPlayed: number // lifetime missions launched (drives the Log's "played it" gate)
   ownsSpace: boolean
+}
+
+/** One re-readable story in the Log (a completed Mogul / romance / EA episode). */
+export interface StoryLogItem {
+  id: string
+  title: string
+  subject: string
+  icon: string
+  protagonist: string
+  kind: 'romance' | 'ea' | 'mogul' // grouping for the Log
+}
+
+/** The Log — the player's scrapbook of past mini-games + stories, opened from 📜 Log. */
+export interface LogView {
+  hasContent: boolean // any loggable history yet (drives the button's visibility)
+  stories: StoryLogItem[] // completed stories, most-recent first
+  romanceCount: number
+  eaCount: number
+  mogulCount: number
 }
 
 /** Reveal thresholds for the onboarding staged reveal (lifetime earnings). */
@@ -524,6 +547,7 @@ export interface ViewSnapshot {
   eventCard: EventCardView | null
   spaceShooter: SpaceShooterView
   foodFrenzy: FoodFrenzyView
+  log: LogView
   daily: {
     available: boolean
     dayIndex: number // today's local-day index (keys per-day UI dismissals)
@@ -1211,6 +1235,8 @@ export function buildView(
     buffSecondsLeft: Math.ceil((ssState?.buffMsLeft ?? 0) / 1000),
     buffPct: Math.round(((ssState?.buffMult ?? 1) - 1) * 100),
     bestScore: ssNextIdx >= 0 ? (ssState?.bestScores?.[ssNextIdx] ?? 0) : 0,
+    bestScores: [...(ssState?.bestScores ?? [])],
+    missionsPlayed: ssState?.missionsPlayed ?? 0,
     ownsSpace: ownsSpace(state),
   }
 
@@ -1231,7 +1257,30 @@ export function buildView(
     buffSecondsLeft: Math.ceil((ffState?.buffMsLeft ?? 0) / 1000),
     buffPct: Math.round(((ffState?.buffMult ?? 1) - 1) * 100),
     bestScore: ffState?.bestScores?.[ffTier.index] ?? 0,
+    bestScores: [...(ffState?.bestScores ?? [])],
     runsPlayed: ffState?.runsPlayed ?? 0,
+  }
+
+  // The Log — completed stories (most-recent first) + whether there's any history to show.
+  const stories: StoryLogItem[] = (state.storyLog ?? [])
+    .map((id) => MOGUL_STORY_BY_ID[id])
+    .filter((def): def is NonNullable<typeof def> => def != null)
+    .map((def) => ({
+      id: def.id,
+      title: def.title,
+      subject: def.subject,
+      icon: def.icon ?? '💼',
+      protagonist: def.protagonist,
+      kind: (isRomanceStory(def.id) ? 'romance' : isEaStory(def.id) ? 'ea' : 'mogul') as StoryLogItem['kind'],
+    }))
+    .reverse()
+  const log: LogView = {
+    hasContent:
+      stories.length > 0 || (ssState?.missionsPlayed ?? 0) > 0 || (ffState?.runsPlayed ?? 0) > 0,
+    stories,
+    romanceCount: stories.filter((s) => s.kind === 'romance').length,
+    eaCount: stories.filter((s) => s.kind === 'ea').length,
+    mogulCount: stories.filter((s) => s.kind === 'mogul').length,
   }
 
   const contracts: ContractView[] = (state.contracts?.active ?? [])
@@ -1340,6 +1389,7 @@ export function buildView(
     eventCard,
     spaceShooter,
     foodFrenzy,
+    log,
     daily,
     contracts,
     contractsClaimable,

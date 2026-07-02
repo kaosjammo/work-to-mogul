@@ -7,6 +7,7 @@ import {
   useBuyMode,
   useAutomation,
   useRomance,
+  useLog,
 } from '../../store/gameStore'
 import { useUiStore } from '../../store/uiStore'
 import { INDUSTRIES } from '../../content/industries'
@@ -136,8 +137,10 @@ export function BusinessesScreen() {
   const buyMode = useBuyMode()
   const automation = useAutomation()
   const romance = useRomance()
+  const log = useLog()
   const openAutomation = useUiStore((s) => s.openAutomation)
   const openMarriage = useUiStore((s) => s.openMarriage)
+  const openLog = useUiStore((s) => s.openLog)
 
   if (!ind || !industryView) return null
 
@@ -259,6 +262,16 @@ export function BusinessesScreen() {
               title={romance.drainPct > 0 ? `Lifestyle upkeep: ${romance.drainPct}% of income` : 'Married — no upkeep yet'}
             >
               💍 Married{romance.drainPct > 0 ? ` · ${romance.drainPct}%` : ''}
+            </button>
+          )}
+          {log.hasContent && (
+            <button
+              type="button"
+              onClick={() => openLog()}
+              className="btn btn-secondary btn-sm"
+              title="The Log — replay a mini-game or re-read a past story"
+            >
+              📜 Log
             </button>
           )}
           {hasAnyBusiness && (

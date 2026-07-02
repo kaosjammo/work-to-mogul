@@ -636,6 +636,7 @@ type Phase = 'briefing' | 'playing' | 'outcome'
 
 export function FoodFrenzyGame() {
   const open = useUiStore((s) => s.foodFrenzyOpen)
+  const replay = useUiStore((s) => s.frenzyReplay) // number | null — a chosen cleared tier to practice
   const ff = useFoodFrenzy()
   const [phase, setPhase] = useState<Phase>('briefing')
   const [result, setResult] = useState<FrenzyResult | null>(null)
@@ -651,18 +652,19 @@ export function FoodFrenzyGame() {
     }
   }, [open])
 
-  const briefTier = FOOD_FRENZY_TIERS[ff.tierIndex]
+  const briefIndex = replay ?? ff.tierIndex
+  const briefTier = FOOD_FRENZY_TIERS[briefIndex]
   const playedTier = playIndex >= 0 ? FOOD_FRENZY_TIERS[playIndex] : undefined
   const tier = phase === 'briefing' ? briefTier : playedTier
 
   const handleEnd = useCallback(
     (metrics: FrenzyMetrics) => {
       setLevelChoices(null)
-      const r = completeFrenzyRun(playIndex, metrics)
+      const r = completeFrenzyRun(playIndex, metrics, replay != null)
       setResult(r)
       setPhase('outcome')
     },
-    [playIndex],
+    [playIndex, replay],
   )
   const handleLevelUp = useCallback((opts: FrenzyUpgradeDef[], choose: (id: string) => void) => {
     chooseRef.current = choose
@@ -672,12 +674,13 @@ export function FoodFrenzyGame() {
   if (!open || !tier) return null
 
   const close = () => useUiStore.getState().closeFoodFrenzy()
+  // A practice replay never re-gates the live rush cooldown — backing out is a pure close.
   const walkAway = () => {
-    abortFrenzyRun()
+    if (replay == null) abortFrenzyRun()
     close()
   }
   const start = () => {
-    setPlayIndex(ff.tierIndex)
+    setPlayIndex(briefIndex)
     setPhase('playing')
   }
   const pick = (id: string) => {
@@ -696,7 +699,7 @@ export function FoodFrenzyGame() {
       <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+10px)] pb-2">
         <div className="min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#f5c518' }}>
-            Lunch Rush · Tier {tier.index + 1}/{ff.totalTiers}
+            Lunch Rush · Tier {tier.index + 1}/{ff.totalTiers}{replay != null ? ' · Replay' : ''}
           </div>
           <div className="truncate text-lg font-black">{tier.name}</div>
         </div>

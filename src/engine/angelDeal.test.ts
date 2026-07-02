@@ -211,6 +211,26 @@ describe('Angel Deal — flow + resolution', () => {
   })
 })
 
+describe('Story Log — resolving a story records it for re-reading', () => {
+  it('records the resolved story id (invest AND walk-away), uniquely', () => {
+    const s = eligibleState()
+    expect(s.storyLog).toEqual([]) // nothing lived through yet
+
+    // Invest → the Angel story is logged once.
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    chooseAngelChoice(s, 'dec_invest', new Set())
+    expect(s.storyLog).toContain(ANGEL_DEAL.id)
+    expect(s.storyLog.filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
+
+    // A second resolve of the SAME story does not duplicate the entry.
+    s.angelDeal.active = true
+    s.angelDeal.stageId = 'decision'
+    chooseAngelChoice(s, 'dec_walk', new Set())
+    expect(s.storyLog.filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
+  })
+})
+
 describe('Angel Deal — trigger + economy folds', () => {
   it('offers a pitch only when eligible + after the cooldown', () => {
     const s = eligibleState()

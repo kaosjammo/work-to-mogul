@@ -408,6 +408,7 @@ export interface GameState {
   milestonesReached: MilestoneId[]
   achievementsUnlocked: string[] // meta-progression; persists through prestige
   prestigeMilestonesClaimed: string[] // ascension-count rewards already granted
+  storyLog: string[] // Mogul/romance/EA story ids the player has completed (for the re-readable Log; persists through prestige)
   contracts: ContractsState // claimable missions board (persists through prestige)
   spaceShooter: SpaceShooterState // Space Salvage Shooter campaign (persists through prestige)
   foodFrenzy: FoodFrenzyState // Lunch Rush mini-game campaign (persists through prestige)

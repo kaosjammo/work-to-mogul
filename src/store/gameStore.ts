@@ -87,6 +87,7 @@ export const useQuantumSuperposition = () => useGameStore(useShallow((s) => s.qu
 export const useEventCard = () => useGameStore(useShallow((s) => s.eventCard))
 export const useSpaceShooter = () => useGameStore(useShallow((s) => s.spaceShooter))
 export const useFoodFrenzy = () => useGameStore(useShallow((s) => s.foodFrenzy))
+export const useLog = () => useGameStore(useShallow((s) => s.log))
 export const useDaily = () => useGameStore(useShallow((s) => s.daily))
 export const useContracts = () =>
   useGameStore(useShallow((s) => ({ list: s.contracts, claimable: s.contractsClaimable })))

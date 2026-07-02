@@ -17,6 +17,7 @@ import { FloatingFrenzySignal } from './ui/shared/FloatingFrenzySignal'
 import { FoodFrenzyGame } from './ui/shared/FoodFrenzyGame'
 import { AutomationModal } from './ui/shared/AutomationModal'
 import { MarriageModal } from './ui/shared/MarriageModal'
+import { LogModal } from './ui/shared/LogModal'
 import { DailyBonusModal } from './ui/shared/DailyBonusModal'
 import { AscensionCelebration } from './ui/shared/AscensionCelebration'
 import { WeddingCelebration } from './ui/shared/WeddingCelebration'
@@ -64,6 +65,7 @@ export function App() {
       <MogulStoryModal />
       <AutomationModal />
       <MarriageModal />
+      <LogModal />
       <CombinatorExitWatcher />
       <AscensionCelebration />
       <WeddingCelebration />

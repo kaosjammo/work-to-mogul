@@ -4,6 +4,36 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## The Log — replay mini-games + re-read past stories
+
+User ask: "have a 'log' button next to Spend cash after the first minigame event. there,
+players can either replay minigames they like (arcade shooter or vampire survivors) or view
+their previous mogul stories and marriage stories, recruitment stories etc."
+
+- New persisted `GameState.storyLog: string[]` (unique completed-story ids, in order). Recorded
+  in `angelDeal.chooseAngelChoice` on every resolve (invest + walk-away) — player-only path, so
+  the greedy sim bot never records → storyLog stays `[]` and income is byte-identical (harness
+  intact). Persists through prestige (a keepsake) + `serialize` restore (drops unregistered ids).
+  Added to the persistence-policy PERSISTED set.
+- Mini-game REPLAY: engine already made replaying a *cleared* stage/tier a reward-safe no-op
+  (`isNextStage`/`isNextTier` gate all rewards + advance — only best-score survives). Added a
+  UI-level replay route: uiStore `shooterReplay`/`frenzyReplay` (a chosen cleared index) +
+  `replaySpaceShooter`/`replayFoodFrenzy`; both mini-game components target the replay index for
+  briefing/launch and pass a `replay` flag to `completeSpaceMission`/`completeFrenzyRun`, which
+  snapshots+restores `cooldownUntil` so a practice run never re-gates the live campaign offer.
+  Backing out of a replay briefing is a pure close (no abort/cooldown). Header shows "· Replay".
+- The Log UI: `LogView` (`hasContent` + grouped `stories` + counts) in buildView; `useLog` hook;
+  `📜 Log` button in the main button-bar (shows once `hasContent`); `LogModal` with a Mini-games
+  shelf (per-stage/tier chips: cleared→▶replay + ★best, next→play, future→🔒) and a Stories shelf
+  (grouped Mogul / Romance / Recruitment) → a read-only `StoryReader` that steps the story's
+  stages (narration + speech, no choices). Exposed `bestScores`/`missionsPlayed` on the views.
+- Tests: storyLog recording (unique, invest + walk-away) in angelDeal.test; round-trip + unknown-id
+  filter in serialize.test; ascension-preserve in romance.test. 442 → 445 pass; build + oxlint clean.
+  Browser-verified: button gating, both shelves render, reader navigates, replay opens the shooter
+  in Replay mode at the chosen stage.
+
+---
+
 ## Managers as unlockables + EA story arc + romance visibility (in slices)
 
 User asks: (1) romance episodes never appear — surface them + next-date to 6 min; (2) the

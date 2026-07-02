@@ -894,6 +894,7 @@ type Phase = 'briefing' | 'playing' | 'outcome'
 
 export function SpaceSalvageShooter() {
   const open = useUiStore((s) => s.spaceShooterOpen)
+  const replay = useUiStore((s) => s.shooterReplay) // number | null — a chosen cleared stage to practice
   const ss = useSpaceShooter()
   const [phase, setPhase] = useState<Phase>('briefing')
   const [result, setResult] = useState<MissionResult | null>(null)
@@ -909,33 +910,37 @@ export function SpaceSalvageShooter() {
     }
   }, [open])
 
-  // Briefing targets the next incomplete stage; play/outcome stay pinned to playIndex.
-  const briefStage = ss.stageIndex >= 0 ? SPACE_SHOOTER_STAGE_BY_INDEX[ss.stageIndex] : undefined
+  // Briefing targets a REPLAY stage when the Log launched one, else the next incomplete
+  // stage; play/outcome stay pinned to playIndex.
+  const briefIndex = replay ?? ss.stageIndex
+  const briefStage = briefIndex >= 0 ? SPACE_SHOOTER_STAGE_BY_INDEX[briefIndex] : undefined
   const playedStage = playIndex >= 0 ? SPACE_SHOOTER_STAGE_BY_INDEX[playIndex] : undefined
   const stage = phase === 'briefing' ? briefStage : playedStage
 
   const handleEnd = useCallback(
     (metrics: MissionMetrics) => {
-      const r = completeSpaceMission(playIndex, metrics)
+      const r = completeSpaceMission(playIndex, metrics, replay != null)
       setResult(r)
       setPhase('outcome')
     },
-    [playIndex],
+    [playIndex, replay],
   )
 
   if (!open || !stage) return null
 
   const close = () => useUiStore.getState().closeSpaceShooter()
+  // A practice replay has no campaign stakes — backing out is a pure close (never re-arms
+  // the live salvage-signal cooldown). Only a real campaign run walks away with a cooldown.
   const walkAway = () => {
-    abortSpaceMission() // re-arm later, no progress
+    if (replay == null) abortSpaceMission() // re-arm later, no progress
     close()
   }
   const eject = () => {
-    abortSpaceMission() // bailing mid-run counts as walking away (no fail, no reward)
+    if (replay == null) abortSpaceMission() // bailing mid-run counts as walking away (no fail, no reward)
     close()
   }
   const launch = () => {
-    setPlayIndex(ss.stageIndex) // pin the stage being played before ss can advance
+    setPlayIndex(briefIndex) // pin the stage being played before ss can advance
     setPhase('playing')
   }
 
@@ -945,7 +950,7 @@ export function SpaceSalvageShooter() {
       <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+10px)] pb-2">
         <div className="min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6ee7ff' }}>
-            Space Salvage · Stage {stage.number}/{ss.totalStages}
+            Space Salvage · Stage {stage.number}/{ss.totalStages}{replay != null ? ' · Replay' : ''}
           </div>
           <div className="truncate text-lg font-black">{stage.title}</div>
         </div>

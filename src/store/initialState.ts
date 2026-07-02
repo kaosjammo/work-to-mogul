@@ -83,6 +83,7 @@ export function initialGameState(now: number = Date.now()): GameState {
     milestonesReached: [],
     achievementsUnlocked: [],
     prestigeMilestonesClaimed: [],
+    storyLog: [],
     contracts: initialContractsState(),
     spaceShooter: initialSpaceShooterState(),
     foodFrenzy: initialFoodFrenzyState(),

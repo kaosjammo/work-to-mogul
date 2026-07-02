@@ -42,13 +42,24 @@ interface UiStore {
   closeAccount: () => void
   // Space Salvage Shooter — is the fullscreen mini-game modal open? (UI-only; the
   // campaign PROGRESS lives in engine state, this is just the open/closed flag.)
+  // `shooterReplay` is a chosen already-cleared stage index for a PRACTICE run from the
+  // Log (null = normal campaign, targets the next incomplete stage).
   spaceShooterOpen: boolean
+  shooterReplay: number | null
   openSpaceShooter: () => void
+  replaySpaceShooter: (stageIndex: number) => void
   closeSpaceShooter: () => void
   // Lunch Rush — is the fullscreen mini-game modal open? (UI-only flag, same deal.)
   foodFrenzyOpen: boolean
+  frenzyReplay: number | null
   openFoodFrenzy: () => void
+  replayFoodFrenzy: (tierIndex: number) => void
   closeFoodFrenzy: () => void
+  // The Log — a scrapbook of past mini-games (replay) + Mogul/romance/EA stories (re-read).
+  // Appears once the player has any loggable history; opened from the main-screen 📜 Log button.
+  logOpen: boolean
+  openLog: () => void
+  closeLog: () => void
   // Automation config modal ('invest' | 'staff' | null → closed).
   automationTab: 'invest' | 'staff' | null
   openAutomation: (tab: 'invest' | 'staff') => void
@@ -108,11 +119,18 @@ export const useUiStore = create<UiStore>((set) => ({
   openAccount: () => set({ accountOpen: true }),
   closeAccount: () => set({ accountOpen: false }),
   spaceShooterOpen: false,
-  openSpaceShooter: () => set({ spaceShooterOpen: true }),
-  closeSpaceShooter: () => set({ spaceShooterOpen: false }),
+  shooterReplay: null,
+  openSpaceShooter: () => set({ spaceShooterOpen: true, shooterReplay: null }),
+  replaySpaceShooter: (stageIndex) => set({ spaceShooterOpen: true, shooterReplay: stageIndex }),
+  closeSpaceShooter: () => set({ spaceShooterOpen: false, shooterReplay: null }),
   foodFrenzyOpen: false,
-  openFoodFrenzy: () => set({ foodFrenzyOpen: true }),
-  closeFoodFrenzy: () => set({ foodFrenzyOpen: false }),
+  frenzyReplay: null,
+  openFoodFrenzy: () => set({ foodFrenzyOpen: true, frenzyReplay: null }),
+  replayFoodFrenzy: (tierIndex) => set({ foodFrenzyOpen: true, frenzyReplay: tierIndex }),
+  closeFoodFrenzy: () => set({ foodFrenzyOpen: false, frenzyReplay: null }),
+  logOpen: false,
+  openLog: () => set({ logOpen: true }),
+  closeLog: () => set({ logOpen: false }),
   automationTab: null,
   openAutomation: (automationTab) => set({ automationTab }),
   closeAutomation: () => set({ automationTab: null }),

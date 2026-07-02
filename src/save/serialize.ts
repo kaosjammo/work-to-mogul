@@ -242,6 +242,8 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   s.milestonesReached = strArray(loaded.milestonesReached)
   s.achievementsUnlocked = strArray(loaded.achievementsUnlocked)
   s.prestigeMilestonesClaimed = strArray(loaded.prestigeMilestonesClaimed)
+  // Story Log: keep only ids of stories still registered (content changes prune cleanly).
+  s.storyLog = strArray(loaded.storyLog).filter((id) => getMogulStory(id))
   s.purchasedUnlocks = strArray(loaded.purchasedUnlocks)
 
   // Contracts board: keep only known contract ids; clamp the pool pointer.

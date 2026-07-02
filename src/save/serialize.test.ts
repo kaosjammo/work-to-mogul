@@ -138,6 +138,9 @@ describe('full-state round-trip', () => {
     expect(r.businesses.lemonade.assigned).toContain('e1')
     expect(r.achievementsUnlocked).toEqual(['first_business', 'millionaire'])
     expect(r.milestonesReached).toEqual(['lemonade_25'])
+    // The story Log round-trips, dropping ids no longer registered.
+    const r2 = deserialize(serialize({ ...s, storyLog: ['angel_fridgemind', 'love_proposal', 'ghost_tale'] }, 100))!
+    expect(r2.storyLog).toEqual(['angel_fridgemind', 'love_proposal'])
     expect(r.prestige.totalPoints).toBe(8)
     expect(r.prestige.resets).toBe(2)
     expect(r.prestige.talents).toEqual({ magnate: 2, efficiency: 1 })
@@ -168,7 +171,7 @@ describe('persistence policy', () => {
     'financeCompoundMs', 'quantumPhaseMs', 'buyMode', 'activeTab', 'visitedTabs',
     'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
     'employees', 'purchasedUnlocks', 'upgradesPurchased', 'repeatableRanks', 'milestonesReached',
-    'achievementsUnlocked', 'prestigeMilestonesClaimed', 'contracts', 'spaceShooter',
+    'achievementsUnlocked', 'prestigeMilestonesClaimed', 'storyLog', 'contracts', 'spaceShooter',
     'foodFrenzy', 'prestige', 'onboardingStep', 'nextEmployeeSeq',
   ])
   const TRANSIENT: ReadonlySet<keyof GameState> = new Set<keyof GameState>([

@@ -315,8 +315,18 @@ export function dismissCard(): void {
  * advances the campaign on a pass (else re-arms the same stage), and surfaces a
  * reward toast. Returns the outcome so the mini-game can render the debrief screen.
  */
-export function completeSpaceMission(stageIndex: number, metrics: MissionMetrics): MissionResult {
-  const result = resolveMission(getEngineState(), stageIndex, metrics, Date.now())
+export function completeSpaceMission(
+  stageIndex: number,
+  metrics: MissionMetrics,
+  replay = false,
+): MissionResult {
+  const s = getEngineState()
+  // A practice replay (an already-cleared stage) must not re-gate the live campaign's
+  // next-offer cooldown — snapshot and restore it. Rewards/advance are already no-ops
+  // for a cleared stage in resolveMission; only best-score tracking survives.
+  const savedCooldown = s.spaceShooter.cooldownUntil
+  const result = resolveMission(s, stageIndex, metrics, Date.now())
+  if (replay) s.spaceShooter.cooldownUntil = savedCooldown
   const passed = result.band !== 'failed'
   haptic(passed ? 40 : 12)
   playSound(passed ? 'chime' : 'tap')
@@ -347,8 +357,16 @@ export function snoozeSalvageSignal(): void {
 // ----- Lunch Rush (the Vampire-Survivors food-truck mini-game) -----
 
 /** Hand a finished rush's metrics to the engine → bounded rewards + progress. */
-export function completeFrenzyRun(tierIndex: number, metrics: FrenzyMetrics): FrenzyResult {
-  const result = resolveFrenzyRun(getEngineState(), tierIndex, metrics, Date.now())
+export function completeFrenzyRun(
+  tierIndex: number,
+  metrics: FrenzyMetrics,
+  replay = false,
+): FrenzyResult {
+  const s = getEngineState()
+  // Same as the shooter: a practice replay never re-gates the live rush cooldown.
+  const savedCooldown = s.foodFrenzy.cooldownUntil
+  const result = resolveFrenzyRun(s, tierIndex, metrics, Date.now())
+  if (replay) s.foodFrenzy.cooldownUntil = savedCooldown
   const passed = result.band !== 'failed'
   haptic(passed ? 40 : 12)
   playSound(passed ? 'chime' : 'tap')
