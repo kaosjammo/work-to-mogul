@@ -4,6 +4,67 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## "Lunch Rush" — a Vampire-Survivors mini-game + the Event Cards 2.0 plan
+
+Two user-directed items: a plan for giving event cards "more meat" (they're "just a
+decision between two choices"), and a VS-style mini-game ("food truck throwing hotdogs at
+rabid fans").
+
+**A) Event Cards 2.0 — PLAN ONLY** ([docs/event-cards-2.0-plan.md](docs/event-cards-2.0-plan.md)):
+three shippable phases — (1) consequence beats + staff-gated third options + targeted
+effect kinds (industry/morale/risk/golden), (2) deterministic event CHAINS (choices
+schedule follow-up cards), (3) multi-step "Storm" crises + gamble pity/memory. All
+deterministic, bounded, bot-inert.
+
+**B) Lunch Rush — SHIPPED.** Your food truck goes viral; rabid fans (😋🏃🤩) swarm from
+every direction; the tongs auto-throw 🌭 at the nearest hungry mouth; fed fans drop tips;
+XP levels you up mid-run with a pick-1-of-3 upgrade overlay (the VS signature: Double Dogs,
+Turbo Grill, Extra Mustard splash, Long Toss, Roller Skates, Big Dog pierce, Snack Magnet,
+Combo Sauce). Survive to closing time without the mob draining your composure (5 ❤️).
+- **3-tier campaign:** Lunch Rush (75s) → Dinner Rush (90s, superfan tanks) → Festival
+  Night (105s, stampede rings). Clearing Festival Night = the permanent **🏆 Golden
+  Spatula** (+10% Food, folds in `economy.ts` beside the salvage perks). Cleared tiers stay
+  replayable for score + the timed Food buff (×1.5–2.0, 60–120s by band).
+- **Bounded rewards:** idle-income-seconds × band with a flat floor (the Food Truck unlocks
+  minutes into a fresh game — early players get a real prize). Failure never punishes.
+- **Opportunity rotation from day one:** priority story > salvage > rush; the rush chip
+  shares the salvage chip's screen slot (they can never coexist), has a "Not now" 30-min
+  snooze, and buzzes once per distinct signal.
+- **Plumbing:** `FoodFrenzyState` (campaign persists through prestige; buff transient +
+  expires offline via `expireTransientsOffline`), tolerant restore (Spatula ⇔ campaign
+  complete, repaired both directions), persistence-policy registered, emoji sprites (zero
+  assets/licences), dev-only `window.__frenzy` bridge.
+
+**Validation:** `tsc -b` + build clean, oxlint clean, **388 tests** (+16 frenzy: gating +
+rotation incl. yields-to-salvage, snooze, bands, clear/advance/floor-cash/buff, Spatula
+once-only, stale-replay no-op, fold Food-only + steady, buff decay, save round-trip +
+corrupt repair, prestige). Browser-verified 375px by pumping the REAL rAF loop with
+synthetic frames (rAF is throttled headless): chip + "Not now" → yields to salvage →
+briefing (Nacho, CODE MUSTARD) → live swarm (84 fans fed over a full 75s shift) → LEVEL UP
+overlay ×3 with working picks → outcome "LEGENDARY SERVICE" → tier cleared, ×1.8/90s Food
+buff + cash banked, "Next up: Dinner Rush". The pump also caught a real design bug pre-ship
+(XP only flowed from collected tips — a stationary player never leveled; feeding now grants
+XP directly).
+
+**Adversarial review (4-lens find→verify, 16 agents) confirmed 5 distinct defects — all
+fixed pre-ship:**
+1. *Dropped upgrade pick*: two level-ups in one update() pass overwrote the pending chooser
+   → thresholds now process ONCE per frame at the top of update() (banked XP levels up
+   frame-by-frame after each pick).
+2. *Outcome-✕ stomped the resolution cooldown* (fail 4 min → 10 min = punished; clear 15 →
+   10 = farmable) → the ✕ plain-closes on the outcome phase. **Mirror-fixed the identical
+   latent bug in SpaceSalvageShooter** (the inherited pattern).
+3. *Sub-44px header/briefing buttons* (misses fell through and yanked the truck) → explicit
+   44px minimums on Close up / ✕ / Walk away.
+4. *Chip band collision* (HIGH): the +78px slot overlapped the Food-gated Rush Hour pill at
+   +70px (which routinely coexists) → BOTH mini-game chips moved to a clean **+132px band**.
+5. *Phantom buzz behind z-[60] modals* (also consumed the once-per-signal latch) → both
+   chips hide + skip the buzz while either mini-game is open.
+Post-fix re-verified via the frame pump (level-up → pause → overlay → pick → resume) and
+the full suite re-run green.
+
+---
+
 ## Salvage Signal anti-nag + the Romance Arc (4 episodes) + marriage money-sink
 
 Two user-directed features. (Note: the long-standing "no dating/life-sim" constraint was

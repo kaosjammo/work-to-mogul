@@ -311,6 +311,21 @@ export interface RomanceState {
   totalSpent: number // lifetime cash lavished on the marriage (running sink total)
 }
 
+/** Lunch Rush — the Vampire-Survivors-style food-truck mini-game. Campaign
+ *  PROGRESS persists (tiers cleared, Golden Spatula, best scores); the in-run
+ *  swarm simulation is NEVER persisted; the timed buff is transient. */
+export interface FoodFrenzyState {
+  // --- persisted campaign progress (overlaid by serialize.tolerantLoad) ---
+  tiersCleared: number // rush tiers cleared (0..3); the offer targets this index
+  cooldownUntil: number // wall-clock ms; the next rush is gated until now >= this
+  goldenSpatula: boolean // Festival Night reward: a permanent Food profit perk
+  bestScores: number[] // best score per tier (length 3)
+  runsPlayed: number // lifetime rushes played (a stat)
+  // --- transient (NOT persisted; fresh on load, like the shooter's buff) ---
+  buffMult: number // Food-only timed profit multiplier from a run reward (>= 1)
+  buffMsLeft: number // countdown for the buff (0 = inactive)
+}
+
 export interface GameState {
   cash: Num
   lifetimeEarnings: Num
@@ -342,6 +357,7 @@ export interface GameState {
   prestigeMilestonesClaimed: string[] // ascension-count rewards already granted
   contracts: ContractsState // claimable missions board (persists through prestige)
   spaceShooter: SpaceShooterState // Space Salvage Shooter campaign (persists through prestige)
+  foodFrenzy: FoodFrenzyState // Lunch Rush mini-game campaign (persists through prestige)
   prestige: PrestigeState
   onboardingStep: number
   nextEmployeeSeq: number // for generating unique employee ids deterministically

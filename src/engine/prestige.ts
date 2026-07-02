@@ -77,6 +77,17 @@ export function prestigeReset(state: GameState): boolean {
         missionsPlayed: state.spaceShooter.missionsPlayed,
       }
     : undefined
+  // Lunch Rush campaign progress is meta-progression too (Golden Spatula etc.);
+  // the transient run-reward buff resets with the fresh state.
+  const rushCampaign = state.foodFrenzy
+    ? {
+        tiersCleared: state.foodFrenzy.tiersCleared,
+        cooldownUntil: state.foodFrenzy.cooldownUntil,
+        goldenSpatula: state.foodFrenzy.goldenSpatula,
+        bestScores: [...(state.foodFrenzy.bestScores ?? [])],
+        runsPlayed: state.foodFrenzy.runsPlayed,
+      }
+    : undefined
 
   // Replace all run state with a fresh game, preserving the engineState object
   // reference (the loop holds it) by assigning fresh fields onto it.
@@ -97,6 +108,7 @@ export function prestigeReset(state: GameState): boolean {
   if (contracts) state.contracts = contracts // the missions board persists too
   if (romance) state.romance = romance // the marriage (and its upkeep) persists too
   if (salvageCampaign) state.spaceShooter = { ...state.spaceShooter, ...salvageCampaign }
+  if (rushCampaign) state.foodFrenzy = { ...state.foodFrenzy, ...rushCampaign }
   // Reaching an ascension-count milestone banks bonus tokens (one-time).
   checkPrestigeMilestones(state)
   // Seed Capital talent grants a starting bankroll for the new empire.

@@ -954,7 +954,15 @@ export function SpaceSalvageShooter() {
             Eject ⏏
           </button>
         ) : (
-          <button type="button" onClick={walkAway} aria-label="Close" className="rounded-full px-3 py-1 text-lg leading-none" style={{ background: 'rgba(255,255,255,0.1)' }}>
+          <button
+            type="button"
+            // On the OUTCOME screen the mission is already resolved — closing must not
+            // abort (that would stomp the resolution cooldown either direction).
+            onClick={phase === 'outcome' ? close : walkAway}
+            aria-label="Close"
+            className="rounded-full px-3 py-1 text-lg leading-none"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          >
             ✕
           </button>
         )}

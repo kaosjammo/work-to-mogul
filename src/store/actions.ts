@@ -36,6 +36,7 @@ import {
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
 import { buyMarriageLevel, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
+import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
 import { claimDaily } from '../engine/daily'
 import { playSound } from '../lib/sound'
 import { claimContract as claimContractFn } from '../engine/contracts'
@@ -330,6 +331,37 @@ export function abortSpaceMission(): void {
 /** "Not now" on the floating salvage chip — snoozes the signal for a long while. */
 export function snoozeSalvageSignal(): void {
   snoozeSignal(getEngineState(), Date.now())
+  publishNow()
+}
+
+// ----- Lunch Rush (the Vampire-Survivors food-truck mini-game) -----
+
+/** Hand a finished rush's metrics to the engine → bounded rewards + progress. */
+export function completeFrenzyRun(tierIndex: number, metrics: FrenzyMetrics): FrenzyResult {
+  const result = resolveFrenzyRun(getEngineState(), tierIndex, metrics, Date.now())
+  const passed = result.band !== 'failed'
+  haptic(passed ? 40 : 12)
+  playSound(passed ? 'chime' : 'tap')
+  const msgs: string[] = []
+  if (result.cashReward > 0) msgs.push(`🌭 Till banked · +${money(result.cashReward)}`)
+  if (result.buffMult > 1) {
+    msgs.push(`🍔 Food profit +${Math.round((result.buffMult - 1) * 100)}% for ${Math.round(result.buffMs / 1000)}s`)
+  }
+  if (result.unlockedSpatula) msgs.push('🏆 GOLDEN SPATULA — Food cooks +10% hotter, forever!')
+  if (msgs.length) useUiStore.getState().pushCelebrations(msgs)
+  publishNow()
+  return result
+}
+
+/** Walk away from a rush before starting (or bail mid-run) — re-arms later. */
+export function abortFrenzyRun(): void {
+  abortFrenzy(getEngineState(), Date.now())
+  publishNow()
+}
+
+/** "Not now" on the floating rush chip — snoozes it for a long while. */
+export function snoozeFrenzySignal(): void {
+  snoozeFrenzy(getEngineState(), Date.now())
   publishNow()
 }
 

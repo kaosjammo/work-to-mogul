@@ -13,26 +13,28 @@ import { haptic } from '../../lib/haptics'
  */
 export function FloatingSalvageSignal() {
   const ss = useSpaceShooter()
-  const open = useUiStore((s) => s.spaceShooterOpen)
+  // Hidden while EITHER fullscreen mini-game is open — no rendering behind a z-[60]
+  // modal, and no phantom buzz (which would also consume the once-per-signal latch).
+  const anyGameOpen = useUiStore((s) => s.spaceShooterOpen || s.foodFrenzyOpen)
   // Buzz ONCE per distinct signal (keyed on the cooldown that armed it) — the chip
   // also blinks out/in while a Mogul Story holds the floor, and those visibility
   // flips must not re-buzz for a signal the player already saw and ignored.
   const buzzedFor = useRef<number | null>(null)
   useEffect(() => {
-    if (ss.offerAvailable && buzzedFor.current !== ss.signalKey) {
+    if (ss.offerAvailable && !anyGameOpen && buzzedFor.current !== ss.signalKey) {
       buzzedFor.current = ss.signalKey
       haptic(22)
     }
-  }, [ss.offerAvailable, ss.signalKey])
-  if (!ss.offerAvailable || open) return null
+  }, [ss.offerAvailable, ss.signalKey, anyGameOpen])
+  if (!ss.offerAvailable || anyGameOpen) return null
 
   return (
     <div
-      // Sits above the Golden Deal chip so both can coexist — with enough clearance
-      // that the "Not now" button's expanded 44px tap area can't overlap the golden
-      // chip's top edge (it extends ~6px past the button's visual bounds).
+      // The mini-game chip band (+132px): clear of the Golden Deal chip (+14) and the
+      // Rush Hour pill (+70 — Food-gated, so a Space player CAN see both at once).
+      // The Lunch Rush chip shares this band; the two never coexist (rotation rule).
       className="fixed inset-x-0 z-40 mx-auto flex w-max max-w-[92vw] flex-col items-center gap-2"
-      style={{ bottom: 'calc(var(--nav-h, 64px) + env(safe-area-inset-bottom) + 78px)' }}
+      style={{ bottom: 'calc(var(--nav-h, 64px) + env(safe-area-inset-bottom) + 132px)' }}
     >
       <button
         type="button"

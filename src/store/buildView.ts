@@ -96,6 +96,8 @@ import {
   nextStageIndex,
   campaignComplete,
 } from '../engine/spaceShooter'
+import { foodFrenzyOfferAvailable, nextFrenzyTier } from '../engine/foodFrenzy'
+import { FOOD_FRENZY_TOTAL_TIERS } from '../content/foodFrenzy'
 import { CONTRACT_BY_ID } from '../content/contracts'
 import { contractProgress, isContractComplete } from '../engine/contracts'
 import type { EffectChannel, EmployeeInstance } from '../types/domain'
@@ -413,6 +415,22 @@ export interface ContractView {
   complete: boolean
 }
 
+export interface FoodFrenzyView {
+  offerAvailable: boolean // a rush is on offer now (the floating chip shows)
+  signalKey: number // stable per distinct signal — buzz once per key
+  tierIndex: number // the tier the next rush targets (0..2; top tier repeats when done)
+  tierName: string
+  tiersCleared: number
+  totalTiers: number
+  campaignComplete: boolean
+  goldenSpatula: boolean
+  buffActive: boolean // a Food profit buff from a run reward is running
+  buffSecondsLeft: number
+  buffPct: number // e.g. 50 for a ×1.5 buff
+  bestScore: number // best score for the targeted tier
+  runsPlayed: number
+}
+
 export interface SpaceShooterView {
   offerAvailable: boolean // a salvage signal is on offer now (the floating chip shows)
   signalKey: number // stable per distinct signal (the cooldown that armed it) — buzz once per key
@@ -452,6 +470,7 @@ export interface ViewSnapshot {
   quantumSuperposition: { industryId: string; collapsing: boolean; mult: number }
   eventCard: EventCardView | null
   spaceShooter: SpaceShooterView
+  foodFrenzy: FoodFrenzyView
   daily: {
     available: boolean
     dayIndex: number // today's local-day index (keys per-day UI dismissals)
@@ -1089,6 +1108,26 @@ export function buildView(
     ownsSpace: ownsSpace(state),
   }
 
+  // Lunch Rush — the VS-style food-truck mini-game. Same wall-clock offer gate
+  // (UI-only; the harness never reads buildView). Yields to stories + salvage.
+  const ffState = state.foodFrenzy
+  const ffTier = nextFrenzyTier(state)
+  const foodFrenzy: FoodFrenzyView = {
+    offerAvailable: foodFrenzyOfferAvailable(state, Date.now()),
+    signalKey: ffState?.cooldownUntil ?? 0,
+    tierIndex: ffTier.index,
+    tierName: ffTier.name,
+    tiersCleared: ffState?.tiersCleared ?? 0,
+    totalTiers: FOOD_FRENZY_TOTAL_TIERS,
+    campaignComplete: (ffState?.tiersCleared ?? 0) >= FOOD_FRENZY_TOTAL_TIERS,
+    goldenSpatula: ffState?.goldenSpatula ?? false,
+    buffActive: (ffState?.buffMsLeft ?? 0) > 0,
+    buffSecondsLeft: Math.ceil((ffState?.buffMsLeft ?? 0) / 1000),
+    buffPct: Math.round(((ffState?.buffMult ?? 1) - 1) * 100),
+    bestScore: ffState?.bestScores?.[ffTier.index] ?? 0,
+    runsPlayed: ffState?.runsPlayed ?? 0,
+  }
+
   const contracts: ContractView[] = (state.contracts?.active ?? [])
     .map((id) => CONTRACT_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
@@ -1192,6 +1231,7 @@ export function buildView(
     quantumSuperposition,
     eventCard,
     spaceShooter,
+    foodFrenzy,
     daily,
     contracts,
     contractsClaimable,

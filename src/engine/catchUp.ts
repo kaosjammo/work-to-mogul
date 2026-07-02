@@ -123,6 +123,11 @@ export function expireTransientsOffline(state: GameState, elapsedMs: number): vo
   }
   const ss = state.spaceShooter
   if (ss) ss.buffMsLeft = tick(ss.buffMsLeft)
+  const ff = state.foodFrenzy
+  if (ff) {
+    ff.buffMsLeft = tick(ff.buffMsLeft)
+    if (ff.buffMsLeft === 0) ff.buffMult = 1
+  }
   // Mid-flight risk events resolve while away (they'd have counted down anyway).
   for (const id in state.businesses) {
     const bs = state.businesses[id]

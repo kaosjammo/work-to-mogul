@@ -169,7 +169,7 @@ describe('persistence policy', () => {
     'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
     'employees', 'purchasedUnlocks', 'upgradesPurchased', 'repeatableRanks', 'milestonesReached',
     'achievementsUnlocked', 'prestigeMilestonesClaimed', 'contracts', 'spaceShooter',
-    'prestige', 'onboardingStep', 'nextEmployeeSeq',
+    'foodFrenzy', 'prestige', 'onboardingStep', 'nextEmployeeSeq',
   ])
   const TRANSIENT: ReadonlySet<keyof GameState> = new Set<keyof GameState>([
     'golden', 'rushHour', 'logistics', 'eventCards', 'hirePool',

@@ -42,6 +42,10 @@ interface UiStore {
   spaceShooterOpen: boolean
   openSpaceShooter: () => void
   closeSpaceShooter: () => void
+  // Lunch Rush — is the fullscreen mini-game modal open? (UI-only flag, same deal.)
+  foodFrenzyOpen: boolean
+  openFoodFrenzy: () => void
+  closeFoodFrenzy: () => void
   // Another tab took over the save — this tab is paused behind a blocking overlay.
   tabConflict: boolean
   setTabConflict: (v: boolean) => void
@@ -76,6 +80,9 @@ export const useUiStore = create<UiStore>((set) => ({
   spaceShooterOpen: false,
   openSpaceShooter: () => set({ spaceShooterOpen: true }),
   closeSpaceShooter: () => set({ spaceShooterOpen: false }),
+  foodFrenzyOpen: false,
+  openFoodFrenzy: () => set({ foodFrenzyOpen: true }),
+  closeFoodFrenzy: () => set({ foodFrenzyOpen: false }),
   tabConflict: false,
   setTabConflict: (tabConflict) => set({ tabConflict }),
 }))

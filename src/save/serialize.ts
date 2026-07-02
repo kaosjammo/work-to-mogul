@@ -23,6 +23,7 @@ import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
 import { ROMANCE_EPISODE_IDS, MARRIAGE_MAX_LEVEL } from '../engine/romance'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
+import { FOOD_FRENZY_TOTAL_TIERS } from '../content/foodFrenzy'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
 import { INDUSTRY_ORDER } from '../content/industries'
 import { reconcileSlots } from '../engine/employees/composition'
@@ -351,6 +352,24 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     }
     // A finished campaign implies both unlocks (defends against a partial/edited save).
     if (target.stageCompleted >= SPACE_SHOOTER_TOTAL_STAGES) target.aiPilotUnlocked = true
+  }
+
+  // Lunch Rush — persist ONLY the campaign progress (the transient buff stays at its
+  // fresh default; the in-run swarm is never persisted). Old saves keep the baseline.
+  if (loaded.foodFrenzy && typeof loaded.foodFrenzy === 'object') {
+    const ff = loaded.foodFrenzy
+    const target = s.foodFrenzy
+    target.tiersCleared = clamp(Math.floor(num(ff.tiersCleared)), 0, FOOD_FRENZY_TOTAL_TIERS)
+    target.cooldownUntil = clamp(num(ff.cooldownUntil), 0, now + 24 * 60 * 60 * 1000)
+    target.runsPlayed = Math.max(0, Math.floor(num(ff.runsPlayed)))
+    if (Array.isArray(ff.bestScores)) {
+      for (let i = 0; i < target.bestScores.length; i++) {
+        target.bestScores[i] = Math.max(0, Math.floor(num(ff.bestScores[i])))
+      }
+    }
+    // The Spatula is exactly "campaign complete" — repair either direction of a
+    // partial/edited save (spatula without the clears, or clears without it).
+    target.goldenSpatula = target.tiersCleared >= FOOD_FRENZY_TOTAL_TIERS
   }
 
   // Industries are always visible/unlocked in the current model.

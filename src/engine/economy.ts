@@ -230,6 +230,23 @@ export function spaceSalvageProfitMult(state: GameState, steady = false): number
   return m
 }
 
+/** Permanent Food profit multiplier once Lunch Rush's Festival Night is cleared. */
+export const GOLDEN_SPATULA_FOOD_PROFIT = 1.1
+
+/** Food-only profit multiplier from the Lunch Rush mini-game: a timed run-reward
+ *  buff × the permanent Golden Spatula. 1 until the player earns anything —
+ *  opt-in + bot-inert, same construction as the salvage fold above. `steady`
+ *  folds only the permanent perk. (Lives here, not in engine/foodFrenzy.ts, to
+ *  keep the economy free of import cycles — matching the salvage fold.) */
+export function foodFrenzyProfitMult(state: GameState, steady = false): number {
+  const f = state.foodFrenzy
+  if (!f) return 1
+  let m = 1
+  if (!steady && (f.buffMsLeft ?? 0) > 0) m *= f.buffMult || 1
+  if (f.goldenSpatula) m *= GOLDEN_SPATULA_FOOD_PROFIT
+  return m
+}
+
 // ----- Fold options -----
 // `steady: true` prices the economy at its FAIR LONG-RUN rate: short activity-
 // triggered buffs (Golden frenzy, Rush Hour, dispatch surges, event cards, Mogul
@@ -348,9 +365,12 @@ export function economyMultipliers(
   // perks (Orbital Yard, AI Pilot). 1 for non-Space and until anything is earned.
   // Opt-in + bot-inert (the harness never plays the shooter) → harness-safe.
   const salvage = def.industryId === SPACE_INDUSTRY_ID ? spaceSalvageProfitMult(state, steady) : 1
+  // Lunch Rush: a Food-only timed run-reward buff × the permanent Golden Spatula.
+  // Same opt-in + bot-inert construction as the salvage fold.
+  const lunchRush = def.industryId === FOOD_INDUSTRY_ID ? foodFrenzyProfitMult(state, steady) : 1
   return {
     profit:
-      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * mogul * salvage,
+      ms.profit * ind.profit * tal.profit * up.profit * frenzy * founderProfitMult(state) * lateDampen * dispatch * evProfit * mogul * salvage * lunchRush,
     speed: ms.speed * ind.speed * tal.speed * up.speed * founderSpeedMult(state) * rush * evSpeed,
     baseCostFactor: ms.costRed * tal.costReduc * up.costRed,
   }

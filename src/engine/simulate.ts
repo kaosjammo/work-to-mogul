@@ -21,6 +21,7 @@ import { tickAngelDeal, tickCombinatorExit } from './angelDeal'
 import { applyMarriageUpkeep } from './romance'
 import { tickEventCards } from './eventCards'
 import { tickSpaceShooter } from './spaceShooter'
+import { tickFoodFrenzy } from './foodFrenzy'
 
 /** Morale eases toward its equilibrium with ~20s time constant. */
 const MORALE_DRIFT_PER_MS = 1 / 20000
@@ -132,6 +133,7 @@ export function applyTick(state: GameState, dtMs: number, rng: () => number = Ma
     tickCombinatorExit(state, resolveBusiness(state, BUSINESSES[COMBINATOR_ID]).pps, dtMs)
   }
   tickSpaceShooter(state, dtMs)
+  tickFoodFrenzy(state, dtMs)
   // Finance's Compound Interest accrues while Finance is owned (capped at the ramp).
   if (ownsFinance(state)) {
     state.financeCompoundMs = Math.min(
