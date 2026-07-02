@@ -149,7 +149,12 @@ export function BusinessesScreen() {
       <WorkCard />
       <CombinatorCard />
       <IndustryTabs />
-      <IndustryBanner industryId={activeId} name={ind.name} totalOwned={industryView.totalOwned} />
+      <IndustryBanner
+        industryId={activeId}
+        name={ind.name}
+        theme={ind.theme}
+        totalOwned={industryView.totalOwned}
+      />
 
       {industryView.totalOwned > 0 && (
         <IndustrySignatureStrip
@@ -225,7 +230,7 @@ export function BusinessesScreen() {
                   target: def.unlock.count,
                 }
               : undefined
-          return <LockedBusinessCard key={bid} def={def} progress={progress} />
+          return <LockedBusinessCard key={bid} def={def} progress={progress} accent={ind.theme} />
         })}
       </div>
     </div>

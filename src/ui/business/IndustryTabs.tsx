@@ -9,7 +9,15 @@ export function IndustryTabs() {
   const active = useActiveIndustry()
 
   return (
-    <div className="-mx-3 mb-1.5 flex gap-1.5 overflow-x-auto px-3 pb-1">
+    <div
+      className="-mx-3 mb-1.5 flex gap-1.5 overflow-x-auto px-3 pb-1"
+      // Fades the trailing edge so a cut-off tab reads as "scroll for more"
+      // instead of clipped/broken text — the list is longer than the viewport.
+      style={{
+        WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent 100%)',
+        maskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent 100%)',
+      }}
+    >
       {industries.map((ind) => {
         const isActive = ind.id === active
         // Dim industries you don't own yet and can't afford to enter.
