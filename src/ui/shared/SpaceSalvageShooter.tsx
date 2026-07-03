@@ -190,8 +190,9 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a)
 
 // Temporary firepower tier from a weapon pickup: renews on pickup (doesn't
 // stack duration), decays to base abruptly when it runs out (a clear, readable
-// countdown rather than a fiddly per-tier fade).
-const WEAPON_DURATION_MS = 8000
+// countdown rather than a fiddly per-tier fade). A generous window so a
+// hard-won upgrade actually gets to feel powerful for a stretch of the run.
+const WEAPON_DURATION_MS = 15000
 const WEAPON_FIRE_MS = [180, 150, 130] // faster reload each tier
 // A short kill streak within this window builds a score multiplier — skill
 // expression only (score never feeds the band/reward calc — see computeBand in
@@ -284,11 +285,29 @@ function ShooterCanvas({
       return mult
     }
 
-    // input
+    // input — keyboard (WASD/arrows) always wins; else touch drives a FLOATING
+    // analog joystick (drag relative to where the thumb landed, ship follows the
+    // stick's direction) and a held mouse follows the cursor. Priority:
+    // keyboard > joystick > hold-mouse. The old model dragged the ship to the
+    // finger's absolute position, which meant your thumb sat on top of the ship
+    // and hid it — the stick keeps the thumb off the action.
     const keys = new Set<string>()
-    let pointerActive = false
-    let pTargetX = player.x
-    let pTargetY = player.y
+    let inputMode: 'idle' | 'joystick' | 'holdmouse' = 'idle'
+    let activePointerId: number | null = null
+    let stickAX = 0 // joystick base-ring centre (canvas px)
+    let stickAY = 0
+    let stickDX = 0 // clamped thumb offset from the anchor (for drawing)
+    let stickDY = 0
+    let stickNX = 0 // unit direction
+    let stickNY = 0
+    let stickMag = 0 // 0..1 throttle after the dead-zone remap
+    let holdTargetX = player.x // live cursor while a mouse button is held
+    let holdTargetY = player.y
+    const STICK_MAX_R = 48 // full-throttle thumb travel
+    const STICK_BASE_R = 54 // drawn base-ring radius
+    const STICK_THUMB_R = 22 // drawn thumb radius
+    const STICK_DEAD = 0.16 // dead-zone as a fraction of STICK_MAX_R
+
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
       if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'a', 'w', 's', 'd'].includes(k)) e.preventDefault()
@@ -297,24 +316,113 @@ function ShooterCanvas({
     const onKeyUp = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase())
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
-    const pointFromEvent = (e: PointerEvent) => {
+
+    const ptFromEvent = (e: PointerEvent) => {
       const rect = canvas!.getBoundingClientRect()
-      pTargetX = e.clientX - rect.left
-      pTargetY = e.clientY - rect.top
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    }
+    const beginJoystick = (id: number, x: number, y: number) => {
+      activePointerId = id
+      inputMode = 'joystick'
+      stickAX = x
+      stickAY = y
+      stickDX = 0
+      stickDY = 0
+      stickNX = 0
+      stickNY = 0
+      stickMag = 0
+    }
+    // Drop all live pointer input — no pointerup fires on focus loss, so a
+    // captured pointer would latch the controls forever otherwise.
+    const clearPointerInput = () => {
+      if (activePointerId !== null) {
+        try {
+          canvas!.releasePointerCapture(activePointerId)
+        } catch {
+          /* not captured — fine */
+        }
+      }
+      activePointerId = null
+      inputMode = 'idle'
+      stickMag = 0
+      stickNX = 0
+      stickNY = 0
+    }
+    const onBlur = () => {
+      keys.clear()
+      clearPointerInput()
     }
     const onPointerDown = (e: PointerEvent) => {
-      pointerActive = true
-      pointFromEvent(e)
+      if (activePointerId !== null) return // one owner at a time
+      const isMouse = e.pointerType === 'mouse'
+      const p = ptFromEvent(e)
+      if (isMouse) {
+        if (e.button !== 0) return // left button only
+        activePointerId = e.pointerId
+        inputMode = 'holdmouse'
+        holdTargetX = p.x
+        holdTargetY = p.y
+      } else {
+        beginJoystick(e.pointerId, p.x, p.y)
+        haptic(6)
+      }
+      try {
+        canvas!.setPointerCapture(e.pointerId)
+      } catch {
+        /* capture unsupported — the window pointerup fallback still ends the gesture */
+      }
+      e.preventDefault()
     }
     const onPointerMove = (e: PointerEvent) => {
-      if (pointerActive) pointFromEvent(e)
+      if (e.pointerId !== activePointerId) return
+      const p = ptFromEvent(e)
+      if (inputMode === 'holdmouse') {
+        holdTargetX = p.x
+        holdTargetY = p.y
+        return
+      }
+      // joystick — floating/follow: if the thumb pulls past max, drag the anchor under it
+      let dx = p.x - stickAX
+      let dy = p.y - stickAY
+      const len = Math.hypot(dx, dy)
+      if (len > STICK_MAX_R) {
+        const k = (len - STICK_MAX_R) / len
+        stickAX += dx * k
+        stickAY += dy * k
+        dx = p.x - stickAX
+        dy = p.y - stickAY
+      }
+      stickDX = dx
+      stickDY = dy
+      const raw = Math.min(1, Math.hypot(dx, dy) / STICK_MAX_R)
+      stickMag = raw <= STICK_DEAD ? 0 : (raw - STICK_DEAD) / (1 - STICK_DEAD) // ramp 0→1 past the dead-zone
+      if (stickMag > 0) {
+        const dl = Math.hypot(dx, dy) || 1
+        stickNX = dx / dl
+        stickNY = dy / dl
+      } else {
+        stickNX = 0
+        stickNY = 0
+      }
     }
-    const onPointerUp = () => {
-      pointerActive = false
+    const endPointer = (e: PointerEvent) => {
+      if (e.pointerId !== activePointerId) return
+      try {
+        canvas!.releasePointerCapture(e.pointerId)
+      } catch {
+        /* not captured — fine */
+      }
+      activePointerId = null
+      inputMode = 'idle'
+      stickMag = 0
+      stickNX = 0
+      stickNY = 0
     }
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointermove', onPointerMove)
-    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointerup', endPointer)
+    window.addEventListener('pointercancel', endPointer)
+    window.addEventListener('blur', onBlur)
     canvas.style.touchAction = 'none'
 
     function spawnParticles(x: number, y: number, color: string, n: number) {
@@ -448,7 +556,7 @@ function ShooterCanvas({
         spawnBoss()
       }
 
-      // player movement
+      // player movement — keyboard > joystick (touch) > hold-mouse (desktop).
       const speed = 340
       let mvx = 0
       let mvy = 0
@@ -456,13 +564,17 @@ function ShooterCanvas({
       if (keys.has('arrowright') || keys.has('d')) mvx += 1
       if (keys.has('arrowup') || keys.has('w')) mvy -= 1
       if (keys.has('arrowdown') || keys.has('s')) mvy += 1
-      if (pointerActive) {
-        player.x += (pTargetX - player.x) * Math.min(1, dt * 12)
-        player.y += (pTargetY - player.y) * Math.min(1, dt * 12)
-      } else if (mvx || mvy) {
+      if (mvx || mvy) {
         const len = Math.hypot(mvx, mvy) || 1
         player.x += (mvx / len) * speed * dt
         player.y += (mvy / len) * speed * dt
+      } else if (inputMode === 'joystick' && stickMag > 0) {
+        // Constant-pace directional move (no ease that mushes near a target).
+        player.x += stickNX * speed * stickMag * dt
+        player.y += stickNY * speed * stickMag * dt
+      } else if (inputMode === 'holdmouse') {
+        player.x += (holdTargetX - player.x) * Math.min(1, dt * 12)
+        player.y += (holdTargetY - player.y) * Math.min(1, dt * 12)
       }
       player.x = Math.max(player.r, Math.min(W - player.r, player.x))
       player.y = Math.max(H * 0.32, Math.min(H - player.r - 6, player.y))
@@ -840,8 +952,29 @@ function ShooterCanvas({
         ctx!.fillStyle = '#e8f0ff'
         ctx!.font = '600 12px system-ui, sans-serif'
         ctx!.textAlign = 'center'
-        ctx!.fillText('Drag to move · auto-fire on · grab weapon crates', W / 2, H - 18)
+        ctx!.fillText('Steer with the stick · auto-fire on · grab weapon crates', W / 2, H - 18)
         ctx!.globalAlpha = 1
+      }
+
+      // virtual joystick (touch only) — low-alpha ring + thumb, screen-locked
+      // (drawn after the world/shake restore so a hit-shake never jitters it).
+      if (inputMode === 'joystick') {
+        ctx!.save()
+        ctx!.beginPath()
+        ctx!.arc(stickAX, stickAY, STICK_BASE_R, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(110,231,255,0.06)'
+        ctx!.fill()
+        ctx!.lineWidth = 2
+        ctx!.strokeStyle = 'rgba(110,231,255,0.35)'
+        ctx!.stroke()
+        ctx!.beginPath()
+        ctx!.arc(stickAX + stickDX, stickAY + stickDY, STICK_THUMB_R, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(232,240,255,0.9)'
+        ctx!.fill()
+        ctx!.strokeStyle = 'rgba(14,116,144,0.9)'
+        ctx!.lineWidth = 2
+        ctx!.stroke()
+        ctx!.restore()
       }
     }
 
@@ -872,7 +1005,9 @@ function ShooterCanvas({
       window.removeEventListener('resize', resize)
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
-      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointerup', endPointer)
+      window.removeEventListener('pointercancel', endPointer)
+      window.removeEventListener('blur', onBlur)
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointermove', onPointerMove)
     }
