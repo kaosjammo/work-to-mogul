@@ -150,11 +150,57 @@ describe('Executive Assistant — auto-buys upgrades when efficient', () => {
     expect(s.upgradesPurchased.length).toBeGreaterThan(0)
   })
 
-  it('never buys upgrades under the cheapest strategy (units only)', () => {
+  it('cheapest strategy buys an upgrade when it undercuts the cheapest unit', () => {
     const s = seededState()
-    s.businesses.lemonade.owned = 3000
-    reinvestWithin(s, 1e8, { ...s.automation.invest, strategy: 'cheapest' })
-    expect(s.upgradesPurchased).toHaveLength(0)
+    // Push every unlocked business's next-unit cost above the cheapest upgrade
+    // (lemonade_2x @ $12K): lemonade base 4 × 1.07^130 ≈ $26K, truck higher still.
+    s.businesses.lemonade.owned = 130
+    s.businesses.food_truck.owned = 130
+    reinvestWithin(s, 1e6, { ...s.automation.invest, strategy: 'cheapest' })
+    expect(s.upgradesPurchased.length).toBeGreaterThan(0)
+  })
+
+  it('cheapest strategy still prefers a unit when the unit is cheaper', () => {
+    const s = seededState() // lemonade next unit ≈ $4 — far below any upgrade
+    const lem0 = s.businesses.lemonade.owned
+    reinvestWithin(s, 100, { ...s.automation.invest, strategy: 'cheapest' })
+    expect(s.businesses.lemonade.owned).toBeGreaterThan(lem0)
+    expect(s.upgradesPurchased).toHaveLength(0) // nothing under $100 in the upgrade table
+  })
+})
+
+describe('Executive Assistant — prices the Startup Combinator once unlocked', () => {
+  /** Combinator unlocked + owned (the angel-deal great outcome's grant). Lemonade
+   *  (free-unlock) is locked so its $4 units don't absorb the 200-buy greedy cap
+   *  before the Combinator gets a slot — this isolates candidacy itself. */
+  function combinatorState(): GameState {
+    const s = initialGameState(0)
+    s.businesses.lemonade.unlocked = false
+    s.businesses.startup_combinator.unlocked = true
+    s.businesses.startup_combinator.owned = 1
+    s.angelDeal.combinatorUnlocked = true
+    s.cash = 1e15
+    return s
+  }
+
+  it('roi strategy buys Combinator units (it was invisible to the EA before)', () => {
+    const s = combinatorState()
+    const before = s.businesses.startup_combinator.owned
+    reinvestWithin(s, 1e14, { ...s.automation.invest, strategy: 'roi' })
+    expect(s.businesses.startup_combinator.owned).toBeGreaterThan(before)
+  })
+
+  it('cheapest strategy buys Combinator units when it is the only board', () => {
+    const s = combinatorState()
+    const before = s.businesses.startup_combinator.owned
+    reinvestWithin(s, 1e14, { ...s.automation.invest, strategy: 'cheapest' })
+    expect(s.businesses.startup_combinator.owned).toBeGreaterThan(before)
+  })
+
+  it('a LOCKED Combinator is never bought (harness bot list unchanged)', () => {
+    const s = seededState() // combinator locked, owned 0
+    reinvestWithin(s, 1e8, { ...s.automation.invest, strategy: 'roi' })
+    expect(s.businesses.startup_combinator.owned).toBe(0)
   })
 })
 

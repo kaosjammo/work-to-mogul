@@ -30,6 +30,22 @@ describe('spendCashBestValue', () => {
     s.cash = 0
     expect(spendCashBestValue(s)).toEqual({ units: 0, spent: 0 })
   })
+
+  it('prices the Startup Combinator once unlocked (never while locked)', () => {
+    const locked = initialGameState(0)
+    locked.cash = 1e15
+    spendCashBestValue(locked, 300)
+    expect(locked.businesses.startup_combinator.owned).toBe(0) // locked → invisible
+
+    const s = initialGameState(0)
+    s.businesses.lemonade.unlocked = false // isolate the board (see automation.test)
+    s.businesses.startup_combinator.unlocked = true
+    s.businesses.startup_combinator.owned = 1
+    s.cash = 1e15
+    const { units } = spendCashBestValue(s, 50)
+    expect(units).toBeGreaterThan(0)
+    expect(s.businesses.startup_combinator.owned).toBeGreaterThan(1)
+  })
 })
 
 describe('buyAllAffordableUpgrades', () => {

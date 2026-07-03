@@ -19,7 +19,7 @@ import type {
   GameState,
   IndustryId,
 } from '../types/domain'
-import { BUSINESS_ORDER, BUSINESSES } from '../content/businesses'
+import { BUSINESS_ORDER, BUSINESSES, COMBINATOR_ID } from '../content/businesses'
 import { EMPLOYEE_TEMPLATES, HIRE_ORDER } from '../content/employeeTemplates'
 import { UPGRADES, UPGRADE_ORDER } from '../content/upgrades'
 import type { UpgradeDef, UpgradeId } from '../types/domain'
@@ -145,8 +145,16 @@ export function unlockChiefOfStaff(state: GameState): boolean {
 
 // ── Executive Assistant — auto-reinvest ──────────────────────────────────────
 
+/** Every business the EA may price: the ordered ladder PLUS the Startup
+ *  Combinator — a special reward business outside BUSINESS_ORDER that is
+ *  nevertheless fully buyable once the angel deal unlocks it. Excluding it
+ *  made the EA blind to what is often the single best $/s purchase on the
+ *  board. Gated on `unlocked`, so the sim bot (which never wins the angel
+ *  deal) sees an identical list → harness byte-identity holds. */
+const INVESTABLE_IDS: BusinessId[] = [...BUSINESS_ORDER, COMBINATOR_ID]
+
 function investCandidates(state: GameState, cfg: AutoInvestConfig): BusinessId[] {
-  const ids = BUSINESS_ORDER.filter((id) => state.businesses[id]?.unlocked)
+  const ids = INVESTABLE_IDS.filter((id) => state.businesses[id]?.unlocked)
   if (cfg.strategy === 'focus' && cfg.focusIndustry) {
     return ids.filter((id) => BUSINESSES[id].industryId === cfg.focusIndustry)
   }
@@ -164,10 +172,12 @@ function perUnitPps(state: GameState, id: BusinessId): number {
   return p
 }
 
-/** Total $/s currently produced by the businesses in an upgrade's scope. */
+/** Total $/s currently produced by the businesses in an upgrade's scope.
+ *  Iterates INVESTABLE_IDS (not BUSINESS_ORDER) so a global upgrade's value
+ *  includes the Combinator's income — global upgrades DO multiply it. */
 function scopePps(state: GameState, up: UpgradeDef): number {
   let sum = 0
-  for (const id of BUSINESS_ORDER) {
+  for (const id of INVESTABLE_IDS) {
     const bs = state.businesses[id]
     if (!bs?.unlocked || bs.owned <= 0) continue
     const def = BUSINESSES[id]
@@ -203,10 +213,11 @@ function upgradeCandidates(state: GameState, cfg: AutoInvestConfig): UpgradeId[]
 }
 
 /**
- * Reinvest up to `budget` cash across the eligible businesses, honouring the
- * strategy (roi = best marginal $/s per $; cheapest = lowest next-unit cost;
- * focus = a single industry, priced by roi within it). Greedy, one unit at a
- * time, capped. Never spends past the budget (which already excludes the reserve).
+ * Reinvest up to `budget` cash across the eligible businesses AND un-owned
+ * one-shot upgrades, honouring the strategy (roi = best marginal $/s per $;
+ * cheapest = lowest price on the board; focus = a single industry, priced by
+ * roi within it). Greedy, one purchase at a time, capped. Never spends past
+ * the budget (which already excludes the reserve).
  */
 export function reinvestWithin(
   state: GameState,
@@ -248,13 +259,28 @@ export function reinvestWithin(
       }
     }
 
-    // "Most efficient" strategies (roi / focus) also weigh one-shot UPGRADES, scored by the
-    // SAME marginal $/s per $ as a unit — so the EA buys an upgrade whenever it beats the best
-    // next business unit. ('cheapest' stays unit-only; it's about raw unit count.)
-    if (cfg.strategy !== 'cheapest') {
-      let bestUp: UpgradeId | null = null
+    // One-shot UPGRADES compete for the greedy slot under EVERY strategy, each
+    // scored in that strategy's own currency:
+    //  • roi/focus — marginal $/s per $ (must beat the best next business unit).
+    //    costReduction upgrades add no direct $/s, so they stay out of this race.
+    //  • cheapest — raw price: buy an upgrade when it's literally the cheapest
+    //    thing on the board (including costReduction ones — permanent one-shots
+    //    are always worth their slot when they undercut the cheapest unit).
+    let bestUp: UpgradeId | null = null
+    let bestUpCost = 0
+    if (cfg.strategy === 'cheapest') {
+      let cheapest = bestId ? bestCost : Infinity // must undercut the cheapest unit
+      for (const uid of upgradeCandidates(state, cfg)) {
+        const cost = UPGRADES[uid].cost
+        if (spentBudget + cost > budget || cost > state.cash) continue
+        if (cost < cheapest) {
+          cheapest = cost
+          bestUp = uid
+          bestUpCost = cost
+        }
+      }
+    } else {
       let bestUpRoi = bestScore // must beat the best business unit's ROI to win the slot
-      let bestUpCost = 0
       for (const uid of upgradeCandidates(state, cfg)) {
         const cost = UPGRADES[uid].cost
         if (spentBudget + cost > budget || cost > state.cash) continue
@@ -267,10 +293,10 @@ export function reinvestWithin(
           bestUpCost = cost
         }
       }
-      if (bestUp && buyUpgrade(state, bestUp)) {
-        spentBudget += bestUpCost
-        continue // an upgrade filled this greedy step; upgrades don't count as "units"
-      }
+    }
+    if (bestUp && buyUpgrade(state, bestUp)) {
+      spentBudget += bestUpCost
+      continue // an upgrade filled this greedy step; upgrades don't count as "units"
     }
 
     if (!bestId || !purchase(state, bestId, 1)) break
