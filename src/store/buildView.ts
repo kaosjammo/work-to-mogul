@@ -71,6 +71,7 @@ import {
 import { EVENT_CARD_BY_ID } from '../content/eventCards'
 import { ANGEL_DEAL } from '../content/angelDeal'
 import { getMogulStory, MOGUL_STORY_BY_ID, type MogulStoryHintCopy } from '../content/mogulStories'
+import { completedStoryIds, storyBestBand, storyRecord } from '../engine/storyState'
 import {
   PARTNER_NAME,
   MARRIAGE_MAX_LEVEL,
@@ -519,6 +520,8 @@ export interface StoryLogItem {
   icon: string
   protagonist: string
   kind: 'romance' | 'ea' | 'mogul' // grouping for the Log
+  band: AngelOutcomeBand | null // your BEST outcome on this story (null = unknown/pre-tracking)
+  plays: number // times resolved (repeatable pitches climb)
 }
 
 /** The Log — the player's scrapbook of past mini-games + stories, opened from 📜 Log. */
@@ -1272,8 +1275,9 @@ export function buildView(
     runsPlayed: ffState?.runsPlayed ?? 0,
   }
 
-  // The Log — completed stories (most-recent first) + whether there's any history to show.
-  const stories: StoryLogItem[] = (state.storyLog ?? [])
+  // The Log — completed stories (most-recent first) with your best outcome band, from the
+  // unified Story State. `completedStoryIds` is already sorted most-recent-completed first.
+  const stories: StoryLogItem[] = completedStoryIds(state)
     .map((id) => MOGUL_STORY_BY_ID[id])
     .filter((def): def is NonNullable<typeof def> => def != null)
     .map((def) => ({
@@ -1283,8 +1287,9 @@ export function buildView(
       icon: def.icon ?? '💼',
       protagonist: def.protagonist,
       kind: (isRomanceStory(def.id) ? 'romance' : isEaStory(def.id) ? 'ea' : 'mogul') as StoryLogItem['kind'],
+      band: storyBestBand(state, def.id),
+      plays: storyRecord(state, def.id)?.plays ?? 1,
     }))
-    .reverse()
   const log: LogView = {
     hasContent:
       stories.length > 0 || (ssState?.missionsPlayed ?? 0) > 0 || (ffState?.runsPlayed ?? 0) > 0,

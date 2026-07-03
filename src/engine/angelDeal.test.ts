@@ -211,23 +211,25 @@ describe('Angel Deal — flow + resolution', () => {
   })
 })
 
-describe('Story Log — resolving a story records it for re-reading', () => {
-  it('records the resolved story id (invest AND walk-away), uniquely', () => {
+describe('Story State — resolving a story records it for re-reading', () => {
+  it('records the resolved story once, counting plays (invest AND walk-away)', () => {
     const s = eligibleState()
-    expect(s.storyLog).toEqual([]) // nothing lived through yet
+    expect(s.stories).toEqual({}) // nothing lived through yet
 
-    // Invest → the Angel story is logged once.
+    // Invest → the Angel story is recorded as completed, one play.
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     chooseAngelChoice(s, 'dec_invest', new Set())
-    expect(s.storyLog).toContain(ANGEL_DEAL.id)
-    expect(s.storyLog.filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
+    expect(s.stories[ANGEL_DEAL.id]?.status).toBe('completed')
+    expect(s.stories[ANGEL_DEAL.id]?.plays).toBe(1)
+    expect(Object.keys(s.stories).filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
 
-    // A second resolve of the SAME story does not duplicate the entry.
+    // A second resolve of the SAME story reuses the record and bumps the play count.
     s.angelDeal.active = true
     s.angelDeal.stageId = 'decision'
     chooseAngelChoice(s, 'dec_walk', new Set())
-    expect(s.storyLog.filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
+    expect(Object.keys(s.stories).filter((id) => id === ANGEL_DEAL.id)).toHaveLength(1)
+    expect(s.stories[ANGEL_DEAL.id]?.plays).toBe(2)
   })
 })
 

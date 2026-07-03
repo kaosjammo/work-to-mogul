@@ -58,8 +58,8 @@ export function prestigeReset(state: GameState): boolean {
   const dailyClaimDay = state.dailyClaimDay
   const dailyStreak = state.dailyStreak
   const prestigeMilestones = [...(state.prestigeMilestonesClaimed ?? [])]
-  // The story Log is a keepsake — the tales you've lived through carry into the new empire.
-  const storyLog = [...(state.storyLog ?? [])]
+  // Story history is a keepsake — the tales you've lived through carry into the new empire.
+  const stories = { ...(state.stories ?? {}) }
   const contracts = state.contracts
     ? { active: [...state.contracts.active], nextIndex: state.contracts.nextIndex }
     : undefined
@@ -116,7 +116,7 @@ export function prestigeReset(state: GameState): boolean {
   }
   state.achievementsUnlocked = achievements
   state.prestigeMilestonesClaimed = prestigeMilestones
-  state.storyLog = storyLog
+  state.stories = stories
   state.dailyClaimDay = dailyClaimDay
   state.dailyStreak = dailyStreak
   if (contracts) state.contracts = contracts // the missions board persists too

@@ -24,19 +24,12 @@ import {
   resolveAffairChoice,
   nextForcedAffairStory,
 } from './affair'
+import { noteStorySeen, noteStoryStage, noteStoryChoice, noteStoryOutcome } from './storyState'
 
 /** Arc episodes (romance + EA + the affair) — rare, one-time, non-repeatable content that
  *  is PREFERRED over the repeatable business pitches so the finite arcs actually surface. */
 function isArcStory(id: string): boolean {
   return isRomanceStory(id) || isEaStory(id) || isAffairEpisode(id)
-}
-
-/** Record a resolved story in the player's re-readable Log (unique, in completion
- *  order). Only reached on a PLAYER resolve → the greedy sim bot never runs this, so
- *  storyLog stays empty in the harness and income is byte-identical. */
-function recordStory(state: GameState, storyId: string): void {
-  if (!Array.isArray(state.storyLog)) state.storyLog = []
-  if (!state.storyLog.includes(storyId)) state.storyLog.push(storyId)
 }
 
 export type OutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
@@ -291,6 +284,7 @@ export function startAngelDeal(state: GameState): boolean {
   a.outcome = null
   a.disciplined = false
   a.payout = 0
+  noteStorySeen(state, a.storyId, a.stageId)
   return true
 }
 
@@ -309,6 +303,7 @@ export function startStorySession(state: GameState, storyId: string): boolean {
   a.outcome = null
   a.disciplined = false
   a.payout = 0
+  noteStorySeen(state, a.storyId, a.stageId)
   return true
 }
 
@@ -394,6 +389,7 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
   if (!choice) return false
 
   a.scores = applyChoiceEffects(a.scores, choice, boosted)
+  noteStoryChoice(state, a.storyId, choice.id) // VN flag — every choice taken is remembered
 
   if (choice.next === 'invest') {
     const band = investedBand(a.scores)
@@ -432,7 +428,7 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       a.payout = applyOutcome(state, band, false)
     }
     a.completedCount += 1
-    recordStory(state, a.storyId)
+    noteStoryOutcome(state, a.storyId, a.outcome ?? band) // a.outcome may be overridden (affair)
     return true
   }
   if (choice.next === 'walkaway') {
@@ -459,11 +455,12 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       a.payout = applyOutcome(state, 'neutral', disciplined)
     }
     a.completedCount += 1
-    recordStory(state, a.storyId)
+    noteStoryOutcome(state, a.storyId, 'neutral')
     return true
   }
   if (story.stages[choice.next]) {
     a.stageId = choice.next
+    noteStoryStage(state, a.storyId, choice.next) // VN "where you are" — resume hint
     return true
   }
   return false

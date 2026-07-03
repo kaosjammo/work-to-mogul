@@ -373,12 +373,16 @@ describe('Romance — save + prestige are marriage-safe', () => {
     expect(s.romance).toEqual({ stage: 4, married: true, marriageLevel: 3, totalSpent: 999, honeymoonTaken: true, divorced: false })
   })
 
-  it('the story Log is a keepsake — it survives an ascension', () => {
+  it('the Story State is a keepsake — it survives an ascension', () => {
     const s = richState()
     s.lifetimeEarnings = 1e15
-    s.storyLog = ['angel_fridgemind', 'love_proposal']
+    s.stories = {
+      angel_fridgemind: { status: 'completed', plays: 1, lastBand: 'great', bestBand: 'great', lastStage: 'close', flags: ['dec_invest'], seq: 1 },
+      love_proposal: { status: 'completed', plays: 1, lastBand: 'good', bestBand: 'good', lastStage: 'yes', flags: [], seq: 2 },
+    }
     expect(prestigeReset(s)).toBe(true)
-    expect(s.storyLog).toEqual(['angel_fridgemind', 'love_proposal'])
+    expect(Object.keys(s.stories).sort()).toEqual(['angel_fridgemind', 'love_proposal'])
+    expect(s.stories.angel_fridgemind.bestBand).toBe('great')
   })
 
   it('fresh state starts unattached', () => {

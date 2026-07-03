@@ -268,6 +268,22 @@ export type AngelScoreKey =
 export type AngelScores = Record<AngelScoreKey, number>
 export type AngelOutcomeBand = 'great' | 'good' | 'neutral' | 'bad'
 
+// ----- Story State: unified visual-novel-style per-story tracking -----
+export type StoryStatus = 'seen' | 'completed'
+/** One story's lived history — the VN "save state" for a single Mogul Story.
+ *  Supersedes the old flat `storyLog: string[]` with rich, replayable tracking. */
+export interface StoryRecord {
+  status: StoryStatus // 'seen' = opened but unresolved; 'completed' = resolved ≥1×
+  plays: number // resolutions (repeatable business pitches climb; arc episodes usually 1)
+  lastBand: AngelOutcomeBand | null // the most recent outcome band
+  bestBand: AngelOutcomeBand | null // best outcome ever (great > good > neutral > bad)
+  lastStage: string | null // last stage reached — VN "where you were" / resume hint
+  flags: string[] // choice ids taken across plays (VN variables for callbacks/branching)
+  seq: number // completion order (monotonic; 0 = not yet completed) → Log recency sort
+}
+/** The whole story "table", keyed by MogulStory id. */
+export type StoryState = Record<string, StoryRecord>
+
 /** State for the Angel Investment mini-game. Durable meta (combinatorUnlocked,
  *  completedCount, cooldown, timed boost) + a validated in-progress session. */
 export interface AngelDealState {
@@ -422,7 +438,7 @@ export interface GameState {
   milestonesReached: MilestoneId[]
   achievementsUnlocked: string[] // meta-progression; persists through prestige
   prestigeMilestonesClaimed: string[] // ascension-count rewards already granted
-  storyLog: string[] // Mogul/romance/EA story ids the player has completed (for the re-readable Log; persists through prestige)
+  stories: StoryState // unified per-story history (seen/outcome/choices/stage); persists through prestige. Supersedes the old `storyLog`.
   contracts: ContractsState // claimable missions board (persists through prestige)
   spaceShooter: SpaceShooterState // Space Salvage Shooter campaign (persists through prestige)
   foodFrenzy: FoodFrenzyState // Lunch Rush mini-game campaign (persists through prestige)

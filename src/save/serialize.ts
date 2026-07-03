@@ -22,7 +22,11 @@ import { REPEATABLE_UPGRADES } from '../content/upgrades'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
 import { ROMANCE_EPISODE_IDS, MARRIAGE_MAX_LEVEL } from '../engine/romance'
-import { AFFAIR_EPISODE_IDS } from '../engine/affair'
+import { AFFAIR_EPISODE_IDS, AFFAIR_CAUGHT_ID, AFFAIR_REYNA_ID } from '../engine/affair'
+import { EA_EPISODE_IDS } from '../engine/execAssistant'
+import { DIVORCE_STORY_ID } from '../engine/divorce'
+import { freshStoryRecord } from '../engine/storyState'
+import type { AngelOutcomeBand, StoryRecord, StoryState } from '../types/domain'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
 import { FOOD_FRENZY_TOTAL_TIERS } from '../content/foodFrenzy'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
@@ -31,7 +35,7 @@ import { reconcileSlots } from '../engine/employees/composition'
 import { checkUnlocks } from '../engine/simulate'
 
 export const SAVE_KEY = 'tycoon:save'
-export const CURRENT_SAVE_VERSION = 2
+export const CURRENT_SAVE_VERSION = 3
 
 interface Envelope {
   version: number
@@ -58,6 +62,63 @@ const MIGRATIONS: Record<number, (s: Partial<GameState>) => Partial<GameState>> 
       const prestige = (s.prestige ?? {}) as Partial<GameState['prestige']>
       s.prestige = { ...prestige, totalPoints: num(prestige.totalPoints, 0) + earned } as GameState['prestige']
     }
+    return s
+  },
+  // v3: the flat `storyLog: string[]` becomes the rich `stories: StoryState`. Back-fill a
+  // completed record for every story the player has lived through, reconstructed from the
+  // old log AND every arc's scattered progress flags (romance, affair, EA/Reyna, combinator),
+  // so existing saves keep their Log + gain the new tracking. Bands are set where inferable
+  // (a great Angel outcome unlocked the Combinator; a married proposal was at least 'good'),
+  // else left null (unknown). Runs once (v2 → v3).
+  3: (s) => {
+    const raw = s as Record<string, unknown>
+    const stories: StoryState = raw.stories && typeof raw.stories === 'object' ? (raw.stories as StoryState) : {}
+    const RANK: Record<AngelOutcomeBand, number> = { bad: 0, neutral: 1, good: 2, great: 3 }
+    let seq = 0
+    const complete = (id: string, band: AngelOutcomeBand | null) => {
+      if (typeof id !== 'string') return
+      const existing = stories[id]
+      if (existing) {
+        // Already back-filled (usually from the flat storyLog, band unknown). If THIS
+        // call knows a better outcome (e.g. the great Angel deal, the accepted proposal),
+        // upgrade the band so the keepsake badge reflects it.
+        if (band && (existing.bestBand == null || RANK[band] > RANK[existing.bestBand])) {
+          existing.bestBand = band
+          existing.lastBand = band
+        }
+        return
+      }
+      stories[id] = { ...freshStoryRecord(), status: 'completed', plays: 1, lastBand: band, bestBand: band, seq: ++seq }
+    }
+    // The old flat completion log (outcome/stage unknown).
+    if (Array.isArray(raw.storyLog)) for (const id of raw.storyLog) complete(id as string, null)
+    // Romance arc: episodes before the current stage are done; married ⇒ the whole arc.
+    const romance = raw.romance as { stage?: unknown; married?: unknown; divorced?: unknown } | undefined
+    if (romance) {
+      const done = romance.married ? ROMANCE_EPISODE_IDS.length : Math.max(0, Math.floor(num(romance.stage)))
+      for (let i = 0; i < done; i++) complete(ROMANCE_EPISODE_IDS[i], null)
+      if (romance.married) complete(ROMANCE_EPISODE_IDS[ROMANCE_EPISODE_IDS.length - 1], 'good')
+      if (romance.divorced) complete(DIVORCE_STORY_ID, null)
+    }
+    // Affair arc + its forced fallout.
+    const affair = raw.affair as { stage?: unknown; cheated?: unknown; reckoned?: unknown; reynaSettled?: unknown } | undefined
+    if (affair) {
+      const done = Math.max(0, Math.floor(num(affair.stage)))
+      for (let i = 0; i < done; i++) complete(AFFAIR_EPISODE_IDS[i], null)
+      if (affair.cheated || affair.reckoned) complete(AFFAIR_CAUGHT_ID, null)
+      if (affair.reynaSettled) complete(AFFAIR_REYNA_ID, null)
+    }
+    // Executive Assistant / "hiring Reyna" arc.
+    const inv = (raw.automation as { invest?: { arcStage?: unknown; unlocked?: unknown } } | undefined)?.invest
+    if (inv) {
+      const done = inv.unlocked ? EA_EPISODE_IDS.length : Math.max(0, Math.floor(num(inv.arcStage)))
+      for (let i = 0; i < done; i++) complete(EA_EPISODE_IDS[i], null)
+    }
+    // Secret business unlock: a GREAT Angel outcome unlocked the Startup Combinator.
+    if ((raw.angelDeal as { combinatorUnlocked?: unknown } | undefined)?.combinatorUnlocked) {
+      complete(ANGEL_DEAL.id, 'great')
+    }
+    s.stories = stories
     return s
   },
 }
@@ -116,6 +177,32 @@ function clamp(v: number, lo: number, hi: number): number {
 
 function strArray(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+}
+
+const STORY_BANDS = new Set<AngelOutcomeBand>(['great', 'good', 'neutral', 'bad'])
+function toBand(v: unknown): AngelOutcomeBand | null {
+  return typeof v === 'string' && STORY_BANDS.has(v as AngelOutcomeBand) ? (v as AngelOutcomeBand) : null
+}
+
+/** Sanitize a loaded story-state map: drop records for unregistered story ids, clamp fields. */
+function restoreStories(v: unknown): StoryState {
+  const out: StoryState = {}
+  if (!v || typeof v !== 'object') return out
+  for (const [id, raw] of Object.entries(v as Record<string, unknown>)) {
+    if (!getMogulStory(id) || !raw || typeof raw !== 'object') continue
+    const rr = raw as Partial<StoryRecord>
+    out[id] = {
+      ...freshStoryRecord(),
+      status: rr.status === 'completed' ? 'completed' : 'seen',
+      plays: Math.max(0, Math.floor(num(rr.plays))),
+      lastBand: toBand(rr.lastBand),
+      bestBand: toBand(rr.bestBand),
+      lastStage: typeof rr.lastStage === 'string' ? rr.lastStage : null,
+      flags: strArray(rr.flags),
+      seq: Math.max(0, Math.floor(num(rr.seq))),
+    }
+  }
+  return out
 }
 
 export function serialize(state: GameState, savedAt: number): string {
@@ -243,8 +330,9 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
   s.milestonesReached = strArray(loaded.milestonesReached)
   s.achievementsUnlocked = strArray(loaded.achievementsUnlocked)
   s.prestigeMilestonesClaimed = strArray(loaded.prestigeMilestonesClaimed)
-  // Story Log: keep only ids of stories still registered (content changes prune cleanly).
-  s.storyLog = strArray(loaded.storyLog).filter((id) => getMogulStory(id))
+  // Story State: keep only records for stories still registered (content changes prune
+  // cleanly), and sanitize each record's fields.
+  s.stories = restoreStories(loaded.stories)
   s.purchasedUnlocks = strArray(loaded.purchasedUnlocks)
 
   // Contracts board: keep only known contract ids; clamp the pool pointer.

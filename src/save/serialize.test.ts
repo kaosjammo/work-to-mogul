@@ -138,9 +138,15 @@ describe('full-state round-trip', () => {
     expect(r.businesses.lemonade.assigned).toContain('e1')
     expect(r.achievementsUnlocked).toEqual(['first_business', 'millionaire'])
     expect(r.milestonesReached).toEqual(['lemonade_25'])
-    // The story Log round-trips, dropping ids no longer registered.
-    const r2 = deserialize(serialize({ ...s, storyLog: ['angel_fridgemind', 'love_proposal', 'ghost_tale'] }, 100))!
-    expect(r2.storyLog).toEqual(['angel_fridgemind', 'love_proposal'])
+    // The Story State round-trips, dropping ids no longer registered and keeping VN metadata.
+    const storiesFixture: GameState['stories'] = {
+      angel_fridgemind: { status: 'completed', plays: 2, lastBand: 'good', bestBand: 'great', lastStage: 'close', flags: ['dd_yes'], seq: 1 },
+      love_proposal: { status: 'completed', plays: 1, lastBand: 'good', bestBand: 'good', lastStage: 'yes', flags: [], seq: 2 },
+      ghost_tale: { status: 'seen', plays: 0, lastBand: null, bestBand: null, lastStage: null, flags: [], seq: 0 },
+    }
+    const r2 = deserialize(serialize({ ...s, stories: storiesFixture }, 100))!
+    expect(Object.keys(r2.stories).sort()).toEqual(['angel_fridgemind', 'love_proposal']) // ghost_tale dropped
+    expect(r2.stories.angel_fridgemind).toMatchObject({ status: 'completed', plays: 2, bestBand: 'great', flags: ['dd_yes'], seq: 1 })
     expect(r.prestige.totalPoints).toBe(8)
     expect(r.prestige.resets).toBe(2)
     expect(r.prestige.talents).toEqual({ magnate: 2, efficiency: 1 })
@@ -171,7 +177,7 @@ describe('persistence policy', () => {
     'financeCompoundMs', 'quantumPhaseMs', 'buyMode', 'activeTab', 'visitedTabs',
     'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
     'employees', 'purchasedUnlocks', 'upgradesPurchased', 'repeatableRanks', 'milestonesReached',
-    'achievementsUnlocked', 'prestigeMilestonesClaimed', 'storyLog', 'contracts', 'spaceShooter',
+    'achievementsUnlocked', 'prestigeMilestonesClaimed', 'stories', 'contracts', 'spaceShooter',
     'foodFrenzy', 'prestige', 'onboardingStep', 'nextEmployeeSeq',
   ])
   const TRANSIENT: ReadonlySet<keyof GameState> = new Set<keyof GameState>([

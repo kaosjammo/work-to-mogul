@@ -4,6 +4,52 @@ Append-only log of development loops. Newest at top.
 
 ---
 
+## Unified Story State — VN-style tracking + v3 save migration
+
+User ask: "review the table database & the new features (stories, marriage, log, unlocking
+secret businesses) — any DB updates required? Flesh out the stories structure with visual-novel
+style tracking + a story state system, then prepare a migration + upgrade for all story events
+(hiring Reyna, getting married, other random stories)."
+
+Findings on the "database" (the versioned localStorage/cloud save): all new-feature state was
+already persisted — the real gap was FRAGMENTATION. Story progress lived in 5 disconnected
+places (romance.stage, affair.stage, automation.invest.arcStage, angelDeal.combinatorUnlocked,
+and the thin flat `storyLog: string[]` of ids only). No per-story outcome / choice / stage
+history existed anywhere.
+
+- New `StoryRecord` (domain.ts): `status` (seen|completed), `plays`, `lastBand`/`bestBand`,
+  `lastStage`, `flags` (choice-ids taken — VN variables for future callbacks/branching), `seq`
+  (completion order → Log recency). `StoryState = Record<storyId, StoryRecord>` REPLACES
+  `storyLog`. It's a HISTORY layer — it does NOT own arc gating (the arc authorities still drive
+  eligibility); it records what happened for the Log + any future content that reacts to it.
+- Pure `engine/storyState.ts`: `noteStorySeen`/`noteStoryStage`/`noteStoryChoice`/
+  `noteStoryOutcome` writers + `storyRecord`/`storySeen`/`storyCompleted`/`storyBestBand`/
+  `storyHasFlag`/`completedStoryIds` queries. `nextSeq` is clock-free (max existing +1) so the
+  harness stays deterministic. Wired into `angelDeal.ts` (replaces the old `recordStory`): seen
+  on launch, stage on advance, choice on every pick, outcome on resolve. **Harness-inert**: every
+  writer is on a player-only path → the greedy bot never resolves a story → `stories` stays `{}`
+  and income is byte-identical.
+- **v3 save migration** (CURRENT_SAVE_VERSION 2→3): back-fills a completed record for every story
+  the player lived through, reconstructed from the old `storyLog` AND every arc's scattered flags
+  — romance (married ⇒ all 6 episodes, proposal ≥ good), affair (episodes reached + caught/Reyna
+  fallout), EA/Reyna (unlocked ⇒ full 3-episode arc), divorce, and the Startup Combinator (great
+  Angel outcome). `complete()` upgrades a band when a better outcome is later known (so a combinator
+  unlock re-bands an angel_fridgemind that was already in the flat log). One migration covers BOTH
+  localStorage and cloud (same deserialize→migrate choke point). `restoreStories` sanitizes on
+  load: drops records for unregistered story ids, clamps every field, validates bands.
+- Log UI: each story row now shows a best-outcome keepsake badge (🌟 triumph / ✨ a win / •
+  settled / 💔 a scar) + a ×N chip when replayed. Rows come from `completedStoryIds` (pre-sorted
+  most-recent-first); `StoryLogItem` gained `band` + `plays`.
+- Persistence-policy trip-wire updated (`storyLog`→`stories`). Tests: new `storyState.test.ts`
+  (writers, best-band-keeps-best, flags dedup, completedStoryIds ordering, harness-inert) + a full
+  v2→v3 migration suite (storyLog back-fill + unregistered-id prune, married→full romance arc,
+  in-progress affair, unlocked EA, combinator→great even when also in storyLog, v3 no-double-
+  migrate round-trip). Updated angelDeal/romance/serialize tests off `storyLog`. 445 → 482 pass;
+  build + oxlint clean. Browser-verified the Log renders all four bands with correct colors + the
+  ×3 chip, and seen-only stories are excluded.
+
+---
+
 ## Lunch Rush rework — background, mobile scaling, joystick/WASD/hold-click controls
 
 User: the Vampire-Survivors clone (Lunch Rush) "needs a background and everything should be

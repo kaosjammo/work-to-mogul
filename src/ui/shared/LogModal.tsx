@@ -17,6 +17,14 @@ const KIND_META: Record<StoryLogItem['kind'], { label: string; icon: string }> =
 }
 const KIND_ORDER: StoryLogItem['kind'][] = ['mogul', 'romance', 'ea']
 
+// Best-outcome keepsake badge per story — a glance at how it went the best time you lived it.
+const BAND_BADGE: Record<NonNullable<StoryLogItem['band']>, { icon: string; label: string; color: string }> = {
+  great: { icon: '🌟', label: 'triumph', color: 'var(--good)' },
+  good: { icon: '✨', label: 'a win', color: 'var(--good)' },
+  neutral: { icon: '•', label: 'settled', color: 'var(--text-dim)' },
+  bad: { icon: '💔', label: 'a scar', color: 'var(--bad)' },
+}
+
 function tnum(n: number): string {
   return n > 0 ? n.toLocaleString('en-US') : '—'
 }
@@ -277,14 +285,32 @@ export function LogModal() {
                     <span className="flex min-w-0 items-center gap-2">
                       <span className="text-lg">{s.icon}</span>
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-semibold">{s.title}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate text-sm font-semibold">{s.title}</span>
+                          {s.plays > 1 && (
+                            <span className="tnum shrink-0 rounded-full px-1.5 text-[9px] font-bold" style={{ background: 'var(--surface-3)', color: 'var(--text-faint)' }}>
+                              ×{s.plays}
+                            </span>
+                          )}
+                        </span>
                         <span className="truncate text-[11px]" style={{ color: 'var(--text-faint)' }}>
                           {s.subject}
                         </span>
                       </span>
                     </span>
-                    <span className="shrink-0 text-xs" style={{ color: ACCENT }}>
-                      read ▸
+                    <span className="flex shrink-0 items-center gap-2">
+                      {s.band && (
+                        <span
+                          className="text-[11px] font-bold"
+                          title={`Best outcome: ${BAND_BADGE[s.band].label}`}
+                          style={{ color: BAND_BADGE[s.band].color }}
+                        >
+                          {BAND_BADGE[s.band].icon}
+                        </span>
+                      )}
+                      <span className="text-xs" style={{ color: ACCENT }}>
+                        read ▸
+                      </span>
                     </span>
                   </button>
                 ))}
