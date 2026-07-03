@@ -97,7 +97,7 @@ function LockedNote({ children }: { children: ReactNode }) {
 
 const STRATEGIES: { id: AutoInvestStrategy; label: string; hint: string }[] = [
   { id: 'roi', label: 'Best ROI', hint: 'Buys whatever adds the most income per dollar.' },
-  { id: 'cheapest', label: 'Cheapest', hint: 'Buys the cheapest units first — fast progress + milestones.' },
+  { id: 'cheapest', label: 'Cheapest', hint: 'Buys the cheapest thing first (units or upgrades) — fast progress + milestones.' },
   { id: 'focus', label: 'Focus', hint: 'Pours everything into one chosen industry.' },
 ]
 

@@ -4,7 +4,7 @@
 //  to click each business individually.
 // ============================================================
 import type { GameState } from '../types/domain'
-import { BUSINESS_ORDER, BUSINESSES } from '../content/businesses'
+import { BUSINESS_ORDER, BUSINESSES, COMBINATOR_ID } from '../content/businesses'
 import { UPGRADES } from '../content/upgrades'
 import { unitCost } from './economy'
 import { resolveBusiness } from './resolveBusiness'
@@ -29,11 +29,17 @@ export function spendCashBestValue(state: GameState, maxBuys = 1000): SpendResul
   const startCash = state.cash
   let units = 0
 
+  // The ladder plus the Startup Combinator — buyable once the angel deal
+  // unlocks it, and often the best $/s per $ on the board. The `unlocked`
+  // filter below keeps the harness bot's candidate list identical (it never
+  // wins the angel deal), so sim pacing is untouched.
+  const candidates = [...BUSINESS_ORDER, COMBINATOR_ID]
+
   for (let i = 0; i < maxBuys; i++) {
     let bestId: string | null = null
     let bestRoi = 0
 
-    for (const id of BUSINESS_ORDER) {
+    for (const id of candidates) {
       const bs = state.businesses[id]
       if (!bs?.unlocked) continue
       const def = BUSINESSES[id]
