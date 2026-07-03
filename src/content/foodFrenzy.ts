@@ -97,18 +97,24 @@ export const FOOD_FRENZY_TIERS: FrenzyTierDef[] = [
       'They’ll talk about tonight for years. The truck is empty, the crowd is chanting, and Nacho is crying into the onions (happy tears).',
       'The GOLDEN SPATULA is yours — the whole Food empire cooks hotter, forever.',
     ],
-    durationSec: 105,
-    spawnEveryMs: 780,
-    fanSpeed: 60,
-    fastShare: 0.3,
-    superAtSec: 20,
-    stampedeEverySec: 30,
+    // Tuned down from a brutal first pass (spawn 780 / speed 60 / fast .30 /
+    // super @20s / stampede @30s / 105s / great 85). Festival Night stays the
+    // hardest tier — every value is still above Dinner Rush — but it's now a
+    // beatable finale rather than a wall: fewer relentless spawns, tanks and
+    // stampedes arrive later and less often, a shorter closing time, and a
+    // 'great' bar that matches the (now lighter) crowd.
+    durationSec: 95,
+    spawnEveryMs: 860,
+    fanSpeed: 56,
+    fastShare: 0.24,
+    superAtSec: 30,
+    stampedeEverySec: 42,
     cashIncomeSeconds: 150,
     cashFloor: 20_000,
     buffMult: 1.7,
     buffMs: 90_000,
-    goodFans: 45,
-    greatFans: 85,
+    goodFans: 40,
+    greatFans: 68,
   },
 ]
 
