@@ -66,6 +66,8 @@ export function prestigeReset(state: GameState): boolean {
   // The love-story arc + marriage are meta-progression — an ascension is not a
   // divorce. The relationship (and its money sink) carries into the new empire.
   const romance = state.romance ? { ...state.romance } : undefined
+  // The affair + its fallout follow you across an ascension too (a mistake doesn't reset).
+  const affair = state.affair ? { ...state.affair } : undefined
   // Automation config is a set-and-forget convenience — it carries across
   // ascensions (the managers just resume in the new empire). Reset the internal
   // cooldowns so they act promptly on the fresh run; keep lifetime stats.
@@ -119,6 +121,7 @@ export function prestigeReset(state: GameState): boolean {
   state.dailyStreak = dailyStreak
   if (contracts) state.contracts = contracts // the missions board persists too
   if (romance) state.romance = romance // the marriage (and its upkeep) persists too
+  if (affair) state.affair = affair // the affair arc / cheating fallout persists too
   if (automation) state.automation = automation // the managers keep their config + stats
   if (salvageCampaign) state.spaceShooter = { ...state.spaceShooter, ...salvageCampaign }
   if (rushCampaign) state.foodFrenzy = { ...state.foodFrenzy, ...rushCampaign }

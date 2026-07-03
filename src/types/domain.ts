@@ -322,6 +322,17 @@ export interface RomanceState {
   divorced: boolean // the marriage ended (prevents re-offering the Quinn arc)
 }
 
+/** The Affair — the post-honeymoon temptation arc + cheating cascade. META-PROGRESSION:
+ *  persists through prestige (a mistake follows you). Every step is player-triggered. */
+export interface AffairState {
+  stage: number // temptation-arc progress (0..AFFAIR_EPISODE_IDS.length)
+  suspicion: number // times a line was crossed — at the threshold, Quinn catches on
+  cheated: boolean // caught cheating → the reckoning (a punitive divorce) chains next
+  reckoned: boolean // the caught-cheating divorce resolved
+  reynaSettled: boolean // the EA-retention negotiation resolved (kept or lost)
+  ended: boolean // the arc concluded (faithful ending, or the full fallout) → never re-offer
+}
+
 /** Lunch Rush — the Vampire-Survivors-style food-truck mini-game. Campaign
  *  PROGRESS persists (tiers cleared, Golden Spatula, best scores); the in-run
  *  swarm simulation is NEVER persisted; the timed buff is transient. */
@@ -391,6 +402,7 @@ export interface GameState {
   momentum: MomentumState // "Hot Streak" combo shared by the tap events (transient)
   angelDeal: AngelDealState // Mogul Story session runtime (offers/stages/scores)
   romance: RomanceState // the love-story arc + marriage sink (persists through prestige)
+  affair: AffairState // the post-honeymoon temptation arc + cheating cascade (persists through prestige)
   automation: AutomationState // Executive Assistant + Chief of Staff (persists through prestige)
   financeCompoundMs: number // Finance's signature: ms of runtime its compound has accrued (this run)
   quantumPhaseMs: number // Quantum's signature: superposition phase (0..cycle), transient oscillator

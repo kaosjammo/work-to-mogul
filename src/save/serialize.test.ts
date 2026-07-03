@@ -167,7 +167,7 @@ describe('full-state round-trip', () => {
 // ============================================================
 describe('persistence policy', () => {
   const PERSISTED: ReadonlySet<keyof GameState> = new Set<keyof GameState>([
-    'cash', 'lifetimeEarnings', 'lastWallClock', 'career', 'angelDeal', 'romance', 'automation',
+    'cash', 'lifetimeEarnings', 'lastWallClock', 'career', 'angelDeal', 'romance', 'affair', 'automation',
     'financeCompoundMs', 'quantumPhaseMs', 'buyMode', 'activeTab', 'visitedTabs',
     'dailyClaimDay', 'dailyStreak', 'activeIndustryTab', 'industries', 'businesses',
     'employees', 'purchasedUnlocks', 'upgradesPurchased', 'repeatableRanks', 'milestonesReached',

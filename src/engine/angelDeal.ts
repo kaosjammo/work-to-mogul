@@ -17,10 +17,18 @@ import { COMBINATOR_ID } from '../content/businesses'
 import { isRomanceStory, romanceEligible, applyRomanceOutcome, ROMANCE_NEXT_DATE_MS } from './romance'
 import { isEaStory, eaEligible, applyEaOutcome, EA_EPISODE_IDS } from './execAssistant'
 import { isDivorceStory, applyDivorceOutcome } from './divorce'
+import {
+  isAnyAffairStory,
+  isAffairEpisode,
+  affairEligible,
+  resolveAffairChoice,
+  nextForcedAffairStory,
+} from './affair'
 
-/** Arc episodes (romance + EA) — rare, one-time, non-repeatable content. */
+/** Arc episodes (romance + EA + the affair) — rare, one-time, non-repeatable content that
+ *  is PREFERRED over the repeatable business pitches so the finite arcs actually surface. */
 function isArcStory(id: string): boolean {
-  return isRomanceStory(id) || isEaStory(id)
+  return isRomanceStory(id) || isEaStory(id) || isAffairEpisode(id)
 }
 
 /** Record a resolved story in the player's re-readable Log (unique, in completion
@@ -196,11 +204,13 @@ export function eligibleStories(state: GameState): MogulStory[] {
   return MOGUL_STORIES.filter((s) =>
     isDivorceStory(s.id)
       ? false // the divorce settlement is player-triggered only — never auto-offered
-      : isRomanceStory(s.id)
-        ? romanceEligible(state, s)
-        : isEaStory(s.id)
-          ? eaEligible(state, s)
-          : storyEligible(state, s),
+      : isAnyAffairStory(s.id)
+        ? isAffairEpisode(s.id) && affairEligible(state, s) // fallout stories are forced, never offered
+        : isRomanceStory(s.id)
+          ? romanceEligible(state, s)
+          : isEaStory(s.id)
+            ? eaEligible(state, s)
+            : storyEligible(state, s),
   )
 }
 
@@ -404,6 +414,20 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       // HALVES the estate (businesses/cash/upgrades/staff) inside applyDivorceOutcome.
       a.payout = 0
       applyDivorceOutcome(state, band)
+    } else if (isAnyAffairStory(a.storyId)) {
+      // The temptation arc + cheating fallout: the "reward" is the relationship's fate
+      // (advance / caught / kept-or-lost-Reyna), applied by the affair module. No cash swing.
+      a.payout = 0
+      if (isAffairEpisode(a.storyId)) {
+        // DETERMINISTIC by the committed choice, not the accumulated band: a positive `risk`
+        // effect on the choice you actually pick IS crossing a line. This avoids the finale
+        // bug where "I'll leave Quinn" could wash out to 'good' behind earlier restraint.
+        const crossed = (choice.effects.risk ?? 0) > 0
+        a.outcome = crossed ? 'bad' : 'great'
+        resolveAffairChoice(state, a.storyId, crossed ? 'bad' : 'great')
+      } else {
+        resolveAffairChoice(state, a.storyId, band) // caught / Reyna fallout: standard band read
+      }
     } else {
       a.payout = applyOutcome(state, band, false)
     }
@@ -412,7 +436,15 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
     return true
   }
   if (choice.next === 'walkaway') {
-    if (isArcStory(a.storyId) || isDivorceStory(a.storyId)) {
+    if (isAnyAffairStory(a.storyId)) {
+      // Walking away resolves the affair beat as a 'neutral': on a temptation episode you
+      // recommit to Quinn (the affair ends); on the confrontation/Reyna fallout, not
+      // contesting is the WORST read (handled inside resolveAffairChoice).
+      a.outcome = 'neutral'
+      a.disciplined = false
+      a.payout = 0
+      resolveAffairChoice(state, a.storyId, 'neutral')
+    } else if (isArcStory(a.storyId) || isDivorceStory(a.storyId)) {
       // Walking away from a person (a date, a recruit) — or from the divorce table —
       // is a clean, quiet neutral: no "discipline bonus" cash, no penalty. Leaving the
       // settlement mid-negotiation means you RECONCILE (the marriage stays intact —
@@ -449,7 +481,8 @@ export function dismissAngelOutcome(state: GameState): void {
   const arcWentWell =
     (a.outcome === 'great' || a.outcome === 'good') &&
     ((isRomanceStory(a.storyId) && !state.romance?.married) ||
-      (isEaStory(a.storyId) && !state.automation?.invest?.unlocked))
+      (isEaStory(a.storyId) && !state.automation?.invest?.unlocked) ||
+      (isAffairEpisode(a.storyId) && !state.affair?.cheated && !state.affair?.ended))
   a.active = false
   a.offered = false
   a.stageId = null
@@ -457,6 +490,11 @@ export function dismissAngelOutcome(state: GameState): void {
   a.scores = initialScores()
   a.nextIsDate = arcWentWell
   a.cooldownMs = arcWentWell ? ROMANCE_NEXT_DATE_MS : ANGEL_REOFFER_MS
+  // The cheating fallout chains off the last beat: a caught betrayal → Quinn's
+  // confrontation (a punitive divorce) → (if you have an EA) keeping Reyna. Launch the
+  // next forced story immediately so it plays out as one unbroken sequence.
+  const forced = nextForcedAffairStory(state)
+  if (forced) startStorySession(state, forced)
 }
 
 // ── Economy folds (imported by engine/economy.ts) ────────────────────────────

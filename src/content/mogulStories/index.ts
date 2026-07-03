@@ -22,6 +22,13 @@ import { EA_SUMMIT } from './eaSummit'
 import { EA_WARROOM } from './eaWarRoom'
 import { EA_OFFER } from './eaOffer'
 import { DIVORCE_SETTLEMENT } from './divorceSettlement'
+import { AFFAIR_MEET } from './affairMeet'
+import { AFFAIR_SPARK } from './affairSpark'
+import { AFFAIR_SECRET } from './affairSecret'
+import { AFFAIR_PULL } from './affairPull'
+import { AFFAIR_CHOICE } from './affairChoice'
+import { AFFAIR_CAUGHT } from './affairCaught'
+import { AFFAIR_REYNA } from './affairReyna'
 
 export * from './types'
 export { ANGEL_DEAL } from './angelInvestment'
@@ -41,6 +48,13 @@ export { EA_SUMMIT } from './eaSummit'
 export { EA_WARROOM } from './eaWarRoom'
 export { EA_OFFER } from './eaOffer'
 export { DIVORCE_SETTLEMENT } from './divorceSettlement'
+export { AFFAIR_MEET } from './affairMeet'
+export { AFFAIR_SPARK } from './affairSpark'
+export { AFFAIR_SECRET } from './affairSecret'
+export { AFFAIR_PULL } from './affairPull'
+export { AFFAIR_CHOICE } from './affairChoice'
+export { AFFAIR_CAUGHT } from './affairCaught'
+export { AFFAIR_REYNA } from './affairReyna'
 
 /** Every registered Mogul Story (Angel Investment is the reference story).
  *  The six `love_*` entries form the romance ARC — offered one at a time,
@@ -65,6 +79,15 @@ export const MOGUL_STORIES: MogulStory[] = [
   EA_OFFER,
   // Player-triggered only (never auto-offered — see eligibleStories): the divorce.
   DIVORCE_SETTLEMENT,
+  // The Affair arc (post-honeymoon temptation) + its cheating fallout. Episodes are
+  // offered on affair progress; the caught/Reyna fallout stories are forced, never offered.
+  AFFAIR_MEET,
+  AFFAIR_SPARK,
+  AFFAIR_SECRET,
+  AFFAIR_PULL,
+  AFFAIR_CHOICE,
+  AFFAIR_CAUGHT,
+  AFFAIR_REYNA,
 ]
 
 export const MOGUL_STORY_BY_ID: Record<string, MogulStory> = Object.fromEntries(

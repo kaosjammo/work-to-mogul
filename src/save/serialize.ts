@@ -22,6 +22,7 @@ import { REPEATABLE_UPGRADES } from '../content/upgrades'
 import { ANGEL_DEAL, SCORE_KEYS } from '../content/angelDeal'
 import { getMogulStory } from '../content/mogulStories'
 import { ROMANCE_EPISODE_IDS, MARRIAGE_MAX_LEVEL } from '../engine/romance'
+import { AFFAIR_EPISODE_IDS } from '../engine/affair'
 import { SPACE_SHOOTER_TOTAL_STAGES } from '../content/spaceShooter'
 import { FOOD_FRENZY_TOTAL_TIERS } from '../content/foodFrenzy'
 import { ACHIEVEMENT_REWARD } from '../content/achievements'
@@ -337,6 +338,18 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
       // married: false} would otherwise dead-end the arc forever (no episode left).
       r.stage = Math.min(r.stage, ROMANCE_EPISODE_IDS.length - 1)
     }
+  }
+
+  // The affair — the post-honeymoon temptation arc + cheating fallout flags.
+  if (loaded.affair && typeof loaded.affair === 'object') {
+    const la = loaded.affair
+    const af = s.affair
+    af.stage = clamp(Math.floor(num(la.stage)), 0, AFFAIR_EPISODE_IDS.length)
+    af.suspicion = Math.max(0, Math.floor(num(la.suspicion)))
+    af.cheated = la.cheated === true
+    af.reckoned = la.reckoned === true
+    af.reynaSettled = la.reynaSettled === true
+    af.ended = la.ended === true
   }
 
   // Automation managers — restore the player's config + lifetime stats (a
