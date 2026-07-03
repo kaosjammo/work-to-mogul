@@ -81,43 +81,46 @@ function BusinessCardImpl({ view, accent }: Props) {
         <Icon art={businessArt(view.id, view.icon)} size={34} alt={view.name} />
       </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-semibold">{view.name}</span>
+      {/* Two-row body: the NAME gets its own full-width line (wrapping to two lines
+          for long names) so it stays readable on a phone; the rate + staff + Buy chip
+          sit on the row BELOW, where the wide Buy cost can no longer crush the name. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="line-clamp-2 text-sm font-semibold leading-snug">
+          {view.name}
           <span
             key={ownedPop}
-            className={`tnum shrink-0 text-xs font-bold ${ownedPop > 0 ? 'count-pop' : ''}`}
+            className={`tnum ml-1 text-xs font-bold ${ownedPop > 0 ? 'count-pop inline-block' : ''}`}
             style={{ color: accent }}
           >
             ×{view.owned}
           </span>
         </div>
-        <div className="tnum truncate text-xs" style={{ color: 'var(--text-dim)' }}>
-          {rate}
-          <span style={{ color: 'var(--text-faint)' }}>
-            {state}
-            {hint}
-          </span>
+        <div className="flex items-center gap-1.5">
+          <div className="tnum min-w-0 flex-1 truncate text-xs" style={{ color: 'var(--text-dim)' }}>
+            {rate}
+            <span style={{ color: 'var(--text-faint)' }}>
+              {state}
+              {hint}
+            </span>
+          </div>
+          {view.owned > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                useUiStore.getState().openAssignment(view.id)
+              }}
+              aria-label={`Manage staff for ${view.name} — ${view.assignedCount} of ${view.unlockedSlots} assigned`}
+              className="btn btn-ghost btn-sm shrink-0"
+              style={{ padding: '0 8px', gap: '4px' }}
+            >
+              👤 {view.assignedCount}/{view.unlockedSlots}
+              {view.synergies.length > 0 && <span style={{ color: '#c084fc' }}>✨{view.synergies.length}</span>}
+            </button>
+          )}
+          <BuyButton view={view} />
         </div>
       </div>
-
-      {view.owned > 0 && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            useUiStore.getState().openAssignment(view.id)
-          }}
-          aria-label={`Manage staff for ${view.name} — ${view.assignedCount} of ${view.unlockedSlots} assigned`}
-          className="btn btn-ghost btn-sm shrink-0"
-          style={{ padding: '0 8px', gap: '4px' }}
-        >
-          👤 {view.assignedCount}/{view.unlockedSlots}
-          {view.synergies.length > 0 && <span style={{ color: '#c084fc' }}>✨{view.synergies.length}</span>}
-        </button>
-      )}
-
-      <BuyButton view={view} />
 
       {view.owned > 0 && (
         <div

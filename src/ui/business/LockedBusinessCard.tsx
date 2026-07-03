@@ -40,7 +40,7 @@ export function LockedBusinessCard({
         <Icon art={businessArt(def.id, def.icon)} size={34} alt="" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold" style={{ color: 'var(--text-dim)' }}>
+        <div className="line-clamp-2 text-sm font-semibold leading-snug" style={{ color: 'var(--text-dim)' }}>
           {def.name}
         </div>
         <div className="truncate text-xs" style={{ color: 'var(--text-faint)' }}>
