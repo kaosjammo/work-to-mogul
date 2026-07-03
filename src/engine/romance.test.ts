@@ -249,6 +249,7 @@ describe('Marriage — the levelable money sink', () => {
     const s = richState()
     s.romance.married = true
     s.romance.stage = ROMANCE_EPISODE_IDS.length
+    s.romance.honeymoonTaken = true // the sink is locked until the honeymoon is booked
     s.romance.marriageLevel = level
     return s
   }
@@ -290,6 +291,13 @@ describe('Marriage — the levelable money sink', () => {
     expect(marriageLevelUpCost(maxed)).toBe(0)
     expect(buyMarriageLevel(maxed)).toBeNull()
     expect(buyMarriageLevel(richState())).toBeNull() // unmarried
+
+    // The lifestyle sink is LOCKED until the honeymoon is booked (level 1 isn't "The
+    // Honeymoon" any more — that's its own one-time purchase).
+    const preHoneymoon = married(0)
+    preHoneymoon.romance.honeymoonTaken = false
+    expect(marriageLevelUpCost(preHoneymoon)).toBe(0)
+    expect(buyMarriageLevel(preHoneymoon)).toBeNull()
   })
 
   it('the upkeep takes its share of earned cash, floors at 0, and never touches lifetime', () => {

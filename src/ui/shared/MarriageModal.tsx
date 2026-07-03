@@ -87,7 +87,11 @@ export function MarriageModal() {
         <Row label="Lavished so far" value={money(r.totalSpent)} />
       </div>
 
-      {r.nextTitle ? (
+      {!r.honeymoonTaken ? (
+        <div className="card p-3 text-center text-sm" style={{ color: 'var(--text-dim)' }}>
+          🔒 Lifestyle upkeep unlocks after the honeymoon — book the trip first.
+        </div>
+      ) : r.nextTitle ? (
         <button
           type="button"
           disabled={!r.canAfford}

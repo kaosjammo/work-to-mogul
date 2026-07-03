@@ -53,8 +53,8 @@ export const MARRIAGE_COST_FLOOR = 25_000
 
 /** Flavour name per marriage level (index 1..MAX — level 0 = sink not started). */
 export const MARRIAGE_TITLES = [
-  '', // level 0 — unused
-  'The Honeymoon',
+  '', // level 0 — unused (the sink is locked until the honeymoon is booked)
+  'Date Nights', // level 1 — the honeymoon is its own one-time purchase, NOT a sink level
   'Joint Accounts',
   'The Apartment Upgrade',
   'The Dog (Rescue, Obviously)',
@@ -185,7 +185,7 @@ export const MARRIAGE_COST_CASH_FRACTION = 0.1
  *  timing purchases around an ascension or an unassigned roster. */
 export function marriageLevelUpCost(state: GameState): number {
   const r = state.romance
-  if (!r || !r.married || r.marriageLevel >= MARRIAGE_MAX_LEVEL) return 0
+  if (!r || !r.married || !r.honeymoonTaken || r.marriageLevel >= MARRIAGE_MAX_LEVEL) return 0
   const target = r.marriageLevel + 1
   const perSec = automatedIncomePerSec(state)
   return Math.max(
@@ -195,12 +195,13 @@ export function marriageLevelUpCost(state: GameState): number {
   )
 }
 
-/** Buy the next marriage level (player action). Returns the result, or null. */
+/** Buy the next marriage level (player action). Locked until the honeymoon is booked —
+ *  the standing lifestyle sink only opens after the trip. Returns the result, or null. */
 export function buyMarriageLevel(
   state: GameState,
 ): { level: number; cost: number; title: string } | null {
   const r = state.romance
-  if (!r || !r.married || r.marriageLevel >= MARRIAGE_MAX_LEVEL) return null
+  if (!r || !r.married || !r.honeymoonTaken || r.marriageLevel >= MARRIAGE_MAX_LEVEL) return null
   const cost = marriageLevelUpCost(state)
   if (!(cost > 0) || state.cash < cost) return null
   state.cash -= cost
