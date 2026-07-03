@@ -20,6 +20,9 @@ import {
   buyMarriageLevel,
   applyMarriageUpkeep,
   grantWeddingGift,
+  bookHoneymoon,
+  honeymoonCost,
+  honeymoonPending,
 } from './romance'
 import {
   eligibleStories,
@@ -210,6 +213,37 @@ describe('Wedding payoff — the honeymoon gift', () => {
   })
 })
 
+describe('Honeymoon — the post-wedding "save up and go" purchase', () => {
+  it('is only bookable when married + affordable, and clears the pending flag', () => {
+    const s = richState()
+    // Not married → no honeymoon at all.
+    expect(honeymoonPending(s)).toBe(false)
+    expect(bookHoneymoon(s)).toBeNull()
+
+    // Marry.
+    s.romance.married = true
+    s.romance.stage = ROMANCE_EPISODE_IDS.length
+    expect(honeymoonPending(s)).toBe(true) // married, not yet taken → the dot shows
+    const cost = honeymoonCost(s)
+    expect(cost).toBeGreaterThan(0)
+
+    // Can't afford → no-op.
+    s.cash = cost - 1
+    expect(bookHoneymoon(s)).toBeNull()
+    expect(s.romance.honeymoonTaken).toBe(false)
+
+    // Afford → book (deducts, sets the flag, clears pending).
+    s.cash = cost + 10
+    expect(bookHoneymoon(s)).toBe(cost)
+    expect(s.romance.honeymoonTaken).toBe(true)
+    expect(s.cash).toBeCloseTo(10)
+    expect(honeymoonPending(s)).toBe(false)
+
+    // Idempotent — can't book a second honeymoon.
+    expect(bookHoneymoon(s)).toBeNull()
+  })
+})
+
 describe('Marriage — the levelable money sink', () => {
   function married(level = 0): GameState {
     const s = richState()
@@ -298,7 +332,7 @@ describe('Marriage — the levelable money sink', () => {
 describe('Romance — save + prestige are marriage-safe', () => {
   it('round-trips through save; corrupt combos are repaired on load', () => {
     const s = richState()
-    s.romance = { stage: ROMANCE_EPISODE_IDS.length, married: true, marriageLevel: 7, totalSpent: 123456 }
+    s.romance = { stage: ROMANCE_EPISODE_IDS.length, married: true, marriageLevel: 7, totalSpent: 123456, honeymoonTaken: true, divorced: false }
     const back = deserialize(serialize(s, 1))!
     expect(back.romance).toEqual(s.romance)
 
@@ -326,9 +360,9 @@ describe('Romance — save + prestige are marriage-safe', () => {
   it('an ascension is not a divorce — romance persists through prestige', () => {
     const s = richState()
     s.lifetimeEarnings = 1e15
-    s.romance = { stage: 4, married: true, marriageLevel: 3, totalSpent: 999 }
+    s.romance = { stage: 4, married: true, marriageLevel: 3, totalSpent: 999, honeymoonTaken: true, divorced: false }
     expect(prestigeReset(s)).toBe(true)
-    expect(s.romance).toEqual({ stage: 4, married: true, marriageLevel: 3, totalSpent: 999 })
+    expect(s.romance).toEqual({ stage: 4, married: true, marriageLevel: 3, totalSpent: 999, honeymoonTaken: true, divorced: false })
   })
 
   it('the story Log is a keepsake — it survives an ascension', () => {
@@ -340,6 +374,8 @@ describe('Romance — save + prestige are marriage-safe', () => {
   })
 
   it('fresh state starts unattached', () => {
-    expect(initialRomanceState()).toEqual({ stage: 0, married: false, marriageLevel: 0, totalSpent: 0 })
+    expect(initialRomanceState()).toEqual({
+      stage: 0, married: false, marriageLevel: 0, totalSpent: 0, honeymoonTaken: false, divorced: false,
+    })
   })
 })

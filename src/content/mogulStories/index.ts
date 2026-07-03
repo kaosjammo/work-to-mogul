@@ -21,6 +21,7 @@ import { ROMANCE_PROPOSAL } from './romanceProposal'
 import { EA_SUMMIT } from './eaSummit'
 import { EA_WARROOM } from './eaWarRoom'
 import { EA_OFFER } from './eaOffer'
+import { DIVORCE_SETTLEMENT } from './divorceSettlement'
 
 export * from './types'
 export { ANGEL_DEAL } from './angelInvestment'
@@ -39,6 +40,7 @@ export { ROMANCE_PROPOSAL } from './romanceProposal'
 export { EA_SUMMIT } from './eaSummit'
 export { EA_WARROOM } from './eaWarRoom'
 export { EA_OFFER } from './eaOffer'
+export { DIVORCE_SETTLEMENT } from './divorceSettlement'
 
 /** Every registered Mogul Story (Angel Investment is the reference story).
  *  The six `love_*` entries form the romance ARC — offered one at a time,
@@ -61,6 +63,8 @@ export const MOGUL_STORIES: MogulStory[] = [
   EA_SUMMIT,
   EA_WARROOM,
   EA_OFFER,
+  // Player-triggered only (never auto-offered — see eligibleStories): the divorce.
+  DIVORCE_SETTLEMENT,
 ]
 
 export const MOGUL_STORY_BY_ID: Record<string, MogulStory> = Object.fromEntries(

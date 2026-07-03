@@ -77,7 +77,35 @@ export const MARRIAGE_TITLES = [
 ]
 
 export function initialRomanceState(): RomanceState {
-  return { stage: 0, married: false, marriageLevel: 0, totalSpent: 0 }
+  return { stage: 0, married: false, marriageLevel: 0, totalSpent: 0, honeymoonTaken: false, divorced: false }
+}
+
+// ── The honeymoon — a one-time "save up and go" purchase after the wedding ────────
+// Booking it clears the 💍 dot and (later) unlocks the temptation arc. Priced to be a
+// real savings goal: a chunk of idle income, floored so pre-automation players can reach it.
+export const HONEYMOON_COST_INCOME_SECONDS = 1800 // 30 minutes of idle income
+export const HONEYMOON_COST_FLOOR = 100_000
+
+export function honeymoonCost(state: GameState): number {
+  return Math.max(HONEYMOON_COST_FLOOR, automatedIncomePerSec(state) * HONEYMOON_COST_INCOME_SECONDS)
+}
+
+/** Married but hasn't booked the honeymoon yet — drives the notification dot + CTA. */
+export function honeymoonPending(state: GameState): boolean {
+  const r = state.romance
+  return !!r && r.married && !r.honeymoonTaken
+}
+
+/** Book the honeymoon (player action). Deducts the cost, returns it, or null if not
+ *  available/affordable. Player-only → the sim bot never marries, so this stays inert. */
+export function bookHoneymoon(state: GameState): number | null {
+  const r = state.romance
+  if (!r || !r.married || r.honeymoonTaken) return null
+  const cost = honeymoonCost(state)
+  if (!(cost > 0) || state.cash < cost) return null
+  state.cash -= cost
+  r.honeymoonTaken = true
+  return cost
 }
 
 /** Is this story id one of the romance episodes? */

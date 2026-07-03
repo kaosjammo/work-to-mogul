@@ -258,10 +258,23 @@ export function BusinessesScreen() {
             <button
               type="button"
               onClick={() => openMarriage()}
-              className="btn btn-secondary btn-sm"
-              title={romance.drainPct > 0 ? `Lifestyle upkeep: ${romance.drainPct}% of income` : 'Married — no upkeep yet'}
+              className={`btn btn-sm relative ${romance.honeymoonPending ? 'btn-primary' : 'btn-secondary'}`}
+              title={
+                romance.honeymoonPending
+                  ? 'Book the honeymoon!'
+                  : romance.drainPct > 0
+                    ? `Lifestyle upkeep: ${romance.drainPct}% of income`
+                    : 'Married — no upkeep yet'
+              }
             >
-              💍 Married{romance.drainPct > 0 ? ` · ${romance.drainPct}%` : ''}
+              💍 Married{romance.honeymoonPending ? ' · 🌴' : romance.drainPct > 0 ? ` · ${romance.drainPct}%` : ''}
+              {romance.honeymoonPending && (
+                <span
+                  className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full"
+                  style={{ background: '#f5c518', boxShadow: '0 0 0 2px rgba(0,0,0,0.4)' }}
+                  aria-hidden
+                />
+              )}
             </button>
           )}
           {log.hasContent && (

@@ -327,6 +327,8 @@ export function tolerantLoad(loaded: Partial<GameState>, now: number = Date.now(
     r.married = lr.married === true
     r.marriageLevel = clamp(Math.floor(num(lr.marriageLevel)), 0, MARRIAGE_MAX_LEVEL)
     r.totalSpent = Math.max(0, num(lr.totalSpent))
+    r.honeymoonTaken = lr.honeymoonTaken === true
+    r.divorced = lr.divorced === true
     if (r.married) {
       r.stage = ROMANCE_EPISODE_IDS.length
     } else {

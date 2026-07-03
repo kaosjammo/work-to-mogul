@@ -31,11 +31,13 @@ import {
   declineAngelDeal,
   chooseAngelChoice,
   dismissAngelOutcome,
+  startStorySession,
   hiredRoles,
 } from '../engine/angelDeal'
 import { resolveEventCard, declineEventCard } from '../engine/eventCards'
 import { resolveMission, abortMission, snoozeSignal, type MissionMetrics, type MissionResult } from '../engine/spaceShooter'
-import { buyMarriageLevel, grantWeddingGift, isRomanceStory, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
+import { buyMarriageLevel, grantWeddingGift, isRomanceStory, bookHoneymoon, PARTNER_NAME, ROMANCE_EPISODE_IDS } from '../engine/romance'
+import { DIVORCE_STORY_ID } from '../engine/divorce'
 import { resolveFrenzyRun, abortFrenzy, snoozeFrenzy, type FrenzyMetrics, type FrenzyResult } from '../engine/foodFrenzy'
 import { updateInvestConfig, updateStaffConfig, unlockChiefOfStaff } from '../engine/automation'
 import { poachEa, EA_PARTNER_NAME } from '../engine/execAssistant'
@@ -516,6 +518,30 @@ export function renewVows(): void {
       `💍 Lv ${res.level}: ${res.title} — ${PARTNER_NAME} is delighted. (-${money(res.cost)})`,
     ])
   publishNow()
+}
+
+/** Book the one-time honeymoon (clears the 💍 dot; unlocks the temptation arc later). */
+export function bookHoneymoonTrip(): void {
+  const cost = bookHoneymoon(getEngineState())
+  if (cost == null) return
+  haptic(30)
+  playSound('chime')
+  useUiStore
+    .getState()
+    .pushCelebrations([`🌴 Honeymoon booked — off to paradise with ${PARTNER_NAME}! (-${money(cost)})`])
+  publishNow()
+}
+
+/** Start divorce proceedings — opens the Settlement negotiation (from the Married panel,
+ *  after an "are you sure?" confirmation in the UI). */
+export function startDivorce(): void {
+  const s = getEngineState()
+  if (!s.romance?.married) return
+  if (startStorySession(s, DIVORCE_STORY_ID)) {
+    haptic(24)
+    playSound('tap')
+    publishNow()
+  }
 }
 
 /** Wipe the save and start a brand-new game (destructive; hold-to-confirm in UI). */

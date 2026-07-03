@@ -78,6 +78,8 @@ import {
   marriageDrainFraction,
   marriageLevelUpCost,
   isRomanceStory,
+  honeymoonCost,
+  honeymoonPending,
 } from '../engine/romance'
 import { automationEligible, chiefUnlockCost } from '../engine/automation'
 import { EA_PARTNER_NAME, EA_EPISODE_IDS, canPoachEa, isEaStory } from '../engine/execAssistant'
@@ -408,6 +410,10 @@ export interface RomanceView {
   nextCost: number // price of the next level (0 when maxed / unmarried)
   canAfford: boolean
   totalSpent: number // lifetime cash lavished on the marriage
+  honeymoonTaken: boolean // booked the honeymoon yet?
+  honeymoonPending: boolean // married but not booked → the 💍 dot + CTA
+  honeymoonCost: number // price to book the honeymoon
+  honeymoonAffordable: boolean
 }
 
 /** Qualitative "read" on the hidden scores — flavour, never numbers. Each story
@@ -1099,6 +1105,7 @@ export function buildView(
   const rm = state.romance
   const marriageLevel = rm?.marriageLevel ?? 0
   const nextCost = rm ? marriageLevelUpCost(state) : 0
+  const hmCost = honeymoonCost(state)
   const romance: RomanceView = {
     stage: rm?.stage ?? 0,
     married: rm?.married ?? false,
@@ -1112,6 +1119,10 @@ export function buildView(
     nextCost,
     canAfford: nextCost > 0 && state.cash >= nextCost,
     totalSpent: rm?.totalSpent ?? 0,
+    honeymoonTaken: rm?.honeymoonTaken ?? false,
+    honeymoonPending: honeymoonPending(state),
+    honeymoonCost: hmCost,
+    honeymoonAffordable: (rm?.married ?? false) && !(rm?.honeymoonTaken ?? false) && state.cash >= hmCost,
   }
 
   // Automation managers — config mirror + live "it would deploy ~$X" previews.

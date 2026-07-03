@@ -16,6 +16,7 @@ import { INDUSTRIES } from '../content/industries'
 import { COMBINATOR_ID } from '../content/businesses'
 import { isRomanceStory, romanceEligible, applyRomanceOutcome, ROMANCE_NEXT_DATE_MS } from './romance'
 import { isEaStory, eaEligible, applyEaOutcome, EA_EPISODE_IDS } from './execAssistant'
+import { isDivorceStory, applyDivorceOutcome } from './divorce'
 
 /** Arc episodes (romance + EA) — rare, one-time, non-repeatable content. */
 function isArcStory(id: string): boolean {
@@ -193,11 +194,13 @@ export function storyEligible(state: GameState, story: MogulStory): boolean {
  *  Romance episodes gate on RELATIONSHIP progress (bespoke), not an industry. */
 export function eligibleStories(state: GameState): MogulStory[] {
   return MOGUL_STORIES.filter((s) =>
-    isRomanceStory(s.id)
-      ? romanceEligible(state, s)
-      : isEaStory(s.id)
-        ? eaEligible(state, s)
-        : storyEligible(state, s),
+    isDivorceStory(s.id)
+      ? false // the divorce settlement is player-triggered only — never auto-offered
+      : isRomanceStory(s.id)
+        ? romanceEligible(state, s)
+        : isEaStory(s.id)
+          ? eaEligible(state, s)
+          : storyEligible(state, s),
   )
 }
 
@@ -271,6 +274,24 @@ export function tickAngelDeal(state: GameState, dtMs: number): void {
 export function startAngelDeal(state: GameState): boolean {
   const a = state.angelDeal
   if (!a || !a.offered || a.active) return false
+  a.offered = false
+  a.active = true
+  a.stageId = activeStory(a).firstStage
+  a.scores = initialScores()
+  a.outcome = null
+  a.disciplined = false
+  a.payout = 0
+  return true
+}
+
+/** Force-start a SPECIFIC story as an active session, bypassing the offer/rotation.
+ *  Used for player-triggered stories (the divorce settlement) that fire from a button,
+ *  not from the random cadence. No-op if a session is already running. */
+export function startStorySession(state: GameState, storyId: string): boolean {
+  const a = state.angelDeal
+  if (!a || a.active) return false
+  if (!getMogulStory(storyId)) return false
+  a.storyId = storyId
   a.offered = false
   a.active = true
   a.stageId = activeStory(a).firstStage
@@ -378,6 +399,11 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
       // toward the poach), applied by the exec-assistant module.
       a.payout = 0
       applyEaOutcome(state, a.storyId, band)
+    } else if (isDivorceStory(a.storyId)) {
+      // Divorce settlement: no direct cash swing here — a bad negotiation instead
+      // HALVES the estate (businesses/cash/upgrades/staff) inside applyDivorceOutcome.
+      a.payout = 0
+      applyDivorceOutcome(state, band)
     } else {
       a.payout = applyOutcome(state, band, false)
     }
@@ -386,9 +412,11 @@ export function chooseAngelChoice(state: GameState, choiceId: string, boosted: S
     return true
   }
   if (choice.next === 'walkaway') {
-    if (isArcStory(a.storyId)) {
-      // Walking away from a person (a date or a recruit) is always a clean, quiet
-      // neutral — no "discipline bonus" cash for dodging someone, no penalty either.
+    if (isArcStory(a.storyId) || isDivorceStory(a.storyId)) {
+      // Walking away from a person (a date, a recruit) — or from the divorce table —
+      // is a clean, quiet neutral: no "discipline bonus" cash, no penalty. Leaving the
+      // settlement mid-negotiation means you RECONCILE (the marriage stays intact —
+      // applyDivorceOutcome is never called).
       a.outcome = 'neutral'
       a.disciplined = false
       a.payout = 0

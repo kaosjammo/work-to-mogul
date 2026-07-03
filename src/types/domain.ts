@@ -315,9 +315,11 @@ export interface SpaceShooterState {
  *  META-PROGRESSION: persists through prestige (an ascension is not a divorce). */
 export interface RomanceState {
   stage: number // dating progress: romance episodes completed successfully (0..6)
-  married: boolean // the proposal landed (stage 4) — unlocks the marriage money-sink
+  married: boolean // the proposal landed (stage 6) — unlocks the marriage money-sink
   marriageLevel: number // sink level (0 = not started); each level drains more income
   totalSpent: number // lifetime cash lavished on the marriage (running sink total)
+  honeymoonTaken: boolean // booked the one-time honeymoon (clears the 💍 dot; gates the 2nd arc)
+  divorced: boolean // the marriage ended (prevents re-offering the Quinn arc)
 }
 
 /** Lunch Rush — the Vampire-Survivors-style food-truck mini-game. Campaign
